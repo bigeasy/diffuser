@@ -20,6 +20,8 @@
     },
     "dependencies":
     {
+                            "hash.fnv":                     "1.0.x",
+                            "keyify":                       "0.0.x"
     },
     "devDependencies":
     {
