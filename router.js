@@ -86,18 +86,18 @@ ActiveBucket.prototype.ready = noop
 
 ActiveBucket.prototype.drop = noop
 
-function Database (client, identifier) {
+function Router (client, identifier) {
     this._client = client
     this._idenifier = identifier
     this._buckets = []
 }
 
-Database.prototype.locate = function (hashed, value) {
+Router.prototype.locate = function (hashed, value) {
     Interrupt.assert(this._buckets.length != 0, 'no.buckets')
     this._buckets[hashed.hash % this._buckets.length].locate(hashed, value)
 }
 
-Database.prototype.push = function (envelope) {
+Router.prototype.push = function (envelope) {
     if (this._buckets.length == 0) {
         logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
@@ -105,7 +105,7 @@ Database.prototype.push = function (envelope) {
     }
 }
 
-Database.prototype.setBuckets = function (buckets) {
+Router.prototype.setBuckets = function (buckets) {
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._idenifier == buckets[i]) {
@@ -124,8 +124,8 @@ Database.prototype.setBuckets = function (buckets) {
     this._buckets = updated
 }
 
-Database.prototype.ready = function () {
+Router.prototype.ready = function () {
     this._buckets.forEach(function (bucket) { bucket.ready() })
 }
 
-module.exports = Database
+module.exports = Router
