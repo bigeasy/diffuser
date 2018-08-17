@@ -21,7 +21,9 @@
     "dependencies":
     {
                             "hash.fnv":                     "1.0.x",
-                            "keyify":                       "0.0.x"
+                            "keyify":                       "0.0.x",
+                            "procession":                   "0.20.x",
+                            "prolific.logger":              "8.0.x"
     },
     "devDependencies":
     {

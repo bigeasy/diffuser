@@ -1,78 +1,107 @@
+var logger = require('prolific.logger').createLogger('diffuser')
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 var coalesce = require('extant')
+var Procession = require('procession')
 
 function noop () {}
 
-function set (hashed, value) {
-    this._values[hashed.stringified] = value
+function locate (hashed, address) {
+    this._locations[hashed.stringified] = address
 }
 
 function EmptyBucket() {
 }
 
-EmptyBucket.prototype.set = noop
+EmptyBucket.prototype.locate = noop
 
-EmptyBucket.prototype.get = function (hashed, callback) {
-    callback(null, null)
-}
+EmptyBucket.prototype.push = noop
 
 EmptyBucket.prototype.ready = noop
 
 EmptyBucket.prototype.drop = noop
 
-function WaitingBucket (buckets, index) {
+function WaitingBucket (client, buckets, index) {
+    this._client = client
     this._buckets = buckets
     this._index = index
+    this._queue = new Procession
+    this._shifter = this._queue.shifter()
     this._waiting = []
-    this._values = {}
+    this._locations = {}
 }
 
-WaitingBucket.prototype.set = set
+WaitingBucket.prototype.locate = locate
 
-WaitingBucket.prototype.get = function (hashed, callback) {
-    this._waiting.push({ hashed: hashed, callback: callback })
+WaitingBucket.prototype.push = function (envelope) {
+    this._queue.push(envelope)
 }
 
 WaitingBucket.prototype.ready = function () {
-    var bucket = this._buckets[this._index] = new ActiveBucket(this._values)
-    this._waiting.forEach(function (wait) {
-        bucket.get(wait.hashed, wait.callback)
-    }, this)
+    var bucket = this._buckets[this._index] = new ActiveBucket(this._client, this._locations)
+    var envelope = null
+    while ((envelope = this._shifter.shift()) != null) {
+        bucket.push(envelope)
+    }
 }
 
 WaitingBucket.prototype.drop = function () {
-    this._waiting.forEach(function (wait) { (wait.callback)(new Interrupt('unrouted', {})) })
+    var envelope = null
+    while ((envelope = this._shifter.shift()) != null) {
+        logger.notice('dropped', { gatherer: envelope.gatherer })
+    }
 }
 
-function ActiveBucket (values) {
-    this._values = values
+function ActiveBucket (client, locations) {
+    this._client = client
+    this._locations = locations
 }
 
-ActiveBucket.prototype.set = set
+ActiveBucket.prototype.locate = locate
 
-ActiveBucket.prototype.get = function (hashed, callback) {
-    callback(null, coalesce(this._values[hashed.stringified]))
+ActiveBucket.prototype.push = function (envelope) {
+    var address = this._locations[envelope.hashed.stringified]
+    if (address == null) {
+        logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
+        this._client.push({
+            gatherer: envelope.gatherer,
+            from: envelope.from,
+            to: envelope.from,
+            type: 'response',
+            body: { statusCode: 404 }
+        })
+    } else {
+        logger.notice('forwarded', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
+        this._client.push({
+            gatherer: envelope.gatherer,
+            from: envelope.from,
+            to: address,
+            hashed: envelope.hashed,
+            type: 'request',
+            body: envelope.body
+        })
+    }
 }
 
 ActiveBucket.prototype.ready = noop
 
 ActiveBucket.prototype.drop = noop
 
-function Database (identifier) {
+function Database (client, identifier) {
+    this._client = client
     this._idenifier = identifier
     this._buckets = []
 }
 
-Database.prototype.set = function (hashed, value) {
+Database.prototype.locate = function (hashed, value) {
     Interrupt.assert(this._buckets.length != 0, 'no.buckets')
-    this._buckets[hashed.hash % this._buckets.length].set(hashed, value)
+    this._buckets[hashed.hash % this._buckets.length].locate(hashed, value)
 }
 
-Database.prototype.get = function (hashed, callback) {
+Database.prototype.push = function (envelope) {
     if (this._buckets.length == 0) {
-        callback(null, null)
+        logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
-        this._buckets[hashed.hash % this._buckets.length].get(hashed, callback)
+        this._buckets[envelope.hashed.hash % this._buckets.length].push(envelope)
     }
 }
 
@@ -81,7 +110,7 @@ Database.prototype.setBuckets = function (buckets) {
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._idenifier == buckets[i]) {
             if (this._buckets[i] == null) {
-                updated[i] = new WaitingBucket(updated, i)
+                updated[i] = new WaitingBucket(this._client, updated, i)
             } else {
                 updated[i] = this._buckets[i]
             }
