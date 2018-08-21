@@ -23,23 +23,46 @@ function prove (okay) {
         from: '1/0',
         body: 0
     })
-    router.push({ hashed: hashes[1], body: 1 })
-    router.push({ hashed: hashes[2], body: 2 })
+    router.push({
+        hashed: hashes[1],
+        gatherer: 'udp://127.0.0.1:8514/1/3',
+        from: '1/0',
+        body: 1
+    })
+    router.push({
+        hashed: hashes[2],
+        gatherer: 'udp://127.0.0.1:8514/1/4',
+        from: '1/0',
+        body: 2
+    })
     router.push({
         hashed: hashes[3],
         gatherer: 'udp://127.0.0.1:8514/1/2',
         from: '1/0',
-        body: 3
-    })
-    okay(client.slice(), [], 'empty')
+        body: 3 })
+    okay(client.splice(0), [{
+        gatherer: 'udp://127.0.0.1:8514/1/3',
+        from: '1/0',
+        to: 'a',
+        hashed: { hash: 1, stringified: '1', key: 1 },
+        type: 'request',
+        body: 1
+    }], 'empty')
     router.setBuckets([ 'a', 'b', 'c', 'a', 'b', 'b', 'a' ])
     router.ready()
     okay(log.map(function (entry) {
         return entry.json.qualified
     }), [
-        'diffuser#dropped', 'diffuser#dropped', 'diffuser#forwarded', 'diffuser#missing'
+        'diffuser#dropped', 'diffuser#rerouted', 'diffuser#rerouted', 'diffuser#forwarded', 'diffuser#missing'
     ], 'logging')
     okay(client.slice(), [{
+        gatherer: 'udp://127.0.0.1:8514/1/4',
+        type: 'request',
+        from: '1/0',
+        to: 'a',
+        hashed: { hash: 2, stringified: '2', key: 2 },
+        body: 2
+    }, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
         type: 'request',
         from: '1/0',
@@ -53,4 +76,5 @@ function prove (okay) {
         to: '1/0',
         body: { statusCode: 404 }
     }], 'routed')
+    return
 }
