@@ -3,13 +3,14 @@ function Actor (f) {
 }
 
 // TODO Track a cookie.
-Actor.prototype.act = function (Hash, client, envelope) {
+Actor.prototype.act = function (client, envelope) {
     var result = this._f.call(null, envelope.body)
     if (result != null) {
         switch (result.method) {
         case 'respond':
             client.push({
                 gatherer: envelope.gatherer,
+                hashed: envelope.hashed,
                 from: envelope.from,
                 to: envelope.from,
                 type: 'response',
@@ -19,8 +20,8 @@ Actor.prototype.act = function (Hash, client, envelope) {
         case 'request':
             client.push({
                 gatherer: envelope.gatherer,
-                from: envelope.from,
                 key: result.key,
+                from: envelope.from,
                 type: 'request',
                 body: result.body
             })
@@ -28,3 +29,5 @@ Actor.prototype.act = function (Hash, client, envelope) {
         }
     }
 }
+
+module.exports = Actor
