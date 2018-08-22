@@ -12,11 +12,11 @@ function prove (okay) {
     client.hostname = 'x'
     var Hash = require('../hash')
     var Router = require('../router')
-    var router = new Router(client, 'a')
+    var router = new Router(client, '1/0')
     router.push({ hashed: hashes[0], body: 0 })
-    router.setBuckets([ 'a', 'b', 'a', 'a', 'b', 'b', 'a' ])
-    router.locate(hashes[0], '2/0')
-    router.locate(hashes[1], '2/0')
+    router.setBuckets([ '1/0', '2/0', '1/0', '1/0', '2/0', '2/0', '1/0' ])
+    router.locate(hashes[0], '4/0')
+    router.locate(hashes[1], '4/0')
     router.push({
         hashed: hashes[0],
         gatherer: 'udp://127.0.0.1:8514/1/1',
@@ -43,12 +43,12 @@ function prove (okay) {
     okay(client.splice(0), [{
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: '1/0',
-        to: 'a',
+        to: '1/0',
         hashed: { hash: 1, stringified: '1', key: 1 },
         type: 'request',
         body: 1
     }], 'empty')
-    router.setBuckets([ 'a', 'b', 'c', 'a', 'b', 'b', 'a' ])
+    router.setBuckets([ '1/0', '2/0', '3/0', '1/0', '2/0', '2/0', '1/0' ])
     router.ready()
     okay(log.map(function (entry) {
         return entry.json.qualified
@@ -59,14 +59,14 @@ function prove (okay) {
         gatherer: 'udp://127.0.0.1:8514/1/4',
         type: 'request',
         from: '1/0',
-        to: 'a',
+        to: '1/0',
         hashed: { hash: 2, stringified: '2', key: 2 },
         body: 2
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
         type: 'request',
         from: '1/0',
-        to: '2/0',
+        to: '4/0',
         hashed: { hash: 0, stringified: '0', key: 0 },
         body: 0
     }, {
@@ -76,5 +76,4 @@ function prove (okay) {
         to: '1/0',
         body: { statusCode: 404 }
     }], 'routed')
-    return
 }
