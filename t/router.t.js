@@ -1,4 +1,4 @@
-require('proof')(3, prove)
+require('proof')(4, prove)
 
 function prove (okay) {
     var Acceptor = require('prolific.acceptor')
@@ -11,8 +11,21 @@ function prove (okay) {
     var client = []
     client.hostname = 'x'
     var Hash = require('../hash')
+    var actor = {
+        act: function (envelope) {
+            okay(envelope, {
+                gatherer: 'udp://127.0.0.1:8514/1/5',
+                from: '1/0',
+                to: '1/0',
+                hashed: { hash: 0, stringified: '0', key: 0 },
+                service: 'router',
+                type: 'request',
+                body: 1
+            }, 'acted')
+        }
+    }
     var Router = require('../router')
-    var router = new Router(client, '1/0')
+    var router = new Router(actor, client, '1/0')
     router.push({ hashed: hashes[0], body: 0 })
     router.setBuckets([ '1/0', '2/0', '1/0', '1/0', '2/0', '2/0', '1/0' ])
     router.locate(hashes[0], '4/0')
@@ -51,6 +64,15 @@ function prove (okay) {
     }], 'empty')
     router.setBuckets([ '1/0', '2/0', '3/0', '1/0', '2/0', '2/0', '1/0' ])
     router.ready()
+    router.push({
+        gatherer: 'udp://127.0.0.1:8514/1/5',
+        from: '1/0',
+        to: '1/0',
+        hashed: { hash: 0, stringified: '0', key: 0 },
+        service: 'router',
+        type: 'request',
+        body: 1
+    })
     okay(log.map(function (entry) {
         return entry.json.qualified
     }), [

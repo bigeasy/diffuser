@@ -23,6 +23,7 @@ RouteBucket.prototype.push = function (envelope) {
     this._client.push({
         gatherer: envelope.gatherer,
         from: envelope.from,
+        // TODO Let client hash using its own table.
         to: this._address,
         hashed: envelope.hashed,
         type: 'request',
@@ -34,10 +35,8 @@ RouteBucket.prototype.ready = noop
 
 RouteBucket.prototype.drop = noop
 
-RouteBucket.prototype.createWaitingBucket = function () {
-}
-
-function WaitingBucket (client, buckets, index) {
+function WaitingBucket (actor, client, buckets, index) {
+    this._actor = actor
     this._client = client
     this._buckets = buckets
     this._index = index
@@ -54,7 +53,7 @@ WaitingBucket.prototype.push = function (envelope) {
 }
 
 WaitingBucket.prototype.ready = function () {
-    var bucket = this._buckets[this._index] = new ActiveBucket(this._client, this._locations)
+    var bucket = this._buckets[this._index] = new ActiveBucket(this._actor, this._client, this._locations)
     var envelope = null
     while ((envelope = this._shifter.shift()) != null) {
         bucket.push(envelope)
@@ -71,7 +70,8 @@ WaitingBucket.prototype.drop = function (bucket) {
     }
 }
 
-function ActiveBucket (client, locations) {
+function ActiveBucket (actor, client, locations) {
+    this._actor = actor
     this._client = client
     this._locations = locations
 }
@@ -79,26 +79,31 @@ function ActiveBucket (client, locations) {
 ActiveBucket.prototype.locate = locate
 
 ActiveBucket.prototype.push = function (envelope) {
-    var address = this._locations[envelope.hashed.stringified]
-    if (address == null) {
-        logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
-        this._client.push({
-            gatherer: envelope.gatherer,
-            from: envelope.from,
-            to: envelope.from,
-            type: 'response',
-            body: { statusCode: 404 }
-        })
+    if (envelope.service == 'router') {
+        this._actor.act(envelope)
     } else {
-        logger.notice('forwarded', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
-        this._client.push({
-            gatherer: envelope.gatherer,
-            from: envelope.from,
-            to: address,
-            hashed: envelope.hashed,
-            type: 'request',
-            body: envelope.body
-        })
+        var address = this._locations[envelope.hashed.stringified]
+        if (address == null) {
+            logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
+            this._client.push({
+                gatherer: envelope.gatherer,
+                from: envelope.from,
+                to: envelope.from,
+                // TODO hashed: envelope.hashed,
+                type: 'response',
+                body: { statusCode: 404 }
+            })
+        } else {
+            logger.notice('forwarded', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
+            this._client.push({
+                gatherer: envelope.gatherer,
+                from: envelope.from,
+                to: address,
+                hashed: envelope.hashed,
+                type: 'request',
+                body: envelope.body
+            })
+        }
     }
 }
 
@@ -106,7 +111,8 @@ ActiveBucket.prototype.ready = noop
 
 ActiveBucket.prototype.drop = noop
 
-function Router (client, identifier) {
+function Router (actor, client, identifier) {
+    this._actor = actor
     this._client = client
     this._idenifier = identifier
     this._buckets = []
@@ -129,7 +135,7 @@ Router.prototype.setBuckets = function (buckets) {
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._idenifier == buckets[i]) {
-            updated[i] = new WaitingBucket(this._client, updated, i)
+            updated[i] = new WaitingBucket(this._actor, this._client, updated, i)
         } else {
             updated[i] = new RouteBucket(this._client, this._idenifier)
         }
