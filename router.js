@@ -5,8 +5,8 @@ var Procession = require('procession')
 
 function noop () {}
 
-function locate (hashed, address) {
-    this._locations[hashed.stringified] = address
+function locate (stringified, address) {
+    this._locations[stringified] = address
 }
 
 function RouteBucket(client, address) {
@@ -33,6 +33,9 @@ RouteBucket.prototype.push = function (envelope) {
 RouteBucket.prototype.ready = noop
 
 RouteBucket.prototype.drop = noop
+
+RouteBucket.prototype.createWaitingBucket = function () {
+}
 
 function WaitingBucket (client, buckets, index) {
     this._client = client
@@ -62,6 +65,9 @@ WaitingBucket.prototype.drop = function (bucket) {
     var envelope = null
     while ((envelope = this._shifter.shift()) != null) {
         bucket.push(envelope)
+    }
+    for (var stringified in this._locations) {
+        bucket.locate(stringified, this._locations[stringified])
     }
 }
 
@@ -108,7 +114,7 @@ function Router (client, identifier) {
 
 Router.prototype.locate = function (hashed, value) {
     Interrupt.assert(this._buckets.length != 0, 'no.buckets')
-    this._buckets[hashed.hash % this._buckets.length].locate(hashed, value)
+    this._buckets[hashed.hash % this._buckets.length].locate(hashed.stringified, value)
 }
 
 Router.prototype.push = function (envelope) {
@@ -123,16 +129,12 @@ Router.prototype.setBuckets = function (buckets) {
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._idenifier == buckets[i]) {
-            if (this._buckets[i] == null) {
-                updated[i] = new WaitingBucket(this._client, updated, i)
-            } else {
-                updated[i] = this._buckets[i]
-            }
+            updated[i] = new WaitingBucket(this._client, updated, i)
         } else {
             updated[i] = new RouteBucket(this._client, this._idenifier)
-            if (this._buckets[i] != null) {
-                this._buckets[i].drop(updated[i])
-            }
+        }
+        if (this._buckets[i] != null) {
+            this._buckets[i].drop(updated[i])
         }
     }
     this._buckets = updated

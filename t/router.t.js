@@ -39,7 +39,8 @@ function prove (okay) {
         hashed: hashes[3],
         gatherer: 'udp://127.0.0.1:8514/1/2',
         from: '1/0',
-        body: 3 })
+        body: 3
+    })
     okay(client.splice(0), [{
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: '1/0',
