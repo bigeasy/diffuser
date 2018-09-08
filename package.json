@@ -20,6 +20,7 @@
     },
     "dependencies":
     {
+                            "destructible":                 "0.33.x",
                             "hash.fnv":                     "1.0.x",
                             "keyify":                       "0.0.x",
                             "procession":                   "0.20.x",
