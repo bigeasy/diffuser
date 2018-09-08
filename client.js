@@ -17,10 +17,14 @@ Client.prototype.hangup = function (arrivals) {
     }, this)
 }
 
+Client.prototype.setLocations = function (locations) {
+    this._locations = locations
+}
+
 Client.prototype.push = function (envelope) {
     var connection = this._connections[envelope.to]
     if (connection == null) {
-        connection = this._connections[envelope.to] = new this._Connection()
+        connection = this._connections[envelope.to] = new this._Connection(this._locations[envelope.to])
     }
     connection.queue.push(envelope)
 }

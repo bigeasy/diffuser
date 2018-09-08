@@ -1,4 +1,4 @@
-require('proof')(1, prove)
+require('proof')(3, prove)
 
 function prove (okay, callback) {
     var Client = require('../client')
@@ -12,7 +12,11 @@ function prove (okay, callback) {
 
     var queue = []
 
-    function Connection () {
+    var setLocation = 1
+
+    function Connection (location) {
+        okay(location, setLocation, 'set location ' + setLocation)
+        setLocation++
         this.queue = queue
     }
 
@@ -20,6 +24,7 @@ function prove (okay, callback) {
         async(function () {
             destructible.monitor('client', Client, Connection, async())
         }, function (client) {
+            client.setLocations({ '1/0': 1, '2/0': 2 })
             client.push({ to: '1/0', body: 1 })
             client.push({ to: '1/0', body: 2 })
             client.push({ to: '2/0', body: 1 })
