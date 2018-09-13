@@ -14,10 +14,12 @@ function prove (okay, callback) {
 
     var setLocation = 1
 
-    function Connection (location) {
+    function Connection (location, shifter) {
         okay(location, setLocation, 'set location ' + setLocation)
         setLocation++
-        this.queue = queue
+        shifter.pump(function (envelope) {
+            queue.push(envelope)
+        }, destructible.monitor([ 'queue', location ]))
     }
 
     cadence(function (async) {
@@ -36,6 +38,7 @@ function prove (okay, callback) {
             }, {
                 to: '2/0', body: 1
             }, null], 'queue')
+            client.hangup([])
         })
     })(destructible.monitor('test'))
 }

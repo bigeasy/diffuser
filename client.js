@@ -1,5 +1,6 @@
 var cadence = require('cadence')
 var Monotonic = require('monotonic').toString
+var Procession = require('procession')
 
 function Client (destructible, Connection) {
     this._Connection = Connection
@@ -12,8 +13,8 @@ Client.prototype.hangup = function (arrivals) {
     Object.keys(this._connections).filter(function (promise) {
         return !~arrivals.indexOf(promise)
     }).forEach(function (promise) {
-        this._connections[arrivals].queue.push(null)
-        delete this._connections[arrivals]
+        this._connections[promise].push(null)
+        delete this._connections[promise]
     }, this)
 }
 
@@ -22,11 +23,12 @@ Client.prototype.setLocations = function (locations) {
 }
 
 Client.prototype.push = function (envelope) {
-    var connection = this._connections[envelope.to]
-    if (connection == null) {
-        connection = this._connections[envelope.to] = new this._Connection(this._locations[envelope.to])
+    var procession = this._connections[envelope.to]
+    if (procession == null) {
+        procession = this._connections[envelope.to] = new Procession
+        this._Connection.call(null, this._locations[envelope.to], procession.shifter())
     }
-    connection.queue.push(envelope)
+    procession.push(envelope)
 }
 
 module.exports = cadence(function (async, destructible, Connection) {
