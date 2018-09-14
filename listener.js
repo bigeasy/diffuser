@@ -11,13 +11,15 @@ function Listener (destructible) {
 }
 
 Listener.prototype._socket = cadence(function (async, message, socket) {
+    var receiver
     async([function () {
         var destructible = new Destructible('listener')
         destructible.completed.wait(async())
-        var receiver = new Receiver(destructible, this.inbox)
+        receiver = new Receiver(destructible, this.inbox)
         destructible.monitor('conduit', Conduit, receiver, socket, socket, null)
     }, function (error) {
-        console.log(error.stack)
+        receiver.outbox.push(null)
+        socket.destroy()
         logger.error('socket', { stack: error.stack })
     }])
 })

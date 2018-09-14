@@ -41,7 +41,7 @@ Connector.prototype.connect = function (hash) {
             destructible: null
         }
         var shifter = connection.outbox.shifter()
-        this._connect(hash, connection.outbox.shifter(), this._destructible.monitor([ 'connection', hash.key ], true))
+        this._connect(hash, connection.outbox.shifter(), this._destructible.monitor([ 'connector', hash.key ], true))
     }
     return connection.outbox
 }
@@ -64,8 +64,8 @@ Connector.prototype._connect = cadence(function (async, hash, shifter) {
                 request.end()
             }, function (request, socket, head) {
                 async(function () {
-                    var sender = new Sender(this.feedback)
                     var destructible = new Destructible([ 'connection' ])
+                    var sender = new Sender(destructible, this.feedback)
                     async(function () {
                         destructible.monitor('conduit', Conduit, sender, socket, socket, head, async())
                     }, function () {

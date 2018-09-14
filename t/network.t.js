@@ -20,17 +20,20 @@ function prove (okay, callback) {
         async(function () {
             destructible.monitor('listener', Listener, async())
         }, function (listener) {
+            var fail = { listener: false, connector: false }
             var http = require('http')
 
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
-                console.log('XXXX')
                 listener.socket({
                     to: {
                         promise: request.headers['x-diffuser-to-promise'],
                         index: +request.headers['x-diffuser-to-index']
                     }
                 }, socket)
+                if (fail.listener) {
+                    setTimeout(function () { socket.emit('error', new Error('error')) }, 250)
+                }
             })
 
             var server = http.createServer(function () {})
@@ -59,6 +62,11 @@ function prove (okay, callback) {
                     okay(value, 1, 'pushed')
                     console.log('dequeued', value)
                     connector.connect(hash).push(null)
+                    setTimeout(async(), 250)
+                }, function () {
+                    fail.listener = true
+                    connector.connect(hash)
+                    setTimeout(async(), 1000)
                 })
             })
         })
