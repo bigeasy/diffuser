@@ -22,16 +22,6 @@ function Connector (destructible) {
     this._destructible = destructible
 }
 
-Connector.prototype.push = function (message) {
-    var index = figureOutIndex()
-    var procession = this._processions[message.to][index]
-    if (procession == null) {
-        procession = this._processions[message.to][index] = new Procession
-        this._connect(location, procession.shifter(), this._destructible.monitor([ message.to, index ], true))
-    }
-    procession.push(message)
-}
-
 Connector.prototype.setLocations = function (locations) {
     for (var key in this._connections) {
         var connection = locations[this._connections[key]]
