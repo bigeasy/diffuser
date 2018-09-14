@@ -8,16 +8,6 @@ function Listener (destructible) {
     this.inbox = new Procession
 }
 
-Listener.prototype.update = function (routes) {
-    for (var key in this._windows) {
-        this._windows[key].receiver.outbox.push({
-            module: 'diffuser',
-            method: 'update',
-            body: routes
-        })
-    }
-}
-
 Listener.prototype._socket = cadence(function (async, destructible, message, socket) {
     var receiver = new Receiver(destructible, this.inbox)
     // Create a conduit.
