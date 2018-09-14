@@ -55,15 +55,30 @@ function prove (okay, callback) {
             }, function (connector) {
                 async(function () {
                     listener.inbox.shifter().dequeue(async())
-                    connector.setLocations({ '1/0': 'http://127.0.0.1:8089/' })
+                    connector.setLocations({
+                        '1/0': 'http://127.0.0.1:8089/',
+                        '2/0': 'http://127.0.0.1:8089/'
+                    })
                     var outbox = connector.connect(hash)
                     outbox.push(1)
                 }, function (value) {
                     okay(value, 1, 'pushed')
                     console.log('dequeued', value)
-                    connector.connect(hash).push(null)
+                    // Test set locations.
+                    connector.setLocations({
+                        '1/0': 'http://127.0.0.1:8089/',
+                        '2/0': 'http://127.0.0.1:8089/'
+                    })
+                    connector.setLocations({
+                        '2/0': 'http://127.0.0.1:8089/'
+                    })
                     setTimeout(async(), 250)
                 }, function () {
+                    key = { promise: '2/0', index: 0 }
+                    hash = {
+                        key: key,
+                        stringified: Keyify.stringify(key)
+                    }
                     fail.listener = true
                     connector.connect(hash)
                     setTimeout(async(), 1000)

@@ -24,7 +24,7 @@ function Connector (destructible) {
 
 Connector.prototype.setLocations = function (locations) {
     for (var key in this._connections) {
-        var connection = locations[this._connections[key]]
+        var connection = this._connections[key]
         if (!(connection.hash.key.promise in locations)) {
             connection.outbox.push(null)
         }
