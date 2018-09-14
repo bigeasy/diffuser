@@ -2,20 +2,28 @@ var cadence = require('cadence')
 var Receiver = require('./receiver')
 var Procession = require('procession')
 var Conduit = require('conduit/conduit')
+var logger = require('prolific.logger').createLogger('diffuser')
+var Destructible = require('destructible')
 
 function Listener (destructible) {
     this._destructibe = destructible
     this.inbox = new Procession
 }
 
-Listener.prototype._socket = cadence(function (async, destructible, message, socket) {
-    var receiver = new Receiver(destructible, this.inbox)
-    // Create a conduit.
-    destructible.monitor('conduit', Conduit, receiver, socket, socket, async())
+Listener.prototype._socket = cadence(function (async, message, socket) {
+    async([function () {
+        var destructible = new Destructible('listener')
+        destructible.completed.wait(async())
+        var receiver = new Receiver(destructible, this.inbox)
+        destructible.monitor('conduit', Conduit, receiver, socket, socket, null)
+    }, function (error) {
+        console.log(error.stack)
+        logger.error('socket', { stack: error.stack })
+    }])
 })
 
 Listener.prototype.socket = function (message, socket) {
-    this._destructibe.monitor([ 'socket', message.from, message.index, Date.now() ], true, this, '_socket', message, socket, null)
+    this._socket(message, socket, this._destructibe.monitor([ 'socket', message.from, message.index, Date.now() ], true))
 }
 
 module.exports = cadence(function (async, destructible) {
