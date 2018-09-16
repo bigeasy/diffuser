@@ -3,7 +3,8 @@ require('proof')(4, prove)
 function prove (okay) {
     var Table = require('../table')
     var table = new Table
-    table.join(7, '1/0')
+    table.bootstrap(7)
+    table.arrive('1/0')
     okay({
         addresses: table.addresses,
         buckets: table.buckets
@@ -11,6 +12,7 @@ function prove (okay) {
         addresses: [ '1/0' ],
         buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ]
     }, 'join')
+    table.join(table.addresses, table.buckets)
     table.arrive('2/0')
     okay({
         addresses: table.addresses,

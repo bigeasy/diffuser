@@ -3,23 +3,34 @@ function Table () {
     this.buckets = null
 }
 
-Table.prototype.join = function (count, address) {
-    this.addresses = [ address ]
-    this.buckets = new Array(count).fill(address)
+Table.prototype.bootstrap = function (count) {
+    this.addresses = []
+    this.buckets = new Array(count).fill(null)
+}
+
+Table.prototype.join = function (addresses, buckets) {
+    this.addresses = addresses
+    this.buckets = buckets
 }
 
 Table.prototype.arrive = function (address) {
     this.addresses.push(address)
-    var buckets = Math.ceil(this.buckets.length / this.addresses.length)
-    var remainder = buckets % (this.addresses.length - 1)
-    var dividend = Math.floor(buckets  / (this.addresses.length - 1))
-    var reassign = this.addresses.reduce(function (reassign, address) {
-        reassign[address] = dividend + (remainder-- == 0 ? 0 : 1)
-        return reassign
-    }, {})
-    for (var i = 0, I = this.buckets.length; i < I; i++) {
-        if (reassign[this.buckets[i]]-- > 0) {
+    if (this.addresses.length == 1) {
+        for (var i = 0, I = this.buckets.length; i < I; i++) {
             this.buckets[i] = address
+        }
+    } else {
+        var buckets = Math.ceil(this.buckets.length / this.addresses.length)
+        var remainder = buckets % (this.addresses.length - 1)
+        var dividend = Math.floor(buckets  / (this.addresses.length - 1))
+        var reassign = this.addresses.reduce(function (reassign, address) {
+            reassign[address] = dividend + (remainder-- == 0 ? 0 : 1)
+            return reassign
+        }, {})
+        for (var i = 0, I = this.buckets.length; i < I; i++) {
+            if (reassign[this.buckets[i]]-- > 0) {
+                this.buckets[i] = address
+            }
         }
     }
 }
