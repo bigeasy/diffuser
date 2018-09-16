@@ -3,9 +3,14 @@ function Table () {
     this.buckets = null
 }
 
-Table.prototype.join = function (count, address) {
-    this.addresses = [ address ]
+Table.prototype.bootstrap = function (count) {
+    this.addresses = []
     this.buckets = new Array(count).fill(address)
+}
+
+Table.prototype.join = function (addresses, buckets) {
+    this.addresses = addresses
+    this.buckets = buckets
 }
 
 Table.prototype.arrive = function (address) {

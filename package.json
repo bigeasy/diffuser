@@ -20,7 +20,9 @@
     },
     "dependencies":
     {
+                            "compassion.counterfeiter":     "0.22.x",
                             "conduit":                      "2.13.x",
+                            "cubbyhole":                    "1.0.x",
                             "delta":                        "1.4.x",
                             "destructible":                 "0.33.x",
                             "downgrader":                   "0.1.x",
@@ -30,6 +32,8 @@
                             "operation":                    "2.0.x",
                             "procession":                   "0.22.x",
                             "prolific.logger":              "8.1.x",
+                            "reactor":                      "10.5.x",
+                            "server-destroy":               "1.0.x",
                             "vizsla":                       "12.12.x"
     },
     "devDependencies":
