@@ -13,25 +13,25 @@ function prove (okay, callback) {
 
     var cadence = require('cadence')
 
-    var Listener = require('../listener')
+    var Connectee = require('../connectee')
     var Connector = require('../connector')
 
     cadence(function (async) {
         async(function () {
-            destructible.monitor('listener', Listener, async())
-        }, function (listener) {
-            var fail = { listener: false, connector: false }
+            destructible.monitor('connectee', Connectee, async())
+        }, function (connectee) {
+            var fail = { connectee: false, connector: false }
             var http = require('http')
 
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
-                listener.socket({
+                connectee.socket({
                     to: {
                         promise: request.headers['x-diffuser-to-promise'],
                         index: +request.headers['x-diffuser-to-index']
                     }
                 }, socket)
-                if (fail.listener) {
+                if (fail.connectee) {
                     setTimeout(function () { socket.emit('error', new Error('error')) }, 250)
                 }
             })
@@ -54,7 +54,7 @@ function prove (okay, callback) {
                 destructible.monitor('connector', Connector, async())
             }, function (connector) {
                 async(function () {
-                    listener.inbox.shifter().dequeue(async())
+                    connectee.inbox.shifter().dequeue(async())
                     connector.setLocations({
                         '1/0': 'http://127.0.0.1:8089/',
                         '2/0': 'http://127.0.0.1:8089/'
@@ -79,7 +79,7 @@ function prove (okay, callback) {
                         key: key,
                         stringified: Keyify.stringify(key)
                     }
-                    fail.listener = true
+                    fail.connectee = true
                     connector.connect(hash)
                     setTimeout(async(), 1000)
                 })
