@@ -26,7 +26,7 @@ var Table = require('./table')
 var Procession = require('procession')
 
 function Diffuser (compassionUrl, count) {
-    this.queue = new Procession
+    this.routes = new Procession
     this._index = 0
     this._compassionUrl = compassionUrl
     this._cubbyholes = new Cubbyhole
@@ -96,7 +96,7 @@ Diffuser.prototype.arrive = cadence(function (async, request) {
         buckets: this._table.buckets
     })))
     this._table.arrive(request.body.government.promise)
-    this.queue.push(JSON.parse(JSON.stringify({
+    this.routes.push(JSON.parse(JSON.stringify({
         locations: this._locations,
         addresses: this._table.addresses,
         buckets: this._table.buckets
@@ -113,7 +113,7 @@ Diffuser.prototype.depart = cadence(function (async, request) {
     delete this._locations[request.body.departed.promise]
     this._cubbyholes.remove(request.body.departed.promise)
     this._table.depart(request.body.departed.promise)
-    this.queue.push(JSON.parse(JSON.stringify({
+    this.routes.push(JSON.parse(JSON.stringify({
         locations: this._locations,
         addresses: this._table.addresses,
         buckets: this._table.buckets
