@@ -59,7 +59,7 @@ function prove (okay, callback) {
                         arrive: true,
                         acclimated: true,
                         depart: true,
-                        properties: { location: 'http://127.0.0.1:9081' }
+                        properties: { isRouter: true, location: 'http://127.0.0.1:9081' }
                     },
                     parse: 'json',
                     raise: true
@@ -98,7 +98,7 @@ function prove (okay, callback) {
                         arrive: true,
                         acclimated: true,
                         depart: true,
-                        properties: { location: 'http://127.0.0.1:9082' }
+                        properties: { isRouter: true, location: 'http://127.0.0.1:9082' }
                     },
                     parse: 'json',
                     raise: true
@@ -114,7 +114,6 @@ function prove (okay, callback) {
                     return false
                 }, async())
             }, function () {
-                console.log('xxx')
                 counterfeiter.terminate('diffuser', 'second')
                 counterfeiter.events.shifter().join(function (event) {
                     if (event.type == 'consumed' && event.id == 'first' && event.body.promise == '4/0') {

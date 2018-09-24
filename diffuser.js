@@ -76,7 +76,7 @@ Diffuser.prototype.join = cadence(function (async, conference) {
             raise: true
         }, async())
     }, function (body) {
-        this._table.join(body.addresses, body.buckets)
+        this._table.join(body)
         return 200
     })
 })
@@ -90,17 +90,9 @@ Diffuser.prototype.snapshot = cadence(function (async, request) {
 })
 
 Diffuser.prototype.arrive = cadence(function (async, request) {
-    this._locations[request.body.government.promise] = request.body.arrived.properties.location
-    this._cubbyholes.set(request.body.government.promise, null, JSON.parse(JSON.stringify({
-        addresses: this._table.addresses,
-        buckets: this._table.buckets
-    })))
-    this._table.arrive(request.body.government.promise)
-    this.routes.push(JSON.parse(JSON.stringify({
-        locations: this._locations,
-        addresses: this._table.addresses,
-        buckets: this._table.buckets
-    })))
+    this._cubbyholes.set(request.body.government.promise, null, this._table.getSnapshot())
+    this._table.arrive(request.body.government.promise, request.body.arrived.properties)
+    this.routes.push(this._table.getSnapshot())
     return 200
 })
 
@@ -110,14 +102,9 @@ Diffuser.prototype.acclimated = cadence(function (async, request) {
 })
 
 Diffuser.prototype.depart = cadence(function (async, request) {
-    delete this._locations[request.body.departed.promise]
     this._cubbyholes.remove(request.body.departed.promise)
     this._table.depart(request.body.departed.promise)
-    this.routes.push(JSON.parse(JSON.stringify({
-        locations: this._locations,
-        addresses: this._table.addresses,
-        buckets: this._table.buckets
-    })))
+    this.routes.push(this._table.getSnapshot())
     return 200
 })
 
