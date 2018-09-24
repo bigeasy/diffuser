@@ -20,7 +20,7 @@
     },
     "dependencies":
     {
-                            "compassion.counterfeiter":     "0.25.x",
+                            "compassion.counterfeiter":     "0.26.x",
                             "conduit":                      "2.13.x",
                             "cubbyhole":                    "1.0.x",
                             "delta":                        "1.4.x",
