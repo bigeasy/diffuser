@@ -26,11 +26,20 @@ function prove (okay, callback) {
         async(function () {
             destructible.monitor('client', Client, Connection, async())
         }, function (client) {
-            client.setLocations({ '1/0': 1, '2/0': 2 })
+            client.setRoutes({
+                properties: {
+                    '1/0': { location: 1 },
+                    '2/0': { location: 2 }
+                }
+            })
             client.push({ to: '1/0', body: 1 })
             client.push({ to: '1/0', body: 2 })
             client.push({ to: '2/0', body: 1 })
-            client.hangup([ '2/0' ])
+            client.setRoutes({
+                properties: {
+                    '1/0': { location: 1 }
+                }
+            })
             okay(queue, [{
                 to: '1/0', body: 1
             }, {
@@ -38,7 +47,7 @@ function prove (okay, callback) {
             }, {
                 to: '2/0', body: 1
             }, null], 'queue')
-            client.hangup([])
+            client.setRoutes({ properties: {} })
         })
     })(destructible.monitor('test'))
 }

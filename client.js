@@ -9,17 +9,21 @@ function Client (destructible, Connection) {
     this._connections = {}
 }
 
-Client.prototype.hangup = function (arrivals) {
+Client.prototype.setRoutes = function (routes) {
+    this._locations = {}
+    for (var promise in routes.properties) {
+        this._locations[promise] = routes.properties[promise].location
+    }
+    this._hangup(Object.keys(this._locations))
+}
+
+Client.prototype._hangup = function (arrivals) {
     Object.keys(this._connections).filter(function (promise) {
         return !~arrivals.indexOf(promise)
     }).forEach(function (promise) {
         this._connections[promise].push(null)
         delete this._connections[promise]
     }, this)
-}
-
-Client.prototype.setLocations = function (locations) {
-    this._locations = locations
 }
 
 Client.prototype.push = function (envelope) {
