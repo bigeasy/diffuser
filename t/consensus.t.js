@@ -4,7 +4,7 @@ function prove (okay, callback) {
     var Destructible = require('destructible')
     var destructible = new Destructible('t/consensus.t.js')
 
-    var Diffuser = require('../diffuser')
+    var Diffuser = require('../consensus')
 
     var http = require('http')
     var destroyer = require('server-destroy')
