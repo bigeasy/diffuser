@@ -11,10 +11,6 @@ var Cubbyhole = require('cubbyhole')
 // Error-first callback interface to HTTP.
 var UserAgent = require('vizsla')
 
-// Evented work queue.
-var Turnstile = require('turnstile')
-Turnstile.Queue = require('turnstile/queue')
-
 // Bind an object to Sencha Connect middleware.
 var Reactor = require('reactor')
 
