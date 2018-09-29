@@ -24,6 +24,7 @@
                             "conduit":                      "2.13.x",
                             "cubbyhole":                    "1.0.x",
                             "delta":                        "1.4.x",
+                            "demur":                        "0.1.x",
                             "destructible":                 "0.33.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",

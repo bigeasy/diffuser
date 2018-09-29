@@ -9,12 +9,14 @@ function prove (okay, callback) {
     var Operation = require('operation')
     var Downgrader = require('downgrader')
 
-    destructible.completed.wait(callback)
+    destructible.completed.wait(function () { callback() })
 
     var cadence = require('cadence')
 
     var Connectee = require('../connectee')
     var Connector = require('../connector')
+
+    var destroyer = require('server-destroy')
 
     cadence(function (async) {
         async(function () {
@@ -26,6 +28,10 @@ function prove (okay, callback) {
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
                 connectee.socket({
+                    from: {
+                        promise: request.headers['x-diffuser-from-promise'],
+                        index: +request.headers['x-diffuser-from-index']
+                    },
                     to: {
                         promise: request.headers['x-diffuser-to-promise'],
                         index: +request.headers['x-diffuser-to-index']
@@ -37,10 +43,12 @@ function prove (okay, callback) {
             })
 
             var server = http.createServer(function () {})
+            destroyer(server)
+
             server.on('upgrade', Operation([ downgrader, 'upgrade' ]))
 
             delta(destructible.monitor('http')).ee(server).on('close')
-            destructible.destruct.wait(server, 'close')
+            destructible.destruct.wait(server, 'destroy')
 
             var Keyify = require('keyify')
             var key = { promise: '1/0', index: 0 }
@@ -49,9 +57,7 @@ function prove (okay, callback) {
                 stringified: Keyify.stringify(key)
             }
             async(function () {
-                server.listen(8089, '127.0.0.1', async())
-            }, function () {
-                destructible.monitor('connector', Connector, async())
+                destructible.monitor('connector', Connector, '0/0', 0, async())
             }, function (connector) {
                 async(function () {
                     connectee.inbox.shifter().dequeue(async())
@@ -61,14 +67,20 @@ function prove (okay, callback) {
                     })
                     var outbox = connector.connect(hash)
                     outbox.push(1)
+                    async(function () {
+                        setTimeout(async(), 2500)
+                    }, function () {
+                        server.listen(8089, '127.0.0.1', async())
+                    })
                 }, function (value) {
                     okay(value, 1, 'pushed')
                     console.log('dequeued', value)
-                    // Test set locations.
+                    // Set locations with no change.
                     connector.setLocations({
                         '1/0': 'http://127.0.0.1:8089/',
                         '2/0': 'http://127.0.0.1:8089/'
                     })
+                    // Set locations so that we hang up on `1/0`.
                     connector.setLocations({
                         '2/0': 'http://127.0.0.1:8089/'
                     })
@@ -80,8 +92,11 @@ function prove (okay, callback) {
                         stringified: Keyify.stringify(key)
                     }
                     fail.connectee = true
-                    connector.connect(hash)
-                    setTimeout(async(), 1000)
+                    connectee.inbox.shifter().dequeue(async())
+                    var outbox = connector.connect(hash)
+                    outbox.push(2)
+                }, function (value) {
+                    okay(value, 2, 'second push')
                 })
             })
         })

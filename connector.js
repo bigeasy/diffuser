@@ -16,17 +16,30 @@ var Destructible = require('destructible')
 
 var Conduit = require('conduit')
 
-function Connector (destructible) {
+var Window = require('conduit/window')
+
+var Demur = require('demur')
+
+var Signal = require('signal')
+
+function Connector (destructible, promise, index) {
     this.feedback = new Procession
     this._connections = {}
     this._destructible = destructible
+    this._promise = promise
+    this._index = index
+    destructible.destruct.wait(this, function () {
+        this.setLocations({})
+    })
 }
 
 Connector.prototype.setLocations = function (locations) {
     for (var key in this._connections) {
         var connection = this._connections[key]
         if (!(connection.hash.key.promise in locations)) {
-            connection.outbox.push(null)
+            console.log('shutting down', key)
+            connection.outbox.end()
+            connection.shutdown.unlatch()
         }
     }
     this._locations = locations
@@ -38,24 +51,43 @@ Connector.prototype.connect = function (hash) {
         connection = this._connections[hash.stringified] = {
             hash: hash,
             outbox: new Procession,
-            destructible: null
+            shutdown: new Signal
         }
         var shifter = connection.outbox.shifter()
-        this._connect(hash, connection.outbox.shifter(), this._destructible.monitor([ 'connector', hash.key ], true))
+        this._destructible.monitor([ 'connector', hash.key ], true, this, '_connect', hash, shifter, null)
     }
     return connection.outbox
 }
 
-Connector.prototype._connect = cadence(function (async, hash, shifter) {
+var COUNTER = 0
+Connector.prototype._connect = cadence(function (async, destructible, hash, shifter) {
+    console.log('here')
+    var shutdown = this._connections[hash.stringified].shutdown
+    shutdown.wait(destructible, 'destroy')
+    var looped = 0
+    var demur = new Demur
+    var sender = new Sender(destructible, this.feedback)
+    var counter = ++COUNTER
+    var location = url.parse(this._locations[hash.key.promise])
     async(function () {
-        async([function () {
+        destructible.monitor([ 'window' ], true, Window, sender, async())
+    }, function (window) {
+        console.log('--- attempt ---', hash.key, counter)
+        shifter.pump(sender.outbox)
+        var loop = async([function () {
+            console.log('--- loop ---', counter, ++looped)
+            if (destructible.destroyed) {
+                return [ loop.break ]
+            }
             async(function () {
-                console.log(this._locations, hash)
-                var location = url.parse(this._locations[hash.key.promise])
+                demur.retry(async())
+            }, function () {
                 var request = http.request({
                     host: location.hostname,
                     port: +location.port,
                     headers: Downgrader.headers({
+                        'x-diffuser-from-promise': this._promise,
+                        'x-diffuser-from-index': this._index,
                         'x-diffuser-to-promise': hash.key.promise,
                         'x-diffuser-to-index': hash.key.index
                     })
@@ -63,26 +95,31 @@ Connector.prototype._connect = cadence(function (async, hash, shifter) {
                 delta(async()).ee(request).on('upgrade')
                 request.end()
             }, function (request, socket, head) {
+                var wait = null
                 async(function () {
-                    var destructible = new Destructible([ 'connection' ])
-                    var sender = new Sender(destructible, this.feedback)
-                    async(function () {
-                        destructible.monitor('conduit', Conduit, sender, socket, socket, head, async())
-                    }, function () {
-                        shifter.pump(sender.outbox)
-                        destructible.completed.wait(async())
-                    })
-                })
+                    demur.reset()
+                    var destructible = new Destructible([ 'connection', hash.key ])
+                    destructible.completed.wait(async())
+                    destructible.monitor('conduit', Conduit, window, socket, socket, head, null)
+                    delta(destructible.monitor('socket')).ee(socket).on('close')
+                    // wait = shutdown.wait(destructible, 'destroy')
+                }, [function () {
+                    // shutdown.cancel(wait)
+                }])
+            }, function () {
+                console.log('--- close ---', looped)
             })
         }, function (error) {
-            console.log(error.stack)
+            console.log('--- error ---', looped)
+            // console.log(error.stack)
             logger.error('error', { stack: error.stack })
-        }])
+        }])()
     }, function () {
         delete this._connections[hash.stringified]
+        console.log('--- terminated ---', counter)
     })
 })
 
-module.exports = cadence(function (async, destructible) {
-    return new Connector(destructible)
+module.exports = cadence(function (async, destructible, promise, index) {
+    return new Connector(destructible, promise, index)
 })
