@@ -64,12 +64,15 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
     console.log('here')
     var shutdown = this._connections[hash.stringified].shutdown
     shutdown.wait(destructible, 'destroy')
+    var done = destructible.monitor('retries')
     var looped = 0
     var demur = new Demur
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
     var location = url.parse(this._locations[hash.key.promise])
-    async(function () {
+    async([function () {
+        done()
+    }], function () {
         destructible.monitor([ 'window' ], true, Window, sender, async())
     }, function (window) {
         console.log('--- attempt ---', hash.key, counter)

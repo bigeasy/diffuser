@@ -21,6 +21,7 @@ function Connectee (destructible) {
     this.turnstile = new Turnstile
     this._sockets = new Turnstile.Queue(this, '_socket', this.turnstile)
     this.turnstile.listen(destructible.monitor('sockets'))
+    destructible.destruct.wait(this.turnstile, 'close')
 }
 
 Connectee.prototype._window = cadence(function (async, destructible, hash) {

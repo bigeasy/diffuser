@@ -9,7 +9,7 @@ function prove (okay, callback) {
     var Operation = require('operation')
     var Downgrader = require('downgrader')
 
-    destructible.completed.wait(function () { callback() })
+    destructible.completed.wait(callback)
 
     var cadence = require('cadence')
 
