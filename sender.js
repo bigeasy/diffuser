@@ -5,7 +5,7 @@ function Sender (destructible, feedback) {
     this.outbox = new Procession
     this.inbox = new Procession
     this._feedback = feedback
-    this.inbox.pump(this, '_eos', destructible.monitor('inbox'))
+    this.inbox.pump(this, '_eos', destructible.monitor('inbox-qq'))
 }
 
 Sender.prototype._eos = cadence(function (async, envelope) {

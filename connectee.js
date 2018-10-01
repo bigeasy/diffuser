@@ -24,10 +24,23 @@ function Connectee (destructible) {
     destructible.destruct.wait(this.turnstile, 'close')
 }
 
+Connectee.prototype.setLocations = function (locations) {
+    for (var key in this._connections) {
+        var connection = this._connections[key]
+        if (!(connection.hash.key.promise in locations)) {
+            connection.outbox.end()
+        }
+    }
+    this._locations = locations
+}
+
 Connectee.prototype._window = cadence(function (async, destructible, hash) {
     async(function () {
         var receiver = new Receiver(destructible, this.inbox)
-        this._destructible.monitor([ 'window', hash.key ], true, Window, receiver, async())
+        destructible.monitor([ 'window', hash.key ], Window, receiver, async())
+        destructible.destruct.wait(this, function () {
+            delete this._windows[hash.stringified]
+        })
     }, function (window) {
         this._windows[hash.stringified] = window
     })
@@ -48,7 +61,6 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
     var hash = Hash(message.from)
     async(function () {
         var window = this._windows[hash.stringified]
-        console.log('--- have window ---', !! window)
         if (window == null) {
             this._destructible.monitor([ 'window', message.from ], true, this, '_window', hash, async())
         } else {
@@ -73,8 +85,6 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
             socket.destroy()
             logger.error('socket', { stack: error.stack })
         }])
-    }, function () {
-        console.log('-- ooo --', hash)
     })
 })
 

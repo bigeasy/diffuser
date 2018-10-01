@@ -37,9 +37,7 @@ Connector.prototype.setLocations = function (locations) {
     for (var key in this._connections) {
         var connection = this._connections[key]
         if (!(connection.hash.key.promise in locations)) {
-            console.log('shutting down', key)
             connection.outbox.end()
-            connection.shutdown.unlatch()
         }
     }
     this._locations = locations
@@ -54,14 +52,13 @@ Connector.prototype.connect = function (hash) {
             shutdown: new Signal
         }
         var shifter = connection.outbox.shifter()
-        this._destructible.monitor([ 'connector', hash.key ], true, this, '_connect', hash, shifter, null)
+        this._destructible.monitor([ 'connector-?', hash.key ], true, this, '_connect', hash, shifter, null)
     }
     return connection.outbox
 }
 
 var COUNTER = 0
 Connector.prototype._connect = cadence(function (async, destructible, hash, shifter) {
-    console.log('here')
     var shutdown = this._connections[hash.stringified].shutdown
     shutdown.wait(destructible, 'destroy')
     var done = destructible.monitor('retries')
@@ -70,21 +67,21 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
     var location = url.parse(this._locations[hash.key.promise])
+    destructible.destruct.wait(sender.inbox, 'end')
+    destructible.destruct.wait(demur, 'cancel')
     async([function () {
         done()
     }], function () {
-        destructible.monitor([ 'window' ], true, Window, sender, async())
+        destructible.monitor([ 'window', COUNTER ], Window, sender, async())
     }, function (window) {
-        console.log('--- attempt ---', hash.key, counter)
         shifter.pump(sender.outbox)
         var loop = async([function () {
-            console.log('--- loop ---', counter, ++looped)
-            if (destructible.destroyed) {
-                return [ loop.break ]
-            }
             async(function () {
                 demur.retry(async())
             }, function () {
+                if (destructible.destroyed) {
+                    return [ loop.break ]
+                }
                 var request = http.request({
                     host: location.hostname,
                     port: +location.port,
@@ -109,17 +106,12 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
                 }, [function () {
                     // shutdown.cancel(wait)
                 }])
-            }, function () {
-                console.log('--- close ---', looped)
             })
         }, function (error) {
-            console.log('--- error ---', looped)
-            // console.log(error.stack)
             logger.error('error', { stack: error.stack })
         }])()
     }, function () {
         delete this._connections[hash.stringified]
-        console.log('--- terminated ---', counter)
     })
 })
 

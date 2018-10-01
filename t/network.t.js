@@ -1,4 +1,4 @@
-require('proof')(1, prove)
+require('proof')(2, prove)
 
 function prove (okay, callback) {
     var Destructible = require('destructible')
@@ -22,7 +22,7 @@ function prove (okay, callback) {
         async(function () {
             destructible.monitor('connectee', Connectee, async())
         }, function (connectee) {
-            var fail = { connectee: false, connector: false }
+            var fail = { connectee: 0, connector: false }
             var http = require('http')
 
             var downgrader = new Downgrader
@@ -37,7 +37,8 @@ function prove (okay, callback) {
                         index: +request.headers['x-diffuser-to-index']
                     }
                 }, socket)
-                if (fail.connectee) {
+                if (fail.connectee != 0) {
+                    fail.connectee--
                     setTimeout(function () { socket.emit('error', new Error('error')) }, 250)
                 }
             })
@@ -74,7 +75,6 @@ function prove (okay, callback) {
                     })
                 }, function (value) {
                     okay(value, 1, 'pushed')
-                    console.log('dequeued', value)
                     // Set locations with no change.
                     connector.setLocations({
                         '1/0': 'http://127.0.0.1:8089/',
@@ -84,14 +84,14 @@ function prove (okay, callback) {
                     connector.setLocations({
                         '2/0': 'http://127.0.0.1:8089/'
                     })
-                    setTimeout(async(), 250)
+                    setTimeout(async(), 2500)
                 }, function () {
                     key = { promise: '2/0', index: 0 }
                     hash = {
                         key: key,
                         stringified: Keyify.stringify(key)
                     }
-                    fail.connectee = true
+                    fail.connectee = 1
                     connectee.inbox.shifter().dequeue(async())
                     var outbox = connector.connect(hash)
                     outbox.push(2)
