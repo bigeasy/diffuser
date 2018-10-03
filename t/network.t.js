@@ -39,7 +39,7 @@ function prove (okay, callback) {
                 }, socket)
                 if (fail.connectee != 0) {
                     fail.connectee--
-                    setTimeout(function () { socket.emit('error', new Error('error')) }, 250)
+                    setImmediate(function () { socket.emit('error', new Error('error')) })
                 }
             })
 
