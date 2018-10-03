@@ -94,6 +94,7 @@ function prove (okay, callback) {
                     }
                     fail.connectee = 1
                     connectee.inbox.shifter().dequeue(async())
+                    connector.connect(hash)
                     var outbox = connector.connect(hash)
                     outbox.push(2)
                 }, function (value) {
