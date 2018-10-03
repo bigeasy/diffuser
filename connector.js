@@ -38,6 +38,7 @@ Connector.prototype.setLocations = function (locations) {
         var connection = this._connections[key]
         if (!(connection.hash.key.promise in locations)) {
             connection.outbox.end()
+            connection.shutdown.unlatch()
         }
     }
     this._locations = locations
@@ -74,6 +75,7 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
     }], function () {
         destructible.monitor([ 'window', COUNTER ], Window, sender, async())
     }, function (window) {
+        destructible.destruct.wait(window, 'hangup')
         shifter.pump(sender.outbox)
         var loop = async([function () {
             async(function () {
@@ -102,9 +104,9 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
                     destructible.completed.wait(async())
                     destructible.monitor('conduit', Conduit, window, socket, socket, head, null)
                     delta(destructible.monitor('socket')).ee(socket).on('close')
-                    // wait = shutdown.wait(destructible, 'destroy')
+                    wait = shutdown.wait(destructible, 'destroy')
                 }, [function () {
-                    // shutdown.cancel(wait)
+                    shutdown.cancel(wait)
                 }])
             })
         }, function (error) {

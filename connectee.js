@@ -42,6 +42,7 @@ Connectee.prototype._window = cadence(function (async, destructible, hash) {
             delete this._windows[hash.stringified]
         })
     }, function (window) {
+        destructible.destruct.wait(window, 'hangup')
         this._windows[hash.stringified] = window
     })
 })

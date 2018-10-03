@@ -86,6 +86,7 @@ function prove (okay, callback) {
                     })
                     setTimeout(async(), 2500)
                 }, function () {
+                    console.log('--- xxx ---')
                     key = { promise: '2/0', index: 0 }
                     hash = {
                         key: key,
