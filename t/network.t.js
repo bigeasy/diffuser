@@ -2,7 +2,7 @@ require('proof')(2, prove)
 
 function prove (okay, callback) {
     var Destructible = require('destructible')
-    var destructible = new Destructible('t/connection.t')
+    var destructible = new Destructible(2000, 't/connection.t')
 
     var delta = require('delta')
 
@@ -84,9 +84,11 @@ function prove (okay, callback) {
                     connector.setLocations({
                         '2/0': 'http://127.0.0.1:8089/'
                     })
+                    connectee.setLocations({
+                        '2/0': 'http://127.0.0.1:8089/'
+                    })
                     setTimeout(async(), 2500)
                 }, function () {
-                    console.log('--- xxx ---')
                     key = { promise: '2/0', index: 0 }
                     hash = {
                         key: key,

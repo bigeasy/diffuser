@@ -25,9 +25,10 @@ function Connectee (destructible) {
 }
 
 Connectee.prototype.setLocations = function (locations) {
-    for (var key in this._connections) {
-        var connection = this._connections[key]
+    for (var key in this._windows) {
+        var connection = this._windows[key]
         if (!(connection.hash.key.promise in locations)) {
+            connection.hangup()
             connection.outbox.end()
         }
     }
@@ -42,6 +43,7 @@ Connectee.prototype._window = cadence(function (async, destructible, hash) {
             delete this._windows[hash.stringified]
         })
     }, function (window) {
+        window.hash = hash
         destructible.destruct.wait(window, 'hangup')
         this._windows[hash.stringified] = window
     })
@@ -50,7 +52,8 @@ Connectee.prototype._window = cadence(function (async, destructible, hash) {
 Connectee.prototype._conduit = cadence(function (async, destructible, window, socket) {
     async(function () {
         destructible.monitor('conduit', Conduit, window, socket, socket, async())
-    }, function () {
+    }, function (conduit) {
+        destructible.destruct.wait(conduit, 'hangup')
         window.reconnect()
     })
 })
@@ -78,10 +81,10 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
         // TODO Haven't really sorted out who shuts down Windows and Conduits
         // yet.
         async([function () {
-            var destructible = new Destructible([ 'conduit', message.from ])
+            var destructible = new Destructible(800, [ 'conduit', message.from ])
             destructible.completed.wait(async())
-            destructible.monitor('socket', this, '_conduit', window, socket, null)
-            delta(destructible.monitor('conduit')).ee(socket).on('close')
+            destructible.monitor('conduit', this, '_conduit', window, socket, null)
+            // delta(destructible.monitor('socket')).ee(socket).on('close')
         }, function (error) {
             socket.destroy()
             logger.error('socket', { stack: error.stack })
