@@ -83,6 +83,7 @@ require('arguable')(module, function (program, callback) {
         }, function (olio) {
             async(function () {
                 destructible.monitor('diffuser', Diffuser, {
+                    olio: olio,
                     router: cadence(function (async, envelope) {
                         switch (envelope.method) {
                         case 'set':
@@ -93,15 +94,13 @@ require('arguable')(module, function (program, callback) {
                         }
                     }),
                     terminus: cadence(function (async, envelope) {
-                        return { index: olio._index }
+                        return { index: olio.index }
                     })
                 }, async())
             }, function (diffuser) {
                 async(function () {
-                    // TODO Okay. Now we do need Window. We are expecting that these
-                    // messages are sent successfully, eventually. Hmm… Use Paxos?
                     // TODO Maybe post and wait to see that it is set. Yeah.
-                    diffuser.set({ name: 'run', index: olio._index }, async())
+                    diffuser.register({ name: 'run', index: olio.index }, async())
                 }, function () {
                     var server = http.createServer(service.router.middleware)
                     destroyer(server)

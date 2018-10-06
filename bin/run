@@ -1,0 +1,7 @@
+#!/bin/sh
+
+PATH=$PATH:./node_modules/.bin
+
+olio listen --socket ./socket \
+    "$(olio serve --workers 1 --name run ./bin/run.bin.js)" \
+    "$(olio serve --workers 1 --name diffuser ./diffuser.bin.js)"

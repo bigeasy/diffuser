@@ -4,7 +4,10 @@
     ___ usage ___ en_US ___
     usage: diffuser
 
-            --help                      display this message
+      -b, --bind <interface:port> end point for consensus
+      -B, --buckets     <integer> count of buckets
+      -c, --commpassion  <string> compassion URL
+      --help                      display this message
 
     ___ $ ___ en_US ___
 
@@ -31,8 +34,17 @@ require('arguable')(module, function (program, callback) {
 
     var Olio = require('olio')
 
+    var http = require('http')
+    var destroyer = require('server-destroy')
+
     cadence(function (async) {
+        var consensus = new Consensus(program.ultimate.compassion, program.ultimate.buckets)
+        var server = http.createServer(consensus.reactor.middleware)
+        destroyer(server)
+        destructible.destruct.wait(server, 'destroy')
         async(function () {
+            program.bind.listen(server, async())
+        }, function () {
             destructible.monitor('olio', Olio, async())
         }, function (olio) {
             program.ready.unlatch()
