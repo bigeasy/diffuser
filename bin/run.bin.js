@@ -11,7 +11,7 @@ require('arguable')(module, function (program, callback) {
     var Procedure = require('conduit/procedure')
 
     var Destructible = require('destructible')
-    var destructible = new Destructible('./t/run.bin.js')
+    var destructible = new Destructible('bin/run.bin.js')
     var cadence = require('cadence')
 
     var logger = require('prolific.logger').createLogger('olio.echo')
@@ -26,6 +26,7 @@ require('arguable')(module, function (program, callback) {
     var Olio = require('olio')
     var Diffuser = require('..')
 
+    // TODO Curious case where if we exit while waiting.
     destructible.completed.wait(callback)
 
     var cadence = require('cadence')
@@ -82,7 +83,10 @@ require('arguable')(module, function (program, callback) {
             destructible.monitor('olio', Olio, async())
         }, function (olio) {
             async(function () {
+                setImmediate(async())
+            }, function () {
                 destructible.monitor('diffuser', Diffuser, {
+                    olio: olio,
                     router: cadence(function (async, envelope) {
                         switch (envelope.method) {
                         case 'set':
@@ -93,15 +97,15 @@ require('arguable')(module, function (program, callback) {
                         }
                     }),
                     terminus: cadence(function (async, envelope) {
-                        return { index: olio._index }
+                        return { index: olio.index }
                     })
                 }, async())
             }, function (diffuser) {
+                console.log('DIFFUSER IS FINALLY READY!!!!')
+                process.exit()
                 async(function () {
-                    // TODO Okay. Now we do need Window. We are expecting that these
-                    // messages are sent successfully, eventually. Hmm… Use Paxos?
                     // TODO Maybe post and wait to see that it is set. Yeah.
-                    diffuser.set({ name: 'run', index: olio._index }, async())
+                    diffuser.register({ name: 'run', index: olio.index }, async())
                 }, function () {
                     var server = http.createServer(service.router.middleware)
                     destroyer(server)

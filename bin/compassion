@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export PATH=$PATH:./node_modules/.bin
+
+prolific --configuration ./prolific.json -- \
+olio listen --socket ./compassion \
+    "$(olio run --name mingle mingle --bind olio static --format 'http://%s:%d/' 127.0.0.1:8486)" \
+    "$(olio run --name compassion compassion colleague --local 8386 --network 8486 --discovery mingle)"

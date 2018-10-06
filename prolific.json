@@ -1,0 +1,7 @@
+{
+    "accept": true,
+    "chain": [],
+    "pipeline": [{
+        "module":  "prolific.stdio"
+    }]
+}

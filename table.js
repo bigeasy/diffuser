@@ -4,7 +4,8 @@ function Table () {
     this.buckets = null
 }
 
-Table.prototype.bootstrap = function (count) {
+Table.prototype.bootstrap = function (self, count) {
+    this.self = self
     this.properties = {}
     this.addresses = []
     this.buckets = new Array(count).fill(null)
@@ -12,13 +13,15 @@ Table.prototype.bootstrap = function (count) {
 
 Table.prototype.getSnapshot = function () {
     return JSON.parse(JSON.stringify({
+        self: this.self,
         properties: this.properties,
         addresses: this.addresses,
         buckets: this.buckets
     }))
 }
 
-Table.prototype.join = function (snapshot) {
+Table.prototype.join = function (self, snapshot) {
+    this.self = self
     this.properties = snapshot.properties
     this.addresses = snapshot.addresses
     this.buckets = snapshot.buckets

@@ -3,7 +3,7 @@ require('proof')(5, prove)
 function prove (okay) {
     var Table = require('../table')
     var table = new Table
-    table.bootstrap(7)
+    table.bootstrap('1/0', 7)
     table.arrive('1/0', { isRouter: true })
     okay({
         addresses: table.addresses,
@@ -12,7 +12,7 @@ function prove (okay) {
         addresses: [ '1/0' ],
         buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ]
     }, 'join')
-    table.join(table.getSnapshot())
+    table.join('1/0', table.getSnapshot())
     table.arrive('2/0', { isRouter: true })
     okay({
         addresses: table.addresses,
@@ -31,6 +31,7 @@ function prove (okay) {
     }, 'second arrival')
     table.arrive('4/0', { isRouter: false })
     okay(table.getSnapshot(), {
+        self: '1/0',
         properties: {
             '1/0': { isRouter: true },
             '2/0': { isRouter: true },

@@ -52,16 +52,17 @@ Diffuser.prototype.ping = cadence(function (async) {
 })
 
 Diffuser.prototype.register = cadence(function (async, request) {
+    console.log('--- registered!!!! ---')
     this._token = request.body.token
     return 200
 })
 
-Diffuser.prototype.bootstrap = cadence(function (async) {
-    this._table.bootstrap(this._count)
+Diffuser.prototype.bootstrap = cadence(function (async, request) {
+    this._table.bootstrap(request.body.self.arrived, this._count)
     return 200
 })
 
-Diffuser.prototype.join = cadence(function (async, conference) {
+Diffuser.prototype.join = cadence(function (async, request) {
     async(function () {
         this._ua.fetch({
             url: this._compassionUrl,
@@ -72,7 +73,7 @@ Diffuser.prototype.join = cadence(function (async, conference) {
             raise: true
         }, async())
     }, function (body) {
-        this._table.join(body)
+        this._table.join(request.body.self.arrived, body)
         return 200
     })
 })
@@ -86,6 +87,7 @@ Diffuser.prototype.snapshot = cadence(function (async, request) {
 })
 
 Diffuser.prototype.arrive = cadence(function (async, request) {
+    console.log(request.body)
     this._cubbyholes.set(request.body.government.promise, null, this._table.getSnapshot())
     this._table.arrive(request.body.government.promise, request.body.arrived.properties)
     this.routes.push(this._table.getSnapshot())
