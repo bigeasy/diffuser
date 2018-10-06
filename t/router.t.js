@@ -18,7 +18,7 @@ function prove (okay) {
                 from: '1/0',
                 to: '1/0',
                 hashed: { hash: 0, stringified: '0', key: 0 },
-                service: 'router',
+                destination: 'router',
                 type: 'request',
                 body: 1
             }, 'acted')
@@ -31,24 +31,28 @@ function prove (okay) {
     router.locate(hashes[0], '4/0')
     router.locate(hashes[1], '4/0')
     router.push({
+        destination: 'terminus',
         hashed: hashes[0],
         gatherer: 'udp://127.0.0.1:8514/1/1',
         from: '1/0',
         body: 0
     })
     router.push({
+        destination: 'terminus',
         hashed: hashes[1],
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: '1/0',
         body: 1
     })
     router.push({
+        destination: 'terminus',
         hashed: hashes[2],
         gatherer: 'udp://127.0.0.1:8514/1/4',
         from: '1/0',
         body: 2
     })
     router.push({
+        destination: 'terminus',
         hashed: hashes[3],
         gatherer: 'udp://127.0.0.1:8514/1/2',
         from: '1/0',
@@ -69,7 +73,7 @@ function prove (okay) {
         from: '1/0',
         to: '1/0',
         hashed: { hash: 0, stringified: '0', key: 0 },
-        service: 'router',
+        destination: 'router',
         type: 'request',
         body: 1
     })

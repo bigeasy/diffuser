@@ -79,9 +79,11 @@ function ActiveBucket (actor, client, locations) {
 ActiveBucket.prototype.locate = locate
 
 ActiveBucket.prototype.push = function (envelope) {
-    if (envelope.service == 'router') {
+    switch (envelope.destination) {
+    case 'router':
         this._actor.act(envelope)
-    } else {
+        break
+    case 'terminus':
         var address = this._locations[envelope.hashed.stringified]
         if (address == null) {
             logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
@@ -104,6 +106,7 @@ ActiveBucket.prototype.push = function (envelope) {
                 body: envelope.body
             })
         }
+        break
     }
 }
 
