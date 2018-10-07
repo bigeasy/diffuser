@@ -4,4 +4,4 @@ PATH=$PATH:./node_modules/.bin
 
 olio listen --socket ./socket \
     "$(olio serve --workers 1 --name run ./bin/run.bin.js)" \
-    "$(olio serve --workers 1 --name diffuser ./diffuser.bin.js)"
+    "$(olio serve --workers 1 --name diffuser ./diffuser.bin.js --bind 127.0.0.1:8286 --compassion http://127.0.0.1:8386 --buckets 7)"

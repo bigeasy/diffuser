@@ -11,7 +11,7 @@ require('arguable')(module, function (program, callback) {
     var Procedure = require('conduit/procedure')
 
     var Destructible = require('destructible')
-    var destructible = new Destructible('./t/run.bin.js')
+    var destructible = new Destructible('bin/run.bin.js')
     var cadence = require('cadence')
 
     var logger = require('prolific.logger').createLogger('olio.echo')
@@ -26,6 +26,7 @@ require('arguable')(module, function (program, callback) {
     var Olio = require('olio')
     var Diffuser = require('..')
 
+    // TODO Curious case where if we exit while waiting.
     destructible.completed.wait(callback)
 
     var cadence = require('cadence')
@@ -82,6 +83,8 @@ require('arguable')(module, function (program, callback) {
             destructible.monitor('olio', Olio, async())
         }, function (olio) {
             async(function () {
+                setImmediate(async())
+            }, function () {
                 destructible.monitor('diffuser', Diffuser, {
                     olio: olio,
                     router: cadence(function (async, envelope) {

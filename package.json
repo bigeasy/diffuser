@@ -25,6 +25,7 @@
                             "cubbyhole":                    "1.0.x",
                             "delta":                        "1.4.x",
                             "demur":                        "0.1.x",
+                            "departure":                    "0.0.x",
                             "destructible":                 "0.33.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
@@ -37,10 +38,15 @@
                             "reactor":                      "10.5.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "4.6.x",
+                            "vivifyer":                     "0.0.x",
                             "vizsla":                       "12.12.x"
     },
     "devDependencies":
     {
+                            "compassion":                   "1.2.x",
+                            "compassion.colleague":         "0.42.x",
+                            "mingle":                       "0.11.x",
+                            "mingle.static":                "0.7.x",
                             "proof":                        "3.0.x"
     },
     "main":                 "diffuser",
