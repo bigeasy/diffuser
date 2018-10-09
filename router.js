@@ -123,7 +123,7 @@ ActiveBucket.prototype.drop = noop
 function Router (actor, client, identifier) {
     this._actor = actor
     this._client = client
-    this._idenifier = identifier
+    this._identifier = identifier
     this._route = []
 }
 
@@ -145,7 +145,7 @@ Router.prototype.setRoutes = function (promise, buckets, counts) {
     this._buckets = buckets
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
-        if (this._idenifier == buckets[i]) {
+        if (this._identifier == buckets[i]) {
             updated[i] = new WaitingBucket(this._actor, this._client, updated, i)
         } else {
             updated[i] = new RouteBucket(this._client, promise, buckets, counts)
