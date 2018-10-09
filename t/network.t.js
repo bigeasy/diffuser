@@ -51,14 +51,10 @@ function prove (okay, callback) {
             delta(destructible.monitor('http')).ee(server).on('close')
             destructible.destruct.wait(server, 'destroy')
 
-            var Keyify = require('keyify')
-            var key = { promise: '1/0', index: 0 }
-            var hash = {
-                key: key,
-                stringified: Keyify.stringify(key)
-            }
+            var to = { promise: '1/0', index: 1 }
+            var from = { promise: '0/0', index: 0 }
             async(function () {
-                destructible.monitor('connector', Connector, '0/0', 0, async())
+                destructible.monitor('connector', Connector, from, async())
             }, function (connector) {
                 async(function () {
                     connectee.inbox.shifter().dequeue(async())
@@ -66,7 +62,7 @@ function prove (okay, callback) {
                         '1/0': 'http://127.0.0.1:8089/',
                         '2/0': 'http://127.0.0.1:8089/'
                     })
-                    var outbox = connector.connect(hash)
+                    var outbox = connector.connect(to)
                     outbox.push(1)
                     async(function () {
                         setTimeout(async(), 2500)
@@ -89,15 +85,11 @@ function prove (okay, callback) {
                     })
                     setTimeout(async(), 2500)
                 }, function () {
-                    key = { promise: '2/0', index: 0 }
-                    hash = {
-                        key: key,
-                        stringified: Keyify.stringify(key)
-                    }
+                    to = { promise: '2/0', index: 0 }
                     fail.connectee = 1
                     connectee.inbox.shifter().dequeue(async())
-                    connector.connect(hash)
-                    var outbox = connector.connect(hash)
+                    connector.connect(to)
+                    var outbox = connector.connect(to)
                     outbox.push(2)
                 }, function (value) {
                     okay(value, 2, 'second push')

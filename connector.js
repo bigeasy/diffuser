@@ -22,52 +22,47 @@ var Demur = require('demur')
 
 var Signal = require('signal')
 
-function Connector (destructible, promise, index) {
+var Connections = require('./connections')
+
+function Connector (destructible, from) {
     this.feedback = new Procession
-    this._connections = {}
+    this._connections = new Connections(function (to, shifter) {
+        this._destructible.monitor([ 'connector-?', to ], true, this, '_connect', to, shifter, null)
+    }.bind(this))
     this._destructible = destructible
-    this._promise = promise
-    this._index = index
+    this._from = from
     destructible.destruct.wait(this, function () {
         this.setLocations({})
     })
 }
 
 Connector.prototype.setLocations = function (locations) {
-    for (var key in this._connections) {
-        var connection = this._connections[key]
-        if (!(connection.hash.key.promise in locations)) {
-            connection.outbox.end()
-            connection.shutdown.unlatch()
+    this._connections.promises().forEach(function (promise) {
+        if (!(promise in locations)) {
+            this._connections.list(promise).forEach(function (connection) {
+                connection.outbox.end()
+                connection.shutdown.unlatch()
+            })
         }
-    }
+    }, this)
     this._locations = locations
 }
 
-Connector.prototype.connect = function (hash) {
-    var connection = this._connections[hash.stringified]
-    if (connection == null) {
-        connection = this._connections[hash.stringified] = {
-            hash: hash,
-            outbox: new Procession,
-            shutdown: new Signal
-        }
-        var shifter = connection.outbox.shifter()
-        this._destructible.monitor([ 'connector-?', hash.key ], true, this, '_connect', hash, shifter, null)
-    }
-    return connection.outbox
+Connector.prototype.connect = function (to) {
+    console.log( this._connections.get(to).outbox)
+    return this._connections.get(to).outbox
 }
 
 var COUNTER = 0
-Connector.prototype._connect = cadence(function (async, destructible, hash, shifter) {
-    var shutdown = this._connections[hash.stringified].shutdown
+Connector.prototype._connect = cadence(function (async, destructible, to, shifter) {
+    var shutdown = this._connections.get(to).shutdown
     shutdown.wait(destructible, 'destroy')
     var done = destructible.monitor('retries')
     var looped = 0
     var demur = new Demur
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
-    var location = url.parse(this._locations[hash.key.promise])
+    var location = url.parse(this._locations[to.promise])
     destructible.destruct.wait(sender.inbox, 'end')
     destructible.destruct.wait(demur, 'cancel')
     async([function () {
@@ -88,10 +83,10 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
                     host: location.hostname,
                     port: +location.port,
                     headers: Downgrader.headers({
-                        'x-diffuser-from-promise': this._promise,
-                        'x-diffuser-from-index': this._index,
-                        'x-diffuser-to-promise': hash.key.promise,
-                        'x-diffuser-to-index': hash.key.index
+                        'x-diffuser-from-promise': this._from.promise,
+                        'x-diffuser-from-index': this._from.index,
+                        'x-diffuser-to-promise': to.promise,
+                        'x-diffuser-to-index': to.index
                     })
                 })
                 delta(async()).ee(request).on('upgrade')
@@ -100,7 +95,7 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
                 var wait = null
                 async(function () {
                     demur.reset()
-                    var destructible = new Destructible([ 'connection', hash.key ])
+                    var destructible = new Destructible([ 'connection', to ])
                     destructible.completed.wait(async())
                     destructible.monitor('conduit', Conduit, window, socket, socket, head, null)
                     delta(destructible.monitor('socket')).ee(socket).on('close')
@@ -113,10 +108,10 @@ Connector.prototype._connect = cadence(function (async, destructible, hash, shif
             logger.error('error', { stack: error.stack })
         }])()
     }, function () {
-        delete this._connections[hash.stringified]
+        this._connections.remove(to)
     })
 })
 
-module.exports = cadence(function (async, destructible, promise, index) {
-    return new Connector(destructible, promise, index)
+module.exports = cadence(function (async, destructible, from) {
+    return new Connector(destructible, from)
 })
