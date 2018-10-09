@@ -1,53 +1,16 @@
-require('proof')(3, prove)
+require('proof')(2, prove)
 
-function prove (okay, callback) {
+function prove (okay) {
     var Client = require('../client')
 
-    var Destructible = require('destructible')
-    var destructible = new Destructible('t/client.t')
+    var pushed = []
+    var client = new Client({
+        connect: function (to) {
+            okay(to, { promise: '1/0', index: 0 }, 'connecting')
+            return pushed
+        }
+    })
 
-    destructible.completed.wait(callback)
-
-    var cadence = require('cadence')
-
-    var queue = []
-
-    var setLocation = 1
-
-    function Connection (location, shifter) {
-        okay(location, setLocation, 'set location ' + setLocation)
-        setLocation++
-        shifter.pump(function (envelope) {
-            queue.push(envelope)
-        }, destructible.monitor([ 'queue', location ]))
-    }
-
-    cadence(function (async) {
-        async(function () {
-            destructible.monitor('client', Client, Connection, async())
-        }, function (client) {
-            client.setRoutes({
-                properties: {
-                    '1/0': { location: 1 },
-                    '2/0': { location: 2 }
-                }
-            })
-            client.push({ to: '1/0', body: 1 })
-            client.push({ to: '1/0', body: 2 })
-            client.push({ to: '2/0', body: 1 })
-            client.setRoutes({
-                properties: {
-                    '1/0': { location: 1 }
-                }
-            })
-            okay(queue, [{
-                to: '1/0', body: 1
-            }, {
-                to: '1/0', body: 2
-            }, {
-                to: '2/0', body: 1
-            }, null], 'queue')
-            client.setRoutes({ properties: {} })
-        })
-    })(destructible.monitor('test'))
+    client.push({ to: { promise: '1/0', index: 0 } })
+    okay(pushed, [{ to: { promise: '1/0', index: 0 } }], 'pushed')
 }
