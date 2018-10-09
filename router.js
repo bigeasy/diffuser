@@ -9,9 +9,11 @@ function locate (stringified, address) {
     this._locations[stringified] = address
 }
 
-function RouteBucket(client, address) {
+function RouteBucket(client, promise, buckets, counts) {
     this._client = client
-    this._address = address
+    this._promise = promise
+    this._buckets = buckets
+    this._counts = counts
 }
 
 RouteBucket.prototype.locate = noop
@@ -19,12 +21,16 @@ RouteBucket.prototype.locate = noop
 // TODO Reroute if we're the wrong worker index.
 RouteBucket.prototype.push = function (envelope) {
     logger.notice('rerouted', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
+    var promise = this._buckets[envelope.hashed.hash % this._buckets.length]
     // TODO Come back and account for hops. Why not?
     this._client.push({
+        promise: this._promise,
         gatherer: envelope.gatherer,
         from: envelope.from,
-        // TODO Let client hash using its own table.
-        to: this._address,
+        to: {
+            promise: promise,
+            index: envelope.hashed.hash % this._counts[promise]
+        },
         hashed: envelope.hashed,
         type: 'request',
         body: envelope.body
@@ -38,7 +44,7 @@ RouteBucket.prototype.drop = noop
 function WaitingBucket (actor, client, buckets, index) {
     this._actor = actor
     this._client = client
-    this._buckets = buckets
+    this._route = buckets
     this._index = index
     this._queue = new Procession
     this._shifter = this._queue.shifter()
@@ -53,7 +59,7 @@ WaitingBucket.prototype.push = function (envelope) {
 }
 
 WaitingBucket.prototype.ready = function () {
-    var bucket = this._buckets[this._index] = new ActiveBucket(this._actor, this._client, this._locations)
+    var bucket = this._route[this._index] = new ActiveBucket(this._actor, this._client, this._locations)
     var envelope = null
     while ((envelope = this._shifter.shift()) != null) {
         bucket.push(envelope)
@@ -118,39 +124,41 @@ function Router (actor, client, identifier) {
     this._actor = actor
     this._client = client
     this._idenifier = identifier
-    this._buckets = []
+    this._route = []
 }
 
 Router.prototype.locate = function (hashed, value) {
-    Interrupt.assert(this._buckets.length != 0, 'no.buckets')
-    this._buckets[hashed.hash % this._buckets.length].locate(hashed.stringified, value)
+    Interrupt.assert(this._route.length != 0, 'no.buckets')
+    this._route[hashed.hash % this._route.length].locate(hashed.stringified, value)
 }
 
 Router.prototype.push = function (envelope) {
-    if (this._buckets.length == 0) {
+    if (this._route.length == 0) {
         logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
-        this._buckets[envelope.hashed.hash % this._buckets.length].push(envelope)
+        this._route[envelope.hashed.hash % this._route.length].push(envelope)
     }
 }
 
-Router.prototype.setBuckets = function (buckets) {
+Router.prototype.setRoutes = function (promise, buckets, counts) {
+    this._counts = counts
+    this._buckets = buckets
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._idenifier == buckets[i]) {
             updated[i] = new WaitingBucket(this._actor, this._client, updated, i)
         } else {
-            updated[i] = new RouteBucket(this._client, this._idenifier)
+            updated[i] = new RouteBucket(this._client, promise, buckets, counts)
         }
-        if (this._buckets[i] != null) {
-            this._buckets[i].drop(updated[i])
+        if (this._route[i] != null) {
+            this._route[i].drop(updated[i])
         }
     }
-    this._buckets = updated
+    this._route = updated
 }
 
 Router.prototype.ready = function () {
-    this._buckets.forEach(function (bucket) { bucket.ready() })
+    this._route.forEach(function (bucket) { bucket.ready() })
 }
 
 module.exports = Router
