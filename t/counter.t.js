@@ -1,31 +1,12 @@
-require('proof')(1, prove)
+require('proof')(4, prove)
 
 function prove (okay) {
     var Counter = require('../counter')
-    var arrivals = []
-    var counter = new Counter({
-        set: function (hashed, address) {
-            arrivals.push({ hashed: hashed, address: address })
-        }
-    }, 2)
+    var counter = new Counter
 
-    counter.arrived({
-        address: '2/0', identifiers: [ 0, 1 ]
-    })
-    counter.arrived({
-        address: '2/0', identifiers: [ 0, 1 ]
-    })
-    counter.arrived({
-        address: '3/0', identifiers: [ 2 ]
-    })
-    okay(arrivals, [{
-        hashed: { hash: 890022063, stringified: '0', key: 0 },
-        address: '2/0'
-    }, {
-        hashed: { hash: 873244444, stringified: '1', key: 1 },
-        address: '2/0'
-    }, {
-        hashed: { hash: 923577301, stringified: '2', key: 2 },
-        address: '3/0'
-    }], 'arrivals')
+    okay(counter.increment('1/0'), 1, 'start')
+    okay(counter.increment('1/0'), 2, 'increment')
+    okay(counter.increment('2/0'), 1, 'next start')
+    counter.updated('1/0')
+    okay(counter.increment('2/0'), 2, 'next increment')
 }
