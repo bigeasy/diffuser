@@ -39,7 +39,7 @@ function prove (okay, callback) {
         from: '1/0',
         to: '1/0',
         status: 'received',
-        body: 'a'
+        values: [ 'a' ]
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/2',
         method: 'respond',
@@ -49,7 +49,7 @@ function prove (okay, callback) {
         from: '1/0',
         to: '1/0',
         status: 'received',
-        body: 'b'
+        values: [ 'b' ]
     }], 'actor')
     destructible.destroy()
 }
