@@ -19,10 +19,11 @@ Actor.prototype.act = function (client, envelope) {
 
 Actor.prototype._act = cadence(function (async, envelope) {
     var client = envelope.body.client, envelope = envelope.body.envelope
+    console.log(envelope)
     async([function () {
         async(function () {
             this._f.call(null, envelope.body, async())
-        }, function (result) {
+        }, [], function (values) {
             client.push({
                 gatherer: envelope.gatherer,
                 method: 'respond',
@@ -32,7 +33,7 @@ Actor.prototype._act = cadence(function (async, envelope) {
                 to: envelope.from,
                 status: 'received',
                 cookie: envelope.cookie,
-                body: result
+                values: values
             })
         })
     }, function (error) {
@@ -47,7 +48,7 @@ Actor.prototype._act = cadence(function (async, envelope) {
             to: envelope.from,
             status: 'error',
             cookie: envelope.cookie,
-            body: error.message
+            values: [ error.message ]
         })
     }])
 })

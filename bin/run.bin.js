@@ -49,20 +49,21 @@ require('arguable')(module, function (program, callback) {
 
     Service.prototype.post = cadence(function (async, request, key) {
         async(function () {
-            this.diffuser.route('router', {
+            this.diffuser.route('router', key, {
                 module: 'example',
                 method: 'set',
                 key: key,
                 value: request.body.value
             }, async())
-        }, function () {
+        }, function (response) {
+            console.log('>>>>> !!!!! >>>!>!>>!', response)
             return 200
         })
     })
 
     Service.prototype.get = cadence(function (async, request, key) {
         async(function () {
-            this.diffuser.route('router', {
+            this.diffuser.route('router', key, {
                 module: 'example',
                 method: 'get',
                 key: key
@@ -91,6 +92,7 @@ require('arguable')(module, function (program, callback) {
             async(function () {
                 setImmediate(async())
             }, function () {
+                var storage = {}
                 destructible.monitor('diffuser', Diffuser, {
                     olio: olio,
                     router: cadence(function (async, envelope) {
@@ -114,6 +116,9 @@ require('arguable')(module, function (program, callback) {
                 }, function () {
                     service.post({ body: { value: 'value' } }, 'key', async())
                 }, function () {
+                    service.get({ body: {} }, 'key', async())
+                }, [], function (response) {
+                    console.log(response)
                     var server = http.createServer(service.reactor.middleware)
                     destroyer(server)
                     destructible.destruct.wait(server, 'destroy')

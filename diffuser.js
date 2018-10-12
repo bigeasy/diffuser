@@ -10,6 +10,7 @@ var Interrupt = require('interrupt').createInterrupter('diffuser')
 var Hash = require('./hash')
 var Router = require('./router')
 var Cliffhanger = require('cliffhanger')
+var Actor = require('./actor')
 
 var Counter = require('./counter')
 
@@ -65,7 +66,7 @@ Diffuser.prototype._initialize = cadence(function (async, destructible, ready, m
             locations[promise] = message.body.properties[promise].location
             counts[promise] = message.body.properties[promise].count
         }
-        this._router = new Router(null, this._client, message.body.self)
+        this._router = new Router(new Actor(destructible, this._actors.router), this._client, message.body.self)
         this._router.setRoutes(message.body.self, message.body.buckets, counts)
         this._connector = connector
         this._connector.setLocations(locations)
@@ -136,7 +137,7 @@ Diffuser.prototype.register = cadence(function (async, key) {
     })
 })
 
-Diffuser.prototype.route = cadence(function (async, destination, key) {
+Diffuser.prototype.route = cadence(function (async, destination, key, value) {
     var hashed = Hash(key)
     var buckets = this._routes.buckets
     var promise = buckets[hashed.hash % buckets.length]
@@ -146,13 +147,15 @@ Diffuser.prototype.route = cadence(function (async, destination, key) {
         this._router.push({
             destination: 'router',
             method: 'react',
+            hashed: hashed,
             to: to,
+            body: value,
             from: this._from,
             cookie: this._cliffhanger.invoke(async())
         })
     }, function (response) {
         console.log(response)
-        return response
+        return { status: response.status, values: response.values }
     })
 })
 
