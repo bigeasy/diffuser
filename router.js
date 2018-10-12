@@ -95,6 +95,7 @@ ActiveBucket.prototype.push = function (envelope) {
                 gatherer: envelope.gatherer,
                 method: 'respond',
                 destination: 'source',
+                hashed: envelope.hashed,
                 from: envelope.from,
                 to: envelope.from,
                 status: 'received',
