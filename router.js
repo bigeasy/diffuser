@@ -41,8 +41,8 @@ RouteBucket.prototype.ready = noop
 
 RouteBucket.prototype.drop = noop
 
-function WaitingBucket (actor, client, buckets, index) {
-    this._actor = actor
+function WaitingBucket (f, client, buckets, index) {
+    this._f = f
     this._client = client
     this._route = buckets
     this._index = index
@@ -59,7 +59,7 @@ WaitingBucket.prototype.push = function (envelope) {
 }
 
 WaitingBucket.prototype.ready = function () {
-    var bucket = this._route[this._index] = new ActiveBucket(this._actor, this._client, this._locations)
+    var bucket = this._route[this._index] = new ActiveBucket(this._f, this._client, this._locations)
     var envelope = null
     while ((envelope = this._shifter.shift()) != null) {
         bucket.push(envelope)
@@ -76,8 +76,8 @@ WaitingBucket.prototype.drop = function (bucket) {
     }
 }
 
-function ActiveBucket (actor, client, locations) {
-    this._actor = actor
+function ActiveBucket (f, client, locations) {
+    this._f = f
     this._client = client
     this._locations = locations
 }
@@ -87,7 +87,6 @@ ActiveBucket.prototype.locate = locate
 ActiveBucket.prototype.push = function (envelope) {
     switch (envelope.destination) {
     case 'router':
-    console.log('>>> !!! >>>', envelope)
         switch (envelope.method) {
         case 'register':
             this._locations[envelope.hashed.stringified] = envelope.from
@@ -100,10 +99,9 @@ ActiveBucket.prototype.push = function (envelope) {
                 status: 'received',
                 cookie: envelope.cookie
             })
-            console.log(envelope, this._locations)
             break
         default:
-            this._actor.act(envelope)
+            this._f.call(null, envelope)
         }
         break
     case 'terminus':
@@ -137,8 +135,8 @@ ActiveBucket.prototype.ready = noop
 
 ActiveBucket.prototype.drop = noop
 
-function Router (actor, client, identifier) {
-    this._actor = actor
+function Router (f, client, identifier) {
+    this._f = f
     this._client = client
     this._identifier = identifier
     this._route = []
@@ -153,7 +151,6 @@ Router.prototype.push = function (envelope) {
     if (this._route.length == 0) {
         logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
-    console.log('pushed!!!', this._route[envelope.hashed.hash % this._route.length].push.toString())
         this._route[envelope.hashed.hash % this._route.length].push(envelope)
     }
 }
@@ -164,7 +161,7 @@ Router.prototype.setRoutes = function (promise, buckets, counts) {
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
         if (this._identifier == buckets[i]) {
-            updated[i] = new WaitingBucket(this._actor, this._client, updated, i)
+            updated[i] = new WaitingBucket(this._f, this._client, updated, i)
         } else {
             updated[i] = new RouteBucket(this._client, promise, buckets, counts)
         }

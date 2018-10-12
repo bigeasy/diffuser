@@ -11,18 +11,16 @@ function prove (okay) {
     var client = []
     client.hostname = 'x'
     var Hash = require('../hash')
-    var actor = {
-        act: function (envelope) {
-            okay(envelope, {
-                gatherer: 'udp://127.0.0.1:8514/1/5',
-                from: { promise: '1/0', index: 0 },
-                to: '1/0',
-                hashed: { hash: 0, stringified: '0', key: 0 },
-                destination: 'router',
-                type: 'request',
-                body: 1
-            }, 'acted')
-        }
+    var actor = function (envelope) {
+        okay(envelope, {
+            gatherer: 'udp://127.0.0.1:8514/1/5',
+            from: { promise: '1/0', index: 0 },
+            to: '1/0',
+            hashed: { hash: 0, stringified: '0', key: 0 },
+            destination: 'router',
+            type: 'request',
+            body: 1
+        }, 'acted')
     }
     var Router = require('../router')
     var router = new Router(actor, client, '1/0')
