@@ -12,7 +12,7 @@ function prove (okay) {
     client.hostname = 'x'
     var Hash = require('../hash')
     var actor = {
-        act: function (envelope) {
+        act: function (client, envelope) {
             okay(envelope, {
                 gatherer: 'udp://127.0.0.1:8514/1/5',
                 from: { promise: '1/0', index: 0 },

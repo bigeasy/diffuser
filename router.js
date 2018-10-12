@@ -103,7 +103,7 @@ ActiveBucket.prototype.push = function (envelope) {
             console.log(envelope, this._locations)
             break
         default:
-            this._actor.act(envelope)
+            this._actor.act(this._client, envelope)
         }
         break
     case 'terminus':
