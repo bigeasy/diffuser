@@ -75,7 +75,7 @@ require('arguable')(module, function (program, callback) {
 
     Service.prototype.route = cadence(function (async, request, index) {
         async(function () {
-            this.diffuser.route('terminus', {
+            this.diffuser.route('sink', {
                 module: 'example',
                 method: 'get',
                 key: { name: 'run', index: +index }
@@ -119,6 +119,7 @@ require('arguable')(module, function (program, callback) {
                     service.get({ body: {} }, 'key', async())
                 }, [], function (response) {
                     console.log(response)
+                    service.route({ body: {} }, 'key', async())
                     var server = http.createServer(service.reactor.middleware)
                     destroyer(server)
                     destructible.destruct.wait(server, 'destroy')

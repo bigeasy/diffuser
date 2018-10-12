@@ -31,28 +31,28 @@ function prove (okay) {
     router.locate(hashes[0], '4/0')
     router.locate(hashes[1], '4/0')
     router.push({
-        destination: 'terminus',
+        destination: 'sink',
         hashed: hashes[0],
         gatherer: 'udp://127.0.0.1:8514/1/1',
         from: { promise: '1/0', index: 0 },
         body: 0
     })
     router.push({
-        destination: 'terminus',
+        destination: 'sink',
         hashed: hashes[1],
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: { promise: '1/0', index: 0 },
         body: 1
     })
     router.push({
-        destination: 'terminus',
+        destination: 'sink',
         hashed: hashes[2],
         gatherer: 'udp://127.0.0.1:8514/1/4',
         from: { promise: '1/0', index: 0 },
         body: 2
     })
     router.push({
-        destination: 'terminus',
+        destination: 'sink',
         hashed: hashes[3],
         gatherer: 'udp://127.0.0.1:8514/1/2',
         from: { promise: '1/0', index: 0 },

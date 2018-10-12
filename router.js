@@ -107,7 +107,7 @@ ActiveBucket.prototype.push = function (envelope) {
             this._actor.act(this._client, envelope)
         }
         break
-    case 'terminus':
+    case 'sink':
         var address = this._locations[envelope.hashed.stringified]
         if (address == null) {
             logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })

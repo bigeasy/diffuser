@@ -48,7 +48,7 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
     this._client = null
     this._actors = {
         router: coalesce(options.router, cadence(function (async) { return null })),
-        terminus: coalesce(options.terminus, cadence(function (async) { return null }))
+        sink: coalesce(options.sink, cadence(function (async) { return null }))
     }
     this._cliffhanger = new Cliffhanger
     this._ready(destructible, callback)
