@@ -8,8 +8,6 @@ Turnstile.Queue = require('turnstile/queue')
 
 var descendent = require('foremost')('descendent')
 
-var Departure = require('departure')
-
 var Procession = require('procession')
 
 function Initializer (destructible) {

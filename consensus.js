@@ -52,7 +52,6 @@ Diffuser.prototype.ping = cadence(function (async) {
 })
 
 Diffuser.prototype.register = cadence(function (async, request) {
-    console.log('--- registered!!!! ---')
     this._token = request.body.token
     return 200
 })
@@ -87,7 +86,6 @@ Diffuser.prototype.snapshot = cadence(function (async, request) {
 })
 
 Diffuser.prototype.arrive = cadence(function (async, request) {
-    console.log(request.body)
     this._cubbyholes.set(request.body.government.promise, null, this._table.getSnapshot())
     this._table.arrive(request.body.government.promise, request.body.arrived.properties)
     this.routes.push(this._table.getSnapshot())
@@ -101,7 +99,7 @@ Diffuser.prototype.acclimated = cadence(function (async, request) {
 
 Diffuser.prototype.depart = cadence(function (async, request) {
     this._cubbyholes.remove(request.body.departed.promise)
-    this._table.depart(request.body.departed.promise)
+    this._table.depart(request.body.departed.promise, request.body.government.promise)
     this.routes.push(this._table.getSnapshot())
     return 200
 })

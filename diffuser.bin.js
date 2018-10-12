@@ -45,12 +45,24 @@ require('arguable')(module, function (program, callback) {
     var Embarkator = require('./embarkator')
     var Updater = require('./updater')
 
+    var Socketeer = require('./socketeer')
+
     var UserAgent = require('vizsla')
     var ua = new UserAgent().bind({ url: program.ultimate.compassion })
+
+    var Downgrader = require('downgrader')
+    var downgrader = new Downgrader
+
+    var delta = require('delta')
+
+    var Operation = require('operation')
 
     cadence(function (async) {
         var consensus = new Consensus(program.ultimate.compassion, +program.ultimate.buckets)
         var server = http.createServer(consensus.reactor.middleware)
+
+        server.on('upgrade', Operation([ downgrader, 'upgrade' ]))
+
         destroyer(server)
         destructible.destruct.wait(server, 'destroy')
         async(function () {
@@ -63,6 +75,10 @@ require('arguable')(module, function (program, callback) {
             }, async())
             destructible.monitor('updater', Updater, async())
         }, function (initializer, embarkator, updater) {
+            var socketeer = new Socketeer(destructible)
+            downgrader.on('socket', function (request, socket) {
+                socketeer.queue.push({ request: request, socket: socket })
+            })
             var embark = initializer.arrived.pump(embarkator, 'push', destructible.monitor('embark'))
             destructible.destruct.wait(embark, 'destroy')
             var update = consensus.routes.pump(updater, 'push', destructible.monitor('update'))
@@ -74,10 +90,12 @@ require('arguable')(module, function (program, callback) {
             }, function () {
                 program.ultimate.bind.listen(server, async())
             }, function () {
+                delta(destructible.monitor('http')).ee(server).on('close')
                 destructible.monitor('olio', Olio, async())
             }, function (olio) {
                 updater.olio.unlatch(null, olio)
                 initializer.olio.unlatch(null, olio)
+                socketeer.olio.unlatch(null, olio)
                 program.ready.unlatch()
             })
         })

@@ -31,6 +31,7 @@ function prove (okay) {
     }, 'second arrival')
     table.arrive('4/0', { isRouter: false })
     okay(table.getSnapshot(), {
+        promise: '4/0',
         self: '1/0',
         properties: {
             '1/0': { isRouter: true },

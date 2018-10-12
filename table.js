@@ -2,6 +2,7 @@ function Table () {
     this.properties = null
     this.addresses = null
     this.buckets = null
+    this.promise = null
 }
 
 Table.prototype.bootstrap = function (self, count) {
@@ -13,6 +14,7 @@ Table.prototype.bootstrap = function (self, count) {
 
 Table.prototype.getSnapshot = function () {
     return JSON.parse(JSON.stringify({
+        promise: this.promise,
         self: this.self,
         properties: this.properties,
         addresses: this.addresses,
@@ -28,6 +30,7 @@ Table.prototype.join = function (self, snapshot) {
 }
 
 Table.prototype.arrive = function (address, properties) {
+    this.promise = address
     this.properties[address] = properties
     if (properties.isRouter) {
         this.addresses.push(address)
@@ -52,7 +55,8 @@ Table.prototype.arrive = function (address, properties) {
     }
 }
 
-Table.prototype.depart = function (address) {
+Table.prototype.depart = function (address, promise) {
+    this.promise = promise
     var properties = this.properties[address]
     delete this.properties[address]
     if (properties.isRouter) {

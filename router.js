@@ -87,7 +87,24 @@ ActiveBucket.prototype.locate = locate
 ActiveBucket.prototype.push = function (envelope) {
     switch (envelope.destination) {
     case 'router':
-        this._actor.act(envelope)
+    console.log('>>> !!! >>>', envelope)
+        switch (envelope.method) {
+        case 'register':
+            this._locations[envelope.hashed.stringified] = envelope.from
+            this._client.push({
+                gatherer: envelope.gatherer,
+                method: 'respond',
+                destination: 'source',
+                from: envelope.from,
+                to: envelope.from,
+                status: 'received',
+                cookie: envelope.cookie
+            })
+            console.log(envelope, this._locations)
+            break
+        default:
+            this._actor.act(envelope)
+        }
         break
     case 'terminus':
         var address = this._locations[envelope.hashed.stringified]
@@ -136,6 +153,7 @@ Router.prototype.push = function (envelope) {
     if (this._route.length == 0) {
         logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
+    console.log('pushed!!!', this._route[envelope.hashed.hash % this._route.length].push.toString())
         this._route[envelope.hashed.hash % this._route.length].push(envelope)
     }
 }

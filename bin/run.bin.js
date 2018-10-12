@@ -29,7 +29,13 @@ require('arguable')(module, function (program, callback) {
     // TODO Curious case where if we exit while waiting.
     destructible.completed.wait(callback)
 
+    var http = require('http')
+
     var cadence = require('cadence')
+
+    var Reactor = require('reactor')
+    var destroyer = require('server-destroy')
+    var delta = require('delta')
 
     function Service (diffuser) {
         this.diffuser = diffuser
@@ -43,7 +49,7 @@ require('arguable')(module, function (program, callback) {
 
     Service.prototype.post = cadence(function (async, request, key) {
         async(function () {
-            this.diffuser.send('router', {
+            this.diffuser.route('router', {
                 module: 'example',
                 method: 'set',
                 key: key,
@@ -101,13 +107,14 @@ require('arguable')(module, function (program, callback) {
                     })
                 }, async())
             }, function (diffuser) {
-                console.log('DIFFUSER IS FINALLY READY!!!!')
-                process.exit()
+                var service = new Service(diffuser)
                 async(function () {
                     // TODO Maybe post and wait to see that it is set. Yeah.
                     diffuser.register({ name: 'run', index: olio.index }, async())
                 }, function () {
-                    var server = http.createServer(service.router.middleware)
+                    service.post({ body: { value: 'value' } }, 'key', async())
+                }, function () {
+                    var server = http.createServer(service.reactor.middleware)
                     destroyer(server)
                     destructible.destruct.wait(server, 'destroy')
                     async(function () {

@@ -86,6 +86,7 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
             destructible.monitor('conduit', this, '_conduit', window, socket, null)
             // delta(destructible.monitor('socket')).ee(socket).on('close')
         }, function (error) {
+            console.log(error.stack)
             socket.destroy()
             logger.error('socket', { stack: error.stack })
         }])

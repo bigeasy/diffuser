@@ -1,27 +1,91 @@
 var cadence = require('cadence')
 var descendent = require('foremost')('descendent')
 var Connectee = require('./connectee')
+var Synchronizer = require('./synchronizer')
+var Connector = require('./connector')
+var Client = require('./client')
 var coalesce = require('extant')
 var Signal = require('signal')
 var Interrupt = require('interrupt').createInterrupter('diffuser')
+var Hash = require('./hash')
+var Router = require('./router')
+var Cliffhanger = require('cliffhanger')
 
-function Diffuser (destructible, connectee, options, callback) {
+var Counter = require('./counter')
+
+function Diffuser (destructible, connectee, synchronizer, options, callback) {
+    var counter = new Counter
+    var inbox = connectee.inbox.pump(function (envelope) {
+        console.log('envelope >>>', envelope)
+        switch (envelope.method) {
+        case 'synchronize':
+            if (envelope.body == null && envelope.promise == this._routes.promise) {
+                var count = 0
+                for (var promise in this._routes.properties) {
+                    count += this._routes.properties[promise].count
+                }
+                if (counter.increment(envelope.promise) == count) {
+                    console.log(count, this._routes)
+                    counter.updated(envelope.promise)
+                    this._router.ready()
+                }
+            } else {
+                console.log('sync!!!')
+            }
+            break
+        case 'respond':
+            this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
+            break
+        }
+    }.bind(this), destructible.monitor('inbox'))
+    destructible.destruct.wait(inbox, 'destroy')
     this._connectee = connectee
+    this._synchronizer = synchronizer
     this._olio = options.olio
     this._diffuserName = coalesce(options.diffuserName, 'diffuser')
     this._isRouter = !! options.router
-    this._router = coalesce(options.router, cadence(function (async) { return null }))
-    this._terminus = coalesce(options.terminus, cadence(function (async) { return null }))
+    this._client = null
+    this._actors = {
+        router: coalesce(options.router, cadence(function (async) { return null })),
+        terminus: coalesce(options.terminus, cadence(function (async) { return null }))
+    }
+    this._cliffhanger = new Cliffhanger
     this._ready(destructible, callback)
 }
+
+Diffuser.prototype._initialize = cadence(function (async, destructible, ready, message) {
+    this._from = { promise: message.body.self, index: this._olio.index }
+    async(function () {
+        destructible.monitor('connector', Connector, this._from, async())
+    }, function (connector) {
+        this._client = new Client(connector)
+        this._synchronizer = new Synchronizer(destructible, this._client)
+        var counts = {}, locations = {}
+        for (var promise in message.body.properties) {
+            locations[promise] = message.body.properties[promise].location
+            counts[promise] = message.body.properties[promise].count
+        }
+        this._router = new Router(null, this._client, message.body.self)
+        this._router.setRoutes(message.body.self, message.body.buckets, counts)
+        this._connector = connector
+        this._connector.setLocations(locations)
+        this._routes = message.body
+        console.log('setting !!!', this._routes)
+        this._synchronizer.queue.push({
+            promise: message.body.promise,
+            from: this._from,
+            buckets: message.body.buckets,
+            counts: counts
+        })
+        ready.unlatch()
+    })
+})
 
 Diffuser.prototype._ready = cadence(function (async, destructible) {
     destructible.destruct.wait(setImmediate.bind(null, destructible.monitor('placeholder')))
     async(function () {
         this._olio.sibling(this._diffuserName, async())
     }, function (sibling) {
-        console.log(sibling)
-        /*
         // The diffuser process is definately listening because it registered
         // itself prior to starting Olio.
         var socket = this._connectee.socket.bind(this._connectee)
@@ -29,7 +93,6 @@ Diffuser.prototype._ready = cadence(function (async, destructible) {
         destructible.destruct.wait(function () {
             descendent.removeListener('diffuser:socket', socket)
         })
-        */
         descendent.up(sibling.paths[0], 'diffuser:ready', {
             name: this._olio.name,
             index: this._olio.index,
@@ -41,8 +104,11 @@ Diffuser.prototype._ready = cadence(function (async, destructible) {
         descendent.on('diffuser:socket', function (message, socket) {
             ready.unlatch()
         }.bind(this))
-        descendent.on('diffuser:routes', function (message) {
-            ready.unlatch()
+        descendent.once('diffuser:routes', function (message) {
+            descendent.on('diffuser:routes', function (message) {
+                this._routes = message
+            }.bind(this))
+            this._initialize(destructible, ready, message, destructible.monitor('ready', true))
         }.bind(this))
         ready.wait(async())
     }, function () {
@@ -50,17 +116,43 @@ Diffuser.prototype._ready = cadence(function (async, destructible) {
     })
 })
 
-Diffuser.prototype.register = cadence(function (async, key, value) {
-    this._router.push({
-        destination: 'router',
-        method: 'register',
-        from: from,
-        gatherer: null,
-        from: from,
-        to: to,
-        hashed: Hash(key),
-        value: value,
-        cookie: cookie
+Diffuser.prototype.register = cadence(function (async, key) {
+    var hashed = Hash(key)
+    var buckets = this._routes.buckets
+    var promise = buckets[hashed.hash % buckets.length]
+    var properties = this._routes.properties[promise]
+    var to = { promise: promise, index: hashed.hash % properties.count }
+    async(function () {
+        this._router.push({
+            destination: 'router',
+            method: 'register',
+            gatherer: null,
+            from: this._from,
+            hashed: hashed,
+            cookie: this._cliffhanger.invoke(async())
+        })
+    }, function (response) {
+        return response.status == 'received'
+    })
+})
+
+Diffuser.prototype.route = cadence(function (async, destination, key) {
+    var hashed = Hash(key)
+    var buckets = this._routes.buckets
+    var promise = buckets[hashed.hash % buckets.length]
+    var properties = this._routes.properties[promise]
+    var to = { promise: promise, index: hashed.hash % properties.count }
+    async(function () {
+        this._router.push({
+            destination: 'router',
+            method: 'react',
+            to: to,
+            from: this._from,
+            cookie: this._cliffhanger.invoke(async())
+        })
+    }, function (response) {
+        console.log(response)
+        return response
     })
 })
 
@@ -69,7 +161,7 @@ module.exports = cadence(function (async, destructible, options) {
     destructible.destruct.wait(descendent, 'decrement')
     async(function () {
         destructible.monitor('connectee', Connectee, async())
-    }, function (connectee) {
-        new Diffuser(destructible, connectee, options, async())
+    }, function (connectee, synchronizer) {
+        new Diffuser(destructible, connectee, synchronizer, options, async())
     })
 })
