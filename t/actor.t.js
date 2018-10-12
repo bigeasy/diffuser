@@ -1,49 +1,55 @@
 require('proof')(1, prove)
 
-function prove (okay) {
+function prove (okay, callback) {
+    var Destructible = require('destructible')
+    var destructible = new Destructible('t/actor.t')
     var client = []
     var Actor = require('../actor')
-    var actor = new Actor(function (body) {
+    var actor = new Actor(destructible, function (body, callback) {
         switch (body) {
         case 0:
-            return {
-                method: 'respond',
-                body: 'a'
-            }
+            callback(null, 'a')
+            break
         case 1:
-            return {
-                method: 'request',
-                body: 'b',
-                key: 'b'
-            }
+            callback(null, 'b')
+            break
         }
     })
+    destructible.completed.wait(callback)
     actor.act(client, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
         hashed: { hash: 1, stringified: '1', key: 1 },
         from: '1/0',
+        cookie: 0,
         body: 0
     })
     actor.act(client, {
         gatherer: 'udp://127.0.0.1:8514/1/2',
+        hashed: {},
         from: '1/0',
+        cookie: 1,
         body: 1
-    })
-    actor.act(client, {
-        body: 2
     })
     okay(client, [{
         gatherer: 'udp://127.0.0.1:8514/1/1',
-        type: 'response',
         hashed: { hash: 1, stringified: '1', key: 1 },
+        method: 'respond',
+        destination: 'source',
+        cookie: 0,
         from: '1/0',
         to: '1/0',
+        status: 'received',
         body: 'a'
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/2',
-        type: 'request',
+        method: 'respond',
+        destination: 'source',
+        hashed: {},
+        cookie: 1,
         from: '1/0',
-        key: 'b',
+        to: '1/0',
+        status: 'received',
         body: 'b'
     }], 'actor')
+    destructible.destroy()
 }
