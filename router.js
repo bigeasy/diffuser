@@ -24,6 +24,8 @@ RouteBucket.prototype.push = function (envelope) {
     var promise = this._buckets[envelope.hashed.hash % this._buckets.length]
     // TODO Come back and account for hops. Why not?
     this._client.push({
+        destination: envelope.destination,
+        method: envelope.method,
         promise: this._promise,
         gatherer: envelope.gatherer,
         from: envelope.from,
@@ -32,7 +34,6 @@ RouteBucket.prototype.push = function (envelope) {
             index: envelope.hashed.hash % this._counts[promise]
         },
         hashed: envelope.hashed,
-        type: 'request',
         body: envelope.body
     })
 }
@@ -87,7 +88,6 @@ ActiveBucket.prototype.locate = locate
 ActiveBucket.prototype.push = function (envelope) {
     switch (envelope.destination) {
     case 'router':
-    console.log('>>> !!! >>>', envelope)
         switch (envelope.method) {
         case 'register':
             this._locations[envelope.hashed.stringified] = envelope.from
@@ -101,7 +101,6 @@ ActiveBucket.prototype.push = function (envelope) {
                 status: 'received',
                 cookie: envelope.cookie
             })
-            console.log(envelope, this._locations)
             break
         default:
             this._actor.act(this._client, envelope)
@@ -112,11 +111,12 @@ ActiveBucket.prototype.push = function (envelope) {
         if (address == null) {
             logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
             this._client.push({
+                destination: 'source',
                 gatherer: envelope.gatherer,
                 from: envelope.from,
                 to: envelope.from,
                 // TODO hashed: envelope.hashed,
-                type: 'response',
+                method: 'response',
                 body: { statusCode: 404 }
             })
         } else {
@@ -126,7 +126,7 @@ ActiveBucket.prototype.push = function (envelope) {
                 from: envelope.from,
                 to: address,
                 hashed: envelope.hashed,
-                type: 'request',
+                method: 'receive',
                 body: envelope.body
             })
         }
@@ -154,7 +154,6 @@ Router.prototype.push = function (envelope) {
     if (this._route.length == 0) {
         logger.notice('dropped', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
     } else {
-    console.log('pushed!!!', this._route[envelope.hashed.hash % this._route.length].push.toString())
         this._route[envelope.hashed.hash % this._route.length].push(envelope)
     }
 }

@@ -19,7 +19,7 @@ function prove (okay) {
                 to: '1/0',
                 hashed: { hash: 0, stringified: '0', key: 0 },
                 destination: 'router',
-                type: 'request',
+                method: 'request',
                 body: 1
             }, 'acted')
         }
@@ -39,6 +39,7 @@ function prove (okay) {
     })
     router.push({
         destination: 'sink',
+        method: 'receive',
         hashed: hashes[1],
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: { promise: '1/0', index: 0 },
@@ -46,6 +47,7 @@ function prove (okay) {
     })
     router.push({
         destination: 'sink',
+        method: 'receive',
         hashed: hashes[2],
         gatherer: 'udp://127.0.0.1:8514/1/4',
         from: { promise: '1/0', index: 0 },
@@ -53,18 +55,20 @@ function prove (okay) {
     })
     router.push({
         destination: 'sink',
+        method: 'receive',
         hashed: hashes[3],
         gatherer: 'udp://127.0.0.1:8514/1/2',
         from: { promise: '1/0', index: 0 },
         body: 3
     })
     okay(client.splice(0), [{
+        destination: 'sink',
+        method: 'receive',
         promise: '1/0',
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: { promise: '1/0', index: 0 },
         to: { promise: '2/0', index: 0 },
         hashed: { hash: 1, stringified: '1', key: 1 },
-        type: 'request',
         body: 1
     }], 'empty')
     router.setRoutes('1/0', [ '1/0', '2/0', '3/0', '1/0', '2/0', '2/0', '1/0' ], { '1/0': 1, '2/0': 1, '3/0': 1 })
@@ -75,7 +79,7 @@ function prove (okay) {
         to: '1/0',
         hashed: { hash: 0, stringified: '0', key: 0 },
         destination: 'router',
-        type: 'request',
+        method: 'request',
         body: 1
     })
     okay(log.map(function (entry) {
@@ -84,23 +88,25 @@ function prove (okay) {
         'diffuser#dropped', 'diffuser#rerouted', 'diffuser#rerouted', 'diffuser#forwarded', 'diffuser#missing'
     ], 'logging')
     okay(client.slice(), [{
+        destination: 'sink',
         promise: '1/0',
         gatherer: 'udp://127.0.0.1:8514/1/4',
-        type: 'request',
+        method: 'receive',
         from: { promise: '1/0', index: 0 },
         to: { promise: '3/0', index: 0 },
         hashed: { hash: 2, stringified: '2', key: 2 },
         body: 2
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
-        type: 'request',
+        method: 'receive',
         from: { promise: '1/0', index: 0 },
         to: '4/0',
         hashed: { hash: 0, stringified: '0', key: 0 },
         body: 0
     }, {
+        destination: 'source',
         gatherer: 'udp://127.0.0.1:8514/1/2',
-        type: 'response',
+        method: 'response',
         from: { promise: '1/0', index: 0 },
         to: { promise: '1/0', index: 0 },
         body: { statusCode: 404 }

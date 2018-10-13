@@ -61,7 +61,6 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
     var demur = new Demur
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
-    console.log('>>>', this._locations, to.promise)
     var location = url.parse(this._locations[to.promise])
     destructible.destruct.wait(sender.inbox, 'end')
     destructible.destruct.wait(demur, 'cancel')
@@ -74,7 +73,6 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
         shifter.pump(sender.outbox)
         var loop = async([function () {
             async(function () {
-                console.log('retry')
                 demur.retry(async())
             }, function () {
                 if (destructible.destroyed) {

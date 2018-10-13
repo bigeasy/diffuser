@@ -66,7 +66,8 @@ require('arguable')(module, function (program, callback) {
             this.diffuser.route('router', key, {
                 module: 'example',
                 method: 'get',
-                key: key
+                key: key,
+                value: null
             }, async())
         }, function (value) {
             return [ 200, { 'content-type': 'text/plain' }, value ]
@@ -75,10 +76,11 @@ require('arguable')(module, function (program, callback) {
 
     Service.prototype.route = cadence(function (async, request, index) {
         async(function () {
-            this.diffuser.route('sink', {
+            // TODO Yes, pass key to handler, you duplicate otherwise.
+            this.diffuser.route('sink', { name: 'run', index: 0 }, {
                 module: 'example',
                 method: 'get',
-                key: { name: 'run', index: +index }
+                key: { name: 'run', index: 0 }
             }, async())
         }, function (value) {
             return value
@@ -104,8 +106,8 @@ require('arguable')(module, function (program, callback) {
                             return coalesce(storage[envelope.key])
                         }
                     }),
-                    terminus: cadence(function (async, envelope) {
-                        return { index: olio.index }
+                    sink: cadence(function (async, envelope) {
+                        return { value: 1, index: olio.index }
                     })
                 }, async())
             }, function (diffuser) {
@@ -120,6 +122,8 @@ require('arguable')(module, function (program, callback) {
                 }, [], function (response) {
                     console.log(response)
                     service.route({ body: {} }, 'key', async())
+                }, function (response) {
+                    console.log(response)
                     var server = http.createServer(service.reactor.middleware)
                     destroyer(server)
                     destructible.destruct.wait(server, 'destroy')

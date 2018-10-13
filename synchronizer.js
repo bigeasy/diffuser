@@ -20,12 +20,10 @@ function Synchronizer (destructible, client) {
 }
 
 Synchronizer.prototype._synchronize = cadence(function (async, envelope) {
-    console.log('poppped')
     async(function () {
         async.forEach(function (promise) {
             var count = envelope.body.counts[promise]
             var loop = async(function () {
-                console.log(count, envelope.body)
                 if (count-- == 0) {
                     return [ loop.break ]
                 }

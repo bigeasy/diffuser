@@ -17,7 +17,6 @@ var Counter = require('./counter')
 function Diffuser (destructible, connectee, synchronizer, options, callback) {
     var counter = new Counter
     var inbox = connectee.inbox.pump(function (envelope) {
-        console.log('envelope >>>', envelope)
         switch (envelope.method) {
         case 'synchronize':
             if (envelope.body == null && envelope.promise == this._routes.promise) {
@@ -26,16 +25,16 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
                     count += this._routes.properties[promise].count
                 }
                 if (counter.increment(envelope.promise) == count) {
-                    console.log(count, this._routes)
                     counter.updated(envelope.promise)
                     this._router.ready()
                 }
-            } else {
-                console.log('sync!!!')
             }
             break
         case 'respond':
             this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
+            break
+        case 'receive':
+            this._actor.act(this._client, envelope)
             break
         }
     }.bind(this), destructible.monitor('inbox'))
@@ -50,6 +49,7 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
         router: coalesce(options.router, cadence(function (async) { return null })),
         sink: coalesce(options.sink, cadence(function (async) { return null }))
     }
+    this._actor = new Actor(destructible, this._actors.sink)
     this._cliffhanger = new Cliffhanger
     this._ready(destructible, callback)
 }
@@ -71,7 +71,6 @@ Diffuser.prototype._initialize = cadence(function (async, destructible, ready, m
         this._connector = connector
         this._connector.setLocations(locations)
         this._routes = message.body
-        console.log('setting !!!', this._routes)
         this._synchronizer.queue.push({
             promise: message.body.promise,
             from: this._from,
@@ -145,8 +144,8 @@ Diffuser.prototype.route = cadence(function (async, destination, key, value) {
     var to = { promise: promise, index: hashed.hash % properties.count }
     async(function () {
         this._router.push({
-            destination: 'router',
-            method: 'react',
+            destination: destination,
+            method: 'route',
             hashed: hashed,
             to: to,
             body: value,
@@ -154,7 +153,6 @@ Diffuser.prototype.route = cadence(function (async, destination, key, value) {
             cookie: this._cliffhanger.invoke(async())
         })
     }, function (response) {
-        console.log(response)
         return { status: response.status, values: response.values }
     })
 })

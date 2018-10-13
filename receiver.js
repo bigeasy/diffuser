@@ -13,7 +13,6 @@ Receiver.prototype._eos = cadence(function (async, envelope) {
     if (envelope == null) {
         this.outbox.push(null)
     } else {
-        console.log('!!!', envelope)
         this._inbox.enqueue(envelope, async())
     }
 })

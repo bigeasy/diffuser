@@ -19,7 +19,6 @@ Actor.prototype.act = function (client, envelope) {
 
 Actor.prototype._act = cadence(function (async, envelope) {
     var client = envelope.body.client, envelope = envelope.body.envelope
-    console.log(envelope)
     async([function () {
         async(function () {
             this._f.call(null, envelope.body, async())
@@ -38,7 +37,6 @@ Actor.prototype._act = cadence(function (async, envelope) {
         })
     }, function (error) {
         logger.error('error', { tag: [ 'actor' ], stack: error.stack })
-        console.log(error.stack)
         client.push({
             gatherer: envelope.gatherer,
             method: 'respond',

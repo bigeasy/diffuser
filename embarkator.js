@@ -14,7 +14,6 @@ function Embarkator (destructible, options) {
 }
 
 Embarkator.prototype._embark = cadence(function (async, envelope) {
-    console.log('arriving', envelope)
     var message = envelope.body
     async(function () {
         this._ua.fetch({
@@ -40,8 +39,6 @@ Embarkator.prototype._embark = cadence(function (async, envelope) {
             parse: 'json',
             raise: true
         }, async())
-    }, function () {
-        console.log('--- emarked ---')
     })
 })
 

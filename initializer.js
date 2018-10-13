@@ -51,7 +51,6 @@ Initializer.prototype._message = cadence(function (async, envelope) {
 })
 
 Initializer.prototype.message = function (message) {
-    console.log(message)
     this._messages.push(message)
 }
 
