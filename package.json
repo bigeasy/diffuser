@@ -55,7 +55,7 @@
     "main":                 "diffuser",
     "bin":
     {
-                            "diffuser":                     "diffuser.bin"
+                            "diffuser":                     "./diffuser.bin.js"
     },
     "scripts":
     {
