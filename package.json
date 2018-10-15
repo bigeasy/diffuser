@@ -53,6 +53,10 @@
                             "proof":                        "3.0.x"
     },
     "main":                 "diffuser",
+    "bin":
+    {
+                            "diffuser":                     "diffuser.bin"
+    },
     "scripts":
     {
                             "test": "proof platform win32 && proof test */*.t.js || t/test"
