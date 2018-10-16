@@ -4,6 +4,7 @@ var Turnstile = require('turnstile')
 Turnstile.Queue = require('turnstile/queue')
 
 var Signal = require('signal')
+var Cubbyhole = require('cubbyhole')
 
 var descendent = require('foremost')('descendent')
 
@@ -11,9 +12,21 @@ function Socketeer (destructible) {
     descendent.increment()
     destructible.destruct.wait(descendent, 'decrement')
     this.turnstile = new Turnstile
+    this._names = new Cubbyhole
     this.turnstile.listen(destructible.monitor('socketeer'))
     this.queue = new Turnstile.Queue(this, '_socket', this.turnstile)
     this.olio = new Signal
+}
+
+Socketeer.prototype.setNames = function (names) {
+    for (var promise in names) {
+        this._names.set(promise, null, names[promise])
+    }
+    this._names.keys().forEach(function (key) {
+        if (names[key] == null) {
+            this._names.remove(key)
+        }
+    }, this)
 }
 
 Socketeer.prototype._socket = cadence(function (async, envelope) {
@@ -30,9 +43,10 @@ Socketeer.prototype._socket = cadence(function (async, envelope) {
     }
     async(function () {
         this.olio.wait(async())
-    }, function (olio) {
+        this._names.wait(message.to.promise, async())
+    }, function (olio, name) {
         // TODO Pluck name from association or else destroy socket.
-        olio.sibling('run', async())
+        olio.sibling(name, async())
     }, function (sibling) {
         descendent.up(sibling.paths[message.to.index], 'diffuser:socket', message, socket)
     })

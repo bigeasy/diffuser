@@ -65,6 +65,7 @@ require('arguable')(module, function (program, callback) {
 
         destroyer(server)
         destructible.destruct.wait(server, 'destroy')
+        var socketeer = new Socketeer(destructible)
         async(function () {
             destructible.monitor('initializer', Initializer, async())
             destructible.monitor('embarkator', Embarkator, {
@@ -73,9 +74,8 @@ require('arguable')(module, function (program, callback) {
                 island: program.ultimate.island,
                 id: program.ultimate.id
             }, async())
-            destructible.monitor('updater', Updater, async())
+            destructible.monitor('updater', Updater, socketeer, async())
         }, function (initializer, embarkator, updater) {
-            var socketeer = new Socketeer(destructible)
             downgrader.on('socket', function (request, socket) {
                 socketeer.queue.push({ request: request, socket: socket })
             })
