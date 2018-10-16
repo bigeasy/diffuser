@@ -1,5 +1,6 @@
 /.*
 /*.md
+/bin
 /coverage
 /docs
 /t
