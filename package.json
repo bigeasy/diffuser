@@ -46,7 +46,7 @@
                             "prolific":                     "18.4.x",
                             "prolific.stdio":               "6.0.x",
                             "prolific.syslog":              "8.1.x",
-                            "compassion":                   "1.2.x",
+                            "compassion":                   "1.4.x",
                             "compassion.colleague":         "0.42.x",
                             "mingle":                       "0.11.x",
                             "mingle.static":                "0.7.x",
