@@ -136,6 +136,26 @@ Diffuser.prototype.register = cadence(function (async, key) {
     })
 })
 
+Diffuser.prototype.unregister = cadence(function (async, key) {
+    var hashed = Hash(key)
+    var buckets = this._routes.buckets
+    var promise = buckets[hashed.hash % buckets.length]
+    var properties = this._routes.properties[promise]
+    var to = { promise: promise, index: hashed.hash % properties.count }
+    async(function () {
+        this._router.push({
+            destination: 'router',
+            method: 'unregister',
+            gatherer: null,
+            from: this._from,
+            hashed: hashed,
+            cookie: this._cliffhanger.invoke(async())
+        })
+    }, function (response) {
+        return response.status == 'received'
+    })
+})
+
 Diffuser.prototype.route = cadence(function (async, destination, key, value) {
     var hashed = Hash(key)
     var buckets = this._routes.buckets

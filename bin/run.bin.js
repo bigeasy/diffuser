@@ -82,8 +82,8 @@ require('arguable')(module, function (program, callback) {
                 method: 'get',
                 key: { name: 'run', index: 0 }
             }, async())
-        }, function (value) {
-            return value
+        }, function (response) {
+            return response.status == 'received' ? response.values : null
         })
     })
 
@@ -121,7 +121,14 @@ require('arguable')(module, function (program, callback) {
                     service.get({ body: {} }, 'key', async())
                 }, [], function (response) {
                     console.log(response)
+                    console.log('xxxx')
                     service.route({ body: {} }, 'key', async())
+                }, function (response) {
+                    console.log(response)
+                    diffuser.unregister({ name: 'run', index: olio.index }, async())
+                }, function (response) {
+                    console.log(response)
+                    service.get({ body: {} }, 'key', async())
                 }, function (response) {
                     console.log(response)
                     var server = http.createServer(service.reactor.middleware)

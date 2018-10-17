@@ -102,6 +102,21 @@ ActiveBucket.prototype.push = function (envelope) {
                 cookie: envelope.cookie
             })
             break
+        case 'unregister':
+            if (this._locations[envelope.hashed.stringified] == envelope.from) {
+                delete this._locations[envelope.hashed.stringified] == envelope.from
+            }
+            this._client.push({
+                gatherer: envelope.gatherer,
+                method: 'respond',
+                destination: 'source',
+                hashed: envelope.hashed,
+                from: envelope.from,
+                to: envelope.from,
+                status: 'received',
+                cookie: envelope.cookie
+            })
+            break
         default:
             this._actor.act(this._client, envelope)
         }
@@ -127,6 +142,7 @@ ActiveBucket.prototype.push = function (envelope) {
                 to: address,
                 hashed: envelope.hashed,
                 method: 'receive',
+                cookie: envelope.cookie,
                 body: envelope.body
             })
         }
