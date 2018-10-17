@@ -14,6 +14,7 @@ function Socketeer (destructible) {
     this.turnstile = new Turnstile
     this._names = new Cubbyhole
     this.turnstile.listen(destructible.monitor('socketeer'))
+    destructible.destruct.wait(this.turnstile, 'close')
     this.queue = new Turnstile.Queue(this, '_socket', this.turnstile)
     this.olio = new Signal
 }

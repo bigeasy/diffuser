@@ -16,6 +16,7 @@ function Synchronizer (destructible, client) {
     this.turnstile = new Turnstile
     this.queue = new Turnstile.Queue(this, '_synchronize', this.turnstile)
     this.turnstile.listen(destructible.monitor('synchronize'))
+    destructible.destruct.wait(this.turnstile, 'close')
     this._client = client
 }
 
