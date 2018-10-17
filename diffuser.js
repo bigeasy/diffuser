@@ -52,6 +52,13 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
     this._actor = new Actor(destructible, this._actors.sink)
     this._cliffhanger = new Cliffhanger
     this._ready(destructible, callback)
+    this._timeout = coalesce(options.timeout)
+    this._interval = setInterval(this._expire.bind(this))
+    destructible.destruct.wait(this, function () { clearTimeout(this._interval) })
+}
+
+Diffuser.prototype._expire = function () {
+    this._cliffhanger.expire(Date.now() - this._timeout, [ null, { status: 'timeout' } ])
 }
 
 Diffuser.prototype._initialize = cadence(function (async, destructible, ready, message) {
