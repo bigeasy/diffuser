@@ -34,6 +34,7 @@ function prove (okay) {
         destination: 'sink',
         hashed: hashes[0],
         gatherer: 'udp://127.0.0.1:8514/1/1',
+        cookie: 1,
         from: { promise: '1/0', index: 0 },
         body: 0
     })
@@ -99,6 +100,7 @@ function prove (okay) {
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
         method: 'receive',
+        cookie: 1,
         from: { promise: '1/0', index: 0 },
         to: '4/0',
         hashed: { hash: 0, stringified: '0', key: 0 },
