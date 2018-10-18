@@ -73,7 +73,7 @@ Diffuser.prototype._initialize = cadence(function (async, destructible, ready, m
             locations[promise] = message.body.properties[promise].location
             counts[promise] = message.body.properties[promise].count
         }
-        this._router = new Router(new Actor(destructible, this._actors.router), this._client, message.body.self)
+        this._router = new Router(new Actor(destructible, this._actors.router), this._client, { promise: message.body.self, index: this._olio.index })
         this._router.setRoutes(message.body.self, message.body.buckets, counts)
         this._connector = connector
         this._connector.setLocations(locations)

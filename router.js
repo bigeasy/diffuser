@@ -9,21 +9,19 @@ function locate (stringified, address) {
     this._locations[stringified] = address
 }
 
-function RouteBucket(client, promise, buckets, counts) {
-    this._client = client
+function RouteBucket(router, promise) {
+    this._router = router
     this._promise = promise
-    this._buckets = buckets
-    this._counts = counts
 }
 
 RouteBucket.prototype.locate = noop
 
 // TODO Reroute if we're the wrong worker index.
 RouteBucket.prototype.push = function (envelope) {
-    logger.notice('rerouted', { route: [ this._client.hostname ] , gatherer: envelope.gatherer })
-    var promise = this._buckets[envelope.hashed.hash % this._buckets.length]
+    logger.notice('rerouted', { route: [ this._router._client.hostname ] , gatherer: envelope.gatherer })
+    var promise = this._router._buckets[envelope.hashed.hash % this._router._buckets.length]
     // TODO Come back and account for hops. Why not?
-    this._client.push({
+    this._router._client.push({
         destination: envelope.destination,
         method: envelope.method,
         promise: this._promise,
@@ -31,7 +29,7 @@ RouteBucket.prototype.push = function (envelope) {
         from: envelope.from,
         to: {
             promise: promise,
-            index: envelope.hashed.hash % this._counts[promise]
+            index: envelope.hashed.hash % this._router._counts[promise]
         },
         hashed: envelope.hashed,
         body: envelope.body
@@ -42,9 +40,9 @@ RouteBucket.prototype.ready = noop
 
 RouteBucket.prototype.drop = noop
 
-function WaitingBucket (actor, client, buckets, index) {
-    this._actor = actor
-    this._client = client
+function WaitingBucket (router, buckets, index, promise) {
+    this._router = router
+    this._promise = promise
     this._route = buckets
     this._index = index
     this._queue = new Procession
@@ -60,7 +58,7 @@ WaitingBucket.prototype.push = function (envelope) {
 }
 
 WaitingBucket.prototype.ready = function () {
-    var bucket = this._route[this._index] = new ActiveBucket(this._actor, this._client, this._locations)
+    var bucket = this._route[this._index] = new ActiveBucket(this._router, this._locations, this._promise)
     var envelope = null
     while ((envelope = this._shifter.shift()) != null) {
         bucket.push(envelope)
@@ -77,21 +75,27 @@ WaitingBucket.prototype.drop = function (bucket) {
     }
 }
 
-function ActiveBucket (actor, client, locations) {
-    this._actor = actor
-    this._client = client
+function ActiveBucket (router, locations, promise) {
+    this._router = router
     this._locations = locations
+    this._rerouter = new RouteBucket(router, promise)
 }
 
 ActiveBucket.prototype.locate = locate
 
 ActiveBucket.prototype.push = function (envelope) {
+    var count = this._router._counts[this._router._self.promise]
+    var index = envelope.hashed.hash % count
+    if (index != this._router._self.index) {
+        this._rerouter.push(envelope)
+        return
+    }
     switch (envelope.destination) {
     case 'router':
         switch (envelope.method) {
         case 'register':
             this._locations[envelope.hashed.stringified] = envelope.from
-            this._client.push({
+            this._router._client.push({
                 gatherer: envelope.gatherer,
                 method: 'respond',
                 destination: 'source',
@@ -106,7 +110,7 @@ ActiveBucket.prototype.push = function (envelope) {
             if (this._locations[envelope.hashed.stringified] == envelope.from) {
                 delete this._locations[envelope.hashed.stringified] == envelope.from
             }
-            this._client.push({
+            this._router._client.push({
                 gatherer: envelope.gatherer,
                 method: 'respond',
                 destination: 'source',
@@ -118,14 +122,14 @@ ActiveBucket.prototype.push = function (envelope) {
             })
             break
         default:
-            this._actor.act(this._client, envelope)
+            this._router._actor.act(this._router._client, envelope)
         }
         break
     case 'sink':
         var address = this._locations[envelope.hashed.stringified]
         if (address == null) {
-            logger.notice('missing', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
-            this._client.push({
+            logger.notice('missing', { route: [ this._router._client.hostname ], gatherer: envelope.gatherer })
+            this._router._client.push({
                 destination: 'source',
                 gatherer: envelope.gatherer,
                 from: envelope.from,
@@ -135,8 +139,8 @@ ActiveBucket.prototype.push = function (envelope) {
                 body: { statusCode: 404 }
             })
         } else {
-            logger.notice('forwarded', { route: [ this._client.hostname ], gatherer: envelope.gatherer })
-            this._client.push({
+            logger.notice('forwarded', { route: [ this._router._client.hostname ], gatherer: envelope.gatherer })
+            this._router._client.push({
                 gatherer: envelope.gatherer,
                 from: envelope.from,
                 to: address,
@@ -154,10 +158,10 @@ ActiveBucket.prototype.ready = noop
 
 ActiveBucket.prototype.drop = noop
 
-function Router (actor, client, identifier) {
+function Router (actor, client, self) {
     this._actor = actor
     this._client = client
-    this._identifier = identifier
+    this._self = self
     this._route = []
 }
 
@@ -179,10 +183,10 @@ Router.prototype.setRoutes = function (promise, buckets, counts) {
     this._buckets = buckets
     var updated = []
     for (var i = 0, I = buckets.length; i < I; i++) {
-        if (this._identifier == buckets[i]) {
-            updated[i] = new WaitingBucket(this._actor, this._client, updated, i)
+        if (this._self.promise == buckets[i]) {
+            updated[i] = new WaitingBucket(this, updated, i, promise)
         } else {
-            updated[i] = new RouteBucket(this._client, promise, buckets, counts)
+            updated[i] = new RouteBucket(this, promise)
         }
         if (this._route[i] != null) {
             this._route[i].drop(updated[i])

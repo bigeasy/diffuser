@@ -25,7 +25,7 @@ function prove (okay) {
         }
     }
     var Router = require('../router')
-    var router = new Router(actor, client, '1/0')
+    var router = new Router(actor, client, { promise: '1/0', index: 0 })
     router.push({ hashed: hashes[0], body: 0 })
     router.setRoutes('1/0', [ '1/0', '2/0', '1/0', '1/0', '2/0', '2/0', '1/0' ], { '1/0': 1, '2/0': 1 })
     router.locate(hashes[0], '4/0')
