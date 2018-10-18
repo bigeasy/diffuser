@@ -70,6 +70,7 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
         destructible.monitor([ 'window', COUNTER ], Window, sender, async())
     }, function (window) {
         destructible.destruct.wait(window, 'hangup')
+        console.log('pumping', to)
         shifter.pump(sender.outbox)
         var loop = async([function () {
             async(function () {
@@ -95,6 +96,7 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
                 async(function () {
                     demur.reset()
                     var destructible = new Destructible([ 'connection', to ])
+                    destructible.destruct.wait(window, 'disconnect')
                     destructible.completed.wait(async())
                     destructible.monitor('conduit', Conduit, window, socket, socket, head, null)
                     delta(destructible.monitor('socket')).ee(socket).on('close')

@@ -25,6 +25,7 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
                     count += this._routes.properties[promise].count
                 }
                 if (counter.increment(envelope.promise) == count) {
+                    console.log('did sink', this._olio.index)
                     counter.updated(envelope.promise)
                     this._router.ready()
                 }
@@ -35,6 +36,10 @@ function Diffuser (destructible, connectee, synchronizer, options, callback) {
             break
         case 'receive':
             this._actor.act(this._client, envelope)
+        case 'register':
+        case 'unregister':
+        case 'route':
+            this._router.push(envelope)
             break
         }
     }.bind(this), destructible.monitor('inbox'))
@@ -67,7 +72,7 @@ Diffuser.prototype._initialize = cadence(function (async, destructible, ready, m
         destructible.monitor('connector', Connector, this._from, async())
     }, function (connector) {
         this._client = new Client(connector)
-        this._synchronizer = new Synchronizer(destructible, this._client)
+        this._synchronizer = new Synchronizer(destructible, this._client, {})
         var counts = {}, locations = {}
         for (var promise in message.body.properties) {
             locations[promise] = message.body.properties[promise].location

@@ -19,6 +19,7 @@ function Updater (destructible, socketeer) {
 }
 
 Updater.prototype._update = cadence(function (async, envelope) {
+    console.log('UPDATE!!!', envelope.body)
     var names = {}
     for (var promise in envelope.body.properties) {
         names[promise] = envelope.body.properties[promise].name

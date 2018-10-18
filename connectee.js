@@ -16,6 +16,7 @@ var Hash = require('./hash')
 
 function Connectee (destructible) {
     this._destructible = destructible
+    this._connections = []
     this._windows = {}
     this.inbox = new Procession
     this.turnstile = new Turnstile
@@ -39,13 +40,13 @@ Connectee.prototype._window = cadence(function (async, destructible, hash) {
     async(function () {
         var receiver = new Receiver(destructible, this.inbox)
         destructible.monitor([ 'window', hash.key ], Window, receiver, async())
-        destructible.destruct.wait(this, function () {
-            delete this._windows[hash.stringified]
-        })
     }, function (window) {
         window.hash = hash
         destructible.destruct.wait(window, 'hangup')
         this._windows[hash.stringified] = window
+        destructible.destruct.wait(this, function () {
+            delete this._windows[hash.stringified]
+        })
     })
 })
 
@@ -60,9 +61,14 @@ Connectee.prototype._conduit = cadence(function (async, destructible, window, so
 
 // TODO Really need to set some sort of panic for Turnstile, automatic panic,
 // where if it gets too full it doesn't shed, it crashes.
-Connectee.prototype._socket = cadence(function (async, envelope) {
-    var message = envelope.body.message, socket = envelope.body.socket
-    var hash = Hash(message.from)
+Connectee.prototype._socket = cadence(function (async, destructible, message, socket, hash, when) {
+    this._connections[hash.stringified] = { destructible: destructible, when: when }
+    destructible.destruct.wait(this, function () {
+        var connection = this._connections[hash.stringified]
+        if (connection.when == when) {
+            delete this._connections[hash.stringified]
+        }
+    })
     async(function () {
         var window = this._windows[hash.stringified]
         if (window == null) {
@@ -82,10 +88,13 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
         // yet.
         async([function () {
             var destructible = new Destructible(800, [ 'conduit', message.from ])
+            destructible.destruct.wait(window, 'disconnect')
             destructible.completed.wait(async())
             destructible.monitor('conduit', this, '_conduit', window, socket, null)
             // delta(destructible.monitor('socket')).ee(socket).on('close')
         }, function (error) {
+            console.log(process.pid, envelope.body)
+            console.log(error.stack)
             socket.destroy()
             logger.error('socket', { stack: error.stack })
         }])
@@ -100,7 +109,13 @@ Connectee.prototype._socket = cadence(function (async, envelope) {
 // listen to run it. Also, don't you want to use a full bouquet of errors to
 // report from Turnstile when it blows up?
 Connectee.prototype.socket = function (message, socket) {
-    this._sockets.push({ message: message, socket: socket })
+    var hash = Hash(message.body.from)
+    var connection = this._connections[hash.stringified]
+    if (connection != null) {
+        connection.destructible.destroy()
+    }
+    var now = Date.now()
+    this._destructible.monitor([ 'socket', message.from, now ], true, this, '_socket', message, socket, hash, now, null)
 }
 
 module.exports = cadence(function (async, destructible) {

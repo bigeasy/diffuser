@@ -83,6 +83,7 @@ require('arguable')(module, function (program, callback) {
                 key: { name: 'run', index: 0 }
             }, async())
         }, function (response) {
+            console.log('routed!', response)
             return response.status == 'received' ? response.values : null
         })
     })
@@ -97,6 +98,7 @@ require('arguable')(module, function (program, callback) {
                 var storage = {}
                 destructible.monitor('diffuser', Diffuser, {
                     olio: olio,
+                    timeout: 5000,
                     router: cadence(function (async, envelope) {
                         switch (envelope.method) {
                         case 'set':
@@ -113,24 +115,31 @@ require('arguable')(module, function (program, callback) {
             }, function (diffuser) {
                 var service = new Service(diffuser)
                 async(function () {
-                    // TODO Maybe post and wait to see that it is set. Yeah.
-                    diffuser.register({ name: 'run', index: olio.index }, async())
+                    setTimeout(async(), 3000)
                 }, function () {
+                    // TODO Maybe post and wait to see that it is set. Yeah.
+                    console.log('will register', olio.index)
+                    diffuser.register({ name: 'run', index: olio.index }, async())
+                }, function (registered) {
+                    console.log('registered', registered, olio.index)
                     service.post({ body: { value: 'value' } }, 'key', async())
                 }, function () {
                     service.get({ body: {} }, 'key', async())
                 }, [], function (response) {
                     console.log(response)
-                    console.log('xxxx')
+                    console.log('xxxx', olio.index)
+                        setTimeout(async(), 3000)
+                }, function () {
+                    console.log('will route')
                     service.route({ body: {} }, 'key', async())
                 }, function (response) {
-                    console.log(response)
-                    diffuser.unregister({ name: 'run', index: olio.index }, async())
+                    console.log(olio.index, response)
+//                    diffuser.unregister({ name: 'run', index: olio.index }, async())
                 }, function (response) {
                     console.log(response)
-                    service.get({ body: {} }, 'key', async())
-                }, function (response) {
-                    console.log(response)
+//                    service.get({ body: {} }, 'key', async())
+//                }, function (response) {
+//                    console.log(response)
                     var server = http.createServer(service.reactor.middleware)
                     destroyer(server)
                     destructible.destruct.wait(server, 'destroy')

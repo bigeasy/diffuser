@@ -20,6 +20,7 @@ RouteBucket.prototype.locate = noop
 RouteBucket.prototype.push = function (envelope) {
     logger.notice('rerouted', { route: [ this._router._client.hostname ] , gatherer: envelope.gatherer })
     var promise = this._router._buckets[envelope.hashed.hash % this._router._buckets.length]
+    var index = envelope.hashed.hash % this._router._counts[promise]
     // TODO Come back and account for hops. Why not?
     this._router._client.push({
         destination: envelope.destination,
@@ -27,11 +28,9 @@ RouteBucket.prototype.push = function (envelope) {
         promise: this._promise,
         gatherer: envelope.gatherer,
         from: envelope.from,
-        to: {
-            promise: promise,
-            index: envelope.hashed.hash % this._router._counts[promise]
-        },
+        to: { promise: promise, index: index },
         hashed: envelope.hashed,
+        cookie: envelope.cookie,
         body: envelope.body
     })
 }
