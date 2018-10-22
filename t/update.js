@@ -1,4 +1,4 @@
-var example = { promise: '1/0',
+module.exports = { promise: '1/0',
   self: '1/0',
   properties:
    { '1/0':

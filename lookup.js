@@ -1,11 +1,10 @@
-function Router (buckets, counts) {
-    this._buckets = buckets
-    this._counts = counts
+function Router (routes) {
+    this._routes = routes
 }
 
 Router.prototype.route = function (hashed) {
-    var promise = this._buckets[hashed.hash % this._buckets.length]
-    var index = hashed.hash % this._counts[promise]
+    var promise = this._routes.buckets[hashed.hash % this._routes.buckets.length]
+    var index = hashed.hash % this._routes.properties[promise].count
     return { promise: promise, index: index }
 }
 
