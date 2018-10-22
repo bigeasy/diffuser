@@ -12,8 +12,9 @@ Table.prototype.bootstrap = function (self, count) {
     this.buckets = new Array(count).fill(null)
 }
 
-Table.prototype.getSnapshot = function () {
+Table.prototype.getSnapshot = function (event) {
     return JSON.parse(JSON.stringify({
+        event: event,
         promise: this.promise,
         self: this.self,
         properties: this.properties,

@@ -12,7 +12,7 @@ function prove (okay) {
         addresses: [ '1/0' ],
         buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ]
     }, 'join')
-    table.join('1/0', table.getSnapshot())
+    table.join('1/0', table.getSnapshot({}))
     table.arrive('2/0', { isRouter: true })
     okay({
         addresses: table.addresses,
@@ -30,7 +30,8 @@ function prove (okay) {
         buckets: [ '3/0', '2/0', '2/0', '2/0', '3/0', '3/0', '1/0' ]
     }, 'second arrival')
     table.arrive('4/0', { isRouter: false })
-    okay(table.getSnapshot(), {
+    okay(table.getSnapshot({}), {
+        event: {},
         promise: '4/0',
         self: '1/0',
         properties: {
