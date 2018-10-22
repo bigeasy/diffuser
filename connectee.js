@@ -93,7 +93,6 @@ Connectee.prototype._socket = cadence(function (async, destructible, message, so
             destructible.monitor('conduit', this, '_conduit', window, socket, null)
             // delta(destructible.monitor('socket')).ee(socket).on('close')
         }, function (error) {
-            console.log(process.pid, envelope.body)
             console.log(error.stack)
             socket.destroy()
             logger.error('socket', { stack: error.stack })
@@ -109,7 +108,7 @@ Connectee.prototype._socket = cadence(function (async, destructible, message, so
 // listen to run it. Also, don't you want to use a full bouquet of errors to
 // report from Turnstile when it blows up?
 Connectee.prototype.socket = function (message, socket) {
-    var hash = Hash(message.body.from)
+    var hash = Hash(message.from)
     var connection = this._connections[hash.stringified]
     if (connection != null) {
         connection.destructible.destroy()
