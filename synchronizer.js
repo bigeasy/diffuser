@@ -12,52 +12,67 @@ var Departure = require('departure')
 
 var Procession = require('procession')
 
-function Synchronizer (destructible, client) {
+var Router = require('./lookup')
+
+function Synchronizer (destructible, buckets) {
     this.turnstile = new Turnstile
     this.queue = new Turnstile.Queue(this, '_synchronize', this.turnstile)
     this.turnstile.listen(destructible.monitor('synchronize'))
     destructible.destruct.wait(this.turnstile, 'close')
     this.registered = {}
-    this._client = client
+    this._locations = Array.apply(null, new Array(buckets)).map(Object)
 }
 
-Synchronizer.prototype._synchronize = cadence(function (async, envelope) {
-    async(function () {
-        for (var stringified in this._registered) {
-            var hashed = this._registered[stringified]
-            var promise = envelope.buckets[hashed.hash % envelope.buckets.length]
-            var index = hashed.hash % envelope.counts[promise].count
-            this._client.push({
-                to: { promise: promise, index: index },
-                from: envelope.body.from,
+Synchronizer.prototype.register = function (hashed) {
+    this._locations[hashed.hash % this._locations.length][hashed.stringified] = hashed
+}
+
+Synchronizer.prototype.contains = function (hashed) {
+    return !! this._locations[hashed.hash % this._locations.length][hashed.stringified]
+}
+
+function transfer (router, client, map, from) {
+    for (var stringified in map) {
+        var hashed = map[stringified]
+        client.push({
+            module: 'diffuser',
+            method: 'synchronize',
+            to: router.route(hashed),
+            from: from,
+            promise: router.routes.promise,
+            body: hashed
+        })
+    }
+}
+
+Synchronizer.prototype.synchronize = function (from, client, routes) {
+    var router = new Router(routes)
+    if (routes.event.action == 'arrive') {
+        this._locations.forEach(function (map, index) {
+            if (routes.buckets[index] == routes.event.promise) {
+                transfer(router, client, map, from)
+            }
+        })
+    } else {
+        this._locations.forEach(function (map, index) {
+            for (var stringified in map) {
+                transfer(router, client, map)
+            }
+        })
+    }
+    for (var promise in routes.properties) {
+        var count = routes.properties[promise].count
+        for (var index = 0; index < count; index++) {
+            client.push({
+                from: from,
+                to: { promise: promise, index: count },
                 module: 'diffuser',
                 method: 'synchronize',
-                promise: envelope.body.promise,
-                body: hashed
+                promise: routes.promise,
+                body: null
             })
         }
-    }, function () {
-        console.log('BODY', envelope.body)
-        async.forEach(function (promise) {
-            var count = envelope.body.counts[promise]
-            var loop = async(function () {
-                if (count-- == 0) {
-                    return [ loop.break ]
-                }
-                console.log('sync >>>', envelope.body.from, { promise: promise, index: count })
-                this._client.push({
-                    from: envelope.body.from,
-                    to: { promise: promise, index: count },
-                    module: 'diffuser',
-                    method: 'synchronize',
-                    promise: envelope.body.promise,
-                    body: null
-                })
-            })()
-        })(envelope.body.buckets.filter(function (promise, index) {
-            return index == envelope.body.buckets.indexOf(promise)
-        }))
-    })
-})
+    }
+}
 
 module.exports = Synchronizer
