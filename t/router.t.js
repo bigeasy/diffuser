@@ -44,6 +44,7 @@ function prove (okay) {
         hashed: hashes[1],
         gatherer: 'udp://127.0.0.1:8514/1/3',
         from: { promise: '1/0', index: 0 },
+        cookie: 0,
         body: 1
     })
     router.push({
@@ -52,6 +53,7 @@ function prove (okay) {
         hashed: hashes[2],
         gatherer: 'udp://127.0.0.1:8514/1/4',
         from: { promise: '1/0', index: 0 },
+        cookie: 0,
         body: 2
     })
     router.push({
@@ -70,6 +72,7 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         to: { promise: '2/0', index: 0 },
         hashed: { hash: 1, stringified: '1', key: 1 },
+        cookie: 0,
         body: 1
     }], 'empty')
     router.setRoutes('1/0', [ '1/0', '2/0', '3/0', '1/0', '2/0', '2/0', '1/0' ], { '1/0': 1, '2/0': 1, '3/0': 1 })
@@ -96,6 +99,7 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         to: { promise: '3/0', index: 0 },
         hashed: { hash: 2, stringified: '2', key: 2 },
+        cookie: 0,
         body: 2
     }, {
         gatherer: 'udp://127.0.0.1:8514/1/1',
