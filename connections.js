@@ -1,9 +1,5 @@
-var Procession = require('procession')
-var Signal = require('signal')
-
-function Connections (constructor) {
+function Connections () {
     this._connections = {}
-    this._constructor = constructor
 }
 
 Connections.prototype.promises = function () {
@@ -30,14 +26,24 @@ Connections.prototype.remove = function (to) {
     }
 }
 
-Connections.prototype.get = function (to) {
+Connections.prototype.put = function (to, value) {
     var connections = this._connections[to.promise]
     if (connections == null) {
         connections = this._connections[to.promise] = []
     }
+    var previous = connections[to.index]
+    connections[to.index] = value
+    return previous
+}
+
+Connections.prototype.get = function (to) {
+    var connections = this._connections[to.promise]
+    if (connections == null) {
+        return null
+    }
     var connection = connections[to.index]
     if (connection == null) {
-        connection = connections[to.index] = this._constructor.call(null, to)
+        return null
     }
     return connection
 }

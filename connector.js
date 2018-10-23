@@ -29,15 +29,7 @@ var Router = require('./lookup')
 function Connector (destructible, index) {
     this.feedback = new Procession
     var self = this
-    this._connections = new Connections(function (to) {
-        var connection = { to: to, outbox: new Procession, shutdown: new Signal }
-        var shifter = connection.outbox.shifter()
-        // Delay because `_connect` is going to call `_connections.get`.
-        setImmediate(function () {
-            destructible.monitor([ 'connection', to ], true, self, '_connect', to, shifter, null)
-        })
-        return connection
-    })
+    this._connections = new Connections
     this._destructible = destructible
     this._index = index
     destructible.destruct.wait(this, function () {
@@ -68,7 +60,14 @@ Connector.prototype._diffLocations = function (properties) {
 }
 
 Connector.prototype.connect = function (to) {
-    return this._connections.get(to).outbox
+    var connection = this._connections.get(to)
+    if (connection == null) {
+        connection = { to: to, outbox: new Procession, shutdown: new Signal }
+        this._connections.put(to, connection)
+        var shifter = connection.outbox.shifter()
+        this._destructible.monitor([ 'connection', to ], true, this, '_connect', to, shifter, null)
+    }
+    return connection.outbox
 }
 
 var COUNTER = 0

@@ -5,47 +5,50 @@ var Conduit = require('conduit/conduit')
 var logger = require('prolific.logger').createLogger('diffuser')
 var Destructible = require('destructible')
 var delta = require('delta')
+var assert = require('assert')
 
 var Window = require('conduit/window')
 
-// Evented work queue.
-var Turnstile = require('turnstile')
-Turnstile.Queue = require('turnstile/queue')
-
-var Hash = require('./hash')
+var Connections = require('./connections')
 
 function Connectee (destructible) {
     this._destructible = destructible
-    this._connections = []
-    this._windows = {}
+    this._connections = new Connections
+    this._windows = new Connections
     this.inbox = new Procession
-    this.turnstile = new Turnstile
-    this._sockets = new Turnstile.Queue(this, '_socket', this.turnstile)
-    this.turnstile.listen(destructible.monitor('sockets'))
-    destructible.destruct.wait(this.turnstile, 'close')
+    destructible.destruct.wait(this, function () {
+        this._diffLocations({})
+    })
 }
 
-Connectee.prototype.setLocations = function (locations) {
-    for (var key in this._windows) {
-        var connection = this._windows[key]
-        if (!(connection.hash.key.promise in locations)) {
-            connection.hangup()
-            connection.outbox.end()
+Connectee.prototype.setRoutes = function (routes) {
+    this._diffLocations(routes.properties)
+}
+
+Connectee.prototype._diffLocations = function (properties) {
+    this._diffCollection(this._windows, properties)
+    this._diffCollection(this._connections, properties)
+}
+
+Connectee.prototype._diffCollection = function (collection, properties) {
+    collection.promises().forEach(function (promise) {
+        if (!(promise in properties)) {
+            collection.list(promise).forEach(function (connection) {
+                connection.destructible.destroy()
+            })
         }
-    }
-    this._locations = locations
+    })
 }
 
-Connectee.prototype._window = cadence(function (async, destructible, hash) {
+Connectee.prototype._window = cadence(function (async, destructible, from) {
     async(function () {
         var receiver = new Receiver(destructible, this.inbox)
-        destructible.monitor([ 'window', hash.key ], Window, receiver, async())
+        destructible.monitor([ 'window', from ], Window, receiver, async())
     }, function (window) {
-        window.hash = hash
+        this._windows.put(from, { destructible: destructible, window: window })
         destructible.destruct.wait(window, 'hangup')
-        this._windows[hash.stringified] = window
         destructible.destruct.wait(this, function () {
-            delete this._windows[hash.stringified]
+            this._windows.remove(from)
         })
     })
 })
@@ -61,20 +64,17 @@ Connectee.prototype._conduit = cadence(function (async, destructible, window, so
 
 // TODO Really need to set some sort of panic for Turnstile, automatic panic,
 // where if it gets too full it doesn't shed, it crashes.
-Connectee.prototype._socket = cadence(function (async, destructible, message, socket, hash, when) {
-    this._connections[hash.stringified] = { destructible: destructible, when: when }
+Connectee.prototype._socket = cadence(function (async, destructible, message, socket) {
+    this._connections.put(message.from, { destructible: destructible })
     destructible.destruct.wait(this, function () {
-        var connection = this._connections[hash.stringified]
-        if (connection.when == when) {
-            delete this._connections[hash.stringified]
-        }
+        this._connections.remove(message.from)
     })
     async(function () {
-        var window = this._windows[hash.stringified]
-        if (window == null) {
-            this._destructible.monitor([ 'window', message.from ], true, this, '_window', hash, async())
+        var windowed = this._windows.get(message.from)
+        if (windowed == null) {
+            this._destructible.monitor([ 'window', message.from ], true, this, '_window', message.from, async())
         } else {
-            return window
+            return windowed.window
         }
     }, function (window) {
         // Uncertain about errors in this case. There may be times when there is
@@ -108,13 +108,14 @@ Connectee.prototype._socket = cadence(function (async, destructible, message, so
 // listen to run it. Also, don't you want to use a full bouquet of errors to
 // report from Turnstile when it blows up?
 Connectee.prototype.socket = function (message, socket) {
-    var hash = Hash(message.from)
-    var connection = this._connections[hash.stringified]
+    var connection = this._connections.get(message.from)
     if (connection != null) {
         connection.destructible.destroy()
     }
-    var now = Date.now()
-    this._destructible.monitor([ 'socket', message.from, now ], true, this, '_socket', message, socket, hash, now, null)
+    assert(this._connections.get(message.from) == null)
+    // We add `now` because there maybe some overlap while waiting for
+    // asynchronous operations to shutdown.
+    this._destructible.monitor([ 'socket', message.from, Date.now() ], true, this, '_socket', message, socket, null)
 }
 
 module.exports = cadence(function (async, destructible) {
