@@ -11,6 +11,8 @@ function prove (okay) {
         }
     })
 
+    client.setRoutes({ properties: { '1/0': {} } })
     client.push({ to: { promise: '1/0', index: 0 } })
+    client.push({ to: { promise: '2/0', index: 0 } })
     okay(pushed, [{ to: { promise: '1/0', index: 0 } }], 'pushed')
 }

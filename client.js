@@ -6,8 +6,15 @@ function Client (connector) {
     this._connector = connector
 }
 
+
+Client.prototype.setRoutes = function (routes) {
+    this._routes = routes
+}
+
 Client.prototype.push = function (envelope) {
-    this._connector.connect(envelope.to).push(envelope)
+    if (this._routes.properties[envelope.to.promise] != null) {
+        this._connector.connect(envelope.to).push(envelope)
+    }
 }
 
 module.exports = Client
