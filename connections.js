@@ -1,9 +1,9 @@
 var Procession = require('procession')
 var Signal = require('signal')
 
-function Connections (monitor) {
+function Connections (constructor) {
     this._connections = {}
-    this._monitor = monitor
+    this._constructor = constructor
 }
 
 Connections.prototype.promises = function () {
@@ -37,12 +37,7 @@ Connections.prototype.get = function (to) {
     }
     var connection = connections[to.index]
     if (connection == null) {
-        connection = connections[to.index] = {
-            to: to,
-            outbox: new Procession,
-            shutdown: new Signal
-        }
-        this._monitor.call(null, to, connection.outbox.shifter())
+        connection = connections[to.index] = this._constructor.call(null, to)
     }
     return connection
 }

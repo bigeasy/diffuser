@@ -6,9 +6,10 @@ function prove (okay) {
         to: { promise: '1/0', index: 2 },
         message: 'first'
     }]
-    var connections = new Connections(function (to, shifter) {
+    var connections = new Connections(function (to) {
         var expected = expect.shift()
         okay(to, expected.to, expected.message)
+        return { to: to }
     })
     okay(connections.promises(), [], 'no promises')
     connections.remove({ promise: '1/0', index: 0 })
