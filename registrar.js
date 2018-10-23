@@ -1,9 +1,8 @@
 var Router = require('./lookup')
 
 function Registrar (options) {
-    this._configuration = options.configuration
     this._client = options.client
-    this._locations = Array.apply(null, new Array(options.buckets)).map(Object)
+    this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._index = options.index
 }
 
@@ -23,14 +22,14 @@ Registrar.prototype.unregister = function (hashed) {
     delete this._registrations[hashed.hash % this._registrations.length][hashed.stringified]
 }
 
-function transfer (router, client, map) {
+Registrar.prototype._transfer = function transfer (map) {
     for (var stringified in map) {
         var hashed = map[stringified]
         this._client.push({
             module: 'diffuser',
             method: 'synchronize',
-            to: this._router.route(hashed),
             from: this._router.from,
+            to: this._router.route(hashed),
             promise: this._router.promise,
             body: hashed
         })
@@ -38,28 +37,28 @@ function transfer (router, client, map) {
 }
 
 Registrar.prototype.synchronize = function (from, routes) {
-    if (routes.event.action == 'arrive') {
+    if (this._router.event.action == 'arrive') {
         this._registrations.forEach(function (map, index) {
-            if (routes.buckets[index] == routes.event.promise) {
+            if (this._router.buckets[index] == this._router.event.promise) {
                 this._transfer(map)
             }
-        })
+        }, this)
     } else {
         this._registrations.forEach(function (map, index) {
             for (var stringified in map) {
                 this._transfer(map)
             }
-        })
+        }, this)
     }
-    for (var promise in routes.properties) {
-        var count = routes.properties[promise].count
+    for (var promise in this._router.properties) {
+        var count = this._router.properties[promise].count
         for (var index = 0; index < count; index++) {
             this._client.push({
-                from: this._router.from,
-                to: { promise: promise, index: count },
                 module: 'diffuser',
                 method: 'synchronize',
-                promise: this._routes.promise,
+                from: this._router.from,
+                to: { promise: promise, index: count },
+                promise: this._router.promise,
                 body: null
             })
         }
