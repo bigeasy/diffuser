@@ -39,7 +39,7 @@ function transfer (router, client, map, from) {
             method: 'synchronize',
             to: router.route(hashed),
             from: from,
-            promise: router.routes.promise,
+            promise: router.promise,
             body: hashed
         })
     }
