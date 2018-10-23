@@ -54,13 +54,15 @@ function prove (okay, callback) {
             var to = { promise: '1/0', index: 1 }
             var from = { promise: '0/0', index: 0 }
             async(function () {
-                destructible.monitor('connector', Connector, from, async())
+                destructible.monitor('connector', Connector, 0, async())
             }, function (connector) {
                 async(function () {
                     connectee.inbox.shifter().dequeue(async())
-                    connector.setLocations({
-                        '1/0': 'http://127.0.0.1:8089/',
-                        '2/0': 'http://127.0.0.1:8089/'
+                    connector.setRoutes({
+                        properties: {
+                            '1/0': { location: 'http://127.0.0.1:8089/' },
+                            '2/0': { location: 'http://127.0.0.1:8089/' }
+                        }
                     })
                     var outbox = connector.connect(to)
                     outbox.push(1)
@@ -72,16 +74,22 @@ function prove (okay, callback) {
                 }, function (value) {
                     okay(value, 1, 'pushed')
                     // Set locations with no change.
-                    connector.setLocations({
-                        '1/0': 'http://127.0.0.1:8089/',
-                        '2/0': 'http://127.0.0.1:8089/'
+                    connector.setRoutes({
+                        properties: {
+                            '1/0': { location: 'http://127.0.0.1:8089/' },
+                            '2/0': { location: 'http://127.0.0.1:8089/' }
+                        }
                     })
                     // Set locations so that we hang up on `1/0`.
-                    connector.setLocations({
-                        '2/0': 'http://127.0.0.1:8089/'
+                    connector.setRoutes({
+                        properties: {
+                            '2/0': { location: 'http://127.0.0.1:8089/' }
+                        }
                     })
-                    connectee.setLocations({
-                        '2/0': 'http://127.0.0.1:8089/'
+                    connector.setRoutes({
+                        properties: {
+                            '2/0': { location: 'http://127.0.0.1:8089/' }
+                        }
                     })
                     setTimeout(async(), 2500)
                 }, function () {

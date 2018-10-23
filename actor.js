@@ -8,23 +8,22 @@ var cadence = require('cadence')
 function Actor (destuctible, f) {
     this._f = f
     this.turnstile = new Turnstile
-    this.turnstile.listen(destuctible.monitor('actor'))
+    this.turnstile.listen(destuctible.monitor('turnstile'))
     destuctible.destruct.wait(this.turnstile, 'close')
     this._queue = new Turnstile.Queue(this, '_act', this.turnstile)
 }
 
-Actor.prototype.act = function (client, envelope) {
-    this._queue.push({ client: client, envelope: envelope })
+Actor.prototype.act = function (connector, envelope) {
+    this._queue.push({ connector: connector, envelope: envelope })
 }
 
 Actor.prototype._act = cadence(function (async, envelope) {
-    var client = envelope.body.client, envelope = envelope.body.envelope
+    var connector = envelope.body.connector, envelope = envelope.body.envelope
     async([function () {
         async(function () {
             this._f.call(null, envelope.body, async())
         }, [], function (values) {
-            client.push({
-                gatherer: envelope.gatherer,
+            connector.push({
                 method: 'respond',
                 destination: 'source',
                 hashed: envelope.hashed,
@@ -37,8 +36,7 @@ Actor.prototype._act = cadence(function (async, envelope) {
         })
     }, function (error) {
         logger.error('error', { tag: [ 'actor' ], stack: error.stack })
-        client.push({
-            gatherer: envelope.gatherer,
+        connector.push({
             method: 'respond',
             destination: 'source',
             hashed: envelope.hashed,
@@ -51,4 +49,9 @@ Actor.prototype._act = cadence(function (async, envelope) {
     }])
 })
 
-module.exports = Actor
+module.exports = cadence(function (async, destructible, f) {
+    if (typeof f != 'function') {
+        f = function (envelope, callback) { callback(null, null) }
+    }
+    return new Actor(destructible, f)
+})

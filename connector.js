@@ -24,28 +24,40 @@ var Signal = require('signal')
 
 var Connections = require('./connections')
 
-function Connector (destructible, from) {
+var Router = require('./lookup')
+
+function Connector (destructible, index) {
     this.feedback = new Procession
     this._connections = new Connections(function (to, shifter) {
         this._destructible.monitor([ 'connector-?', to ], true, this, '_connect', to, shifter, null)
     }.bind(this))
     this._destructible = destructible
-    this._from = from
+    this._index = index
     destructible.destruct.wait(this, function () {
-        this.setLocations({})
+        this._diffLocations({})
     })
 }
 
-Connector.prototype.setLocations = function (locations) {
+Connector.prototype.push = function (envelope) {
+    if (this._router.properties[envelope.to.promise] != null) {
+        this._connector.connect(envelope.to).push(envelope)
+    }
+}
+
+Connector.prototype.setRoutes = function (routes) {
+    this._router = new Router(routes)
+    this._diffLocations(this._router.properties)
+}
+
+Connector.prototype._diffLocations = function (properties) {
     this._connections.promises().forEach(function (promise) {
-        if (!(promise in locations)) {
+        if (!(promise in properties)) {
             this._connections.list(promise).forEach(function (connection) {
                 connection.outbox.end()
                 connection.shutdown.unlatch()
             })
         }
     }, this)
-    this._locations = locations
 }
 
 Connector.prototype.connect = function (to) {
@@ -61,7 +73,7 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
     var demur = new Demur
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
-    var location = url.parse(this._locations[to.promise])
+    var location = url.parse(this._router.properties[to.promise].location)
     destructible.destruct.wait(sender.inbox, 'end')
     destructible.destruct.wait(demur, 'cancel')
     async([function () {
@@ -83,8 +95,8 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
                     host: location.hostname,
                     port: +location.port,
                     headers: Downgrader.headers({
-                        'x-diffuser-from-promise': this._from.promise,
-                        'x-diffuser-from-index': this._from.index,
+                        'x-diffuser-from-promise': this._router.from.promise,
+                        'x-diffuser-from-index': this._router.from.index,
                         'x-diffuser-to-promise': to.promise,
                         'x-diffuser-to-index': to.index
                     })
@@ -114,6 +126,6 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
     })
 })
 
-module.exports = cadence(function (async, destructible, from) {
-    return new Connector(destructible, from)
+module.exports = cadence(function (async, destructible, index) {
+    return new Connector(destructible, index)
 })
