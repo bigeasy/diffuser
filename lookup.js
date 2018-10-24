@@ -16,11 +16,11 @@ Router.prototype.route = function (hashed) {
 }
 
 Router.compare = function (left, right) {
-    var compare = Monotonic(left.promise, right.promise)
+    var compare = Monotonic.compare(left.promise, right.promise)
     if (compare == 0) {
-        return compare
+        return left.index - right.index
     }
-    return left.index - right.index
+    return compare
 }
 
 module.exports = Router

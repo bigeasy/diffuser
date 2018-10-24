@@ -9,21 +9,23 @@ var RBTree = require('bintrees').RBTree
 function Dispatcher (options) {
     this._index = options.index
     this._router = null
-    this._backlogged = new RBTree(Monotonic.compare)
     this._backlogs = {
         synchronize: new Vivifyer(function () { return [] }),
         route: { queue: new Procession, shifter: null }
     }
     this._backlogs.route.shifter = this._backlogs.route.queue.shifter()
-    this._router = { dirty: true }
+    this._router = null
+    this._receiver = options.receiver
+    this._visitor = options.visitor
     this._countdown = new Countdown
-    this._synchronized = '0/0'
+    this._cliffhanger = options.cliffhanger
     this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._registrar = options.registrar
+    this._connector = options.connector
 }
 
 Dispatcher.prototype.setRoutes = function (routes) {
-    this._router = new Router(routes)
+    this._router = new Router(routes, this._index)
     this._countdown.start(routes)
     var backlog = this._backlogs.synchronize.get(routes.promise)
     this._backlogs.synchronize.remove(routes.promise)
@@ -35,8 +37,9 @@ Dispatcher.prototype._setRegistration = function (hashed, from) {
 }
 
 Dispatcher.prototype.dispatch = function (envelope) {
+    var to
     assert(envelope.module == 'diffuser')
-    assert(envelope.to.promise == this._router.self && envelope.to.index == this._index)
+    assert(Router.compare(envelope.to, this._router.from) == 0)
     // We've not yet received a route from consensus, so let's pretend we didn't
     // even get this envelope yet. Note that envelopes will always be sent from a
     // specific peer with their route promises in ascending order.
@@ -63,17 +66,23 @@ Dispatcher.prototype.dispatch = function (envelope) {
         // Regardless of all that versioning guff above, we only have one bucket
         // table at a time and we only record a registration if the bucket
         // routes to ourselves.
-        } else if (Router.compare(this._router.route(envelope.hashed), this._self) == 0) {
-            this._setRegistration(envelope.hashed, envelope.from)
+        } else if (Router.compare(this._router.route(envelope.body), this._router.from) == 0) {
+            this._setRegistration(envelope.body, envelope.from)
         }
     } else if (this._countdown.count != 0) {
         this._backlogs.route.queue.push(envelope)
+    // TODO No. We may have to reroute, right?
+    } else if (Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0) {
+        // TODO We should count hops and make sure we're not in a loop.
+        envelope.promise = this._router.promise
+        envelope.to = to
+        this._connector.push(envelope)
     } else {
-        assert(Router.compare(this._router.route(envelope.hashed), this._self) == 0)
         switch (envelope.destination + '/' + envelope.method) {
         case 'router/register':
             this._setRegistration(envelope.hashed, envelope.from)
-            client.push({
+            this._connector.push({
+                promise: this._router.promise,
                 module: 'diffuser',
                 method: 'respond',
                 destination: 'source',
@@ -87,11 +96,12 @@ Dispatcher.prototype.dispatch = function (envelope) {
         case 'router/unregister':
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
             var exists = !! registration[envelope.hashed.stringified], deleted = false
-            if (registration[envelope.hashed.stringified] == envelope.from) {
+            if (exists && Router.compare(registration[envelope.hashed.stringified], envelope.from) == 0) {
                 delete registration[envelope.hashed.stringified]
                 deleted = true
             }
-            client.push({
+            this._connector.push({
+                promise: this._router.promise,
                 module: 'diffuser',
                 method: 'respond',
                 destination: 'source',
@@ -104,28 +114,29 @@ Dispatcher.prototype.dispatch = function (envelope) {
             })
             break
         case 'router/route':
-            this._visit.act(envelope)
+            this._visitor.act(this._connector, envelope)
             break
         case 'receiver/route':
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
             var address = registration[envelope.hashed.stringified]
             if (address == null) {
-                client.push({
+                this._connector.push({
+                    promise: this._router.promise,
                     module: 'diffuser',
-                    method: 'respond',
                     destination: 'source',
+                    method: 'respond',
                     hashed: envelope.hashed,
                     from: envelope.from,
                     to: envelope.from,
                     status: 'missing',
-                    cookie: envelope.cookie,
-                    body: null
+                    cookie: envelope.cookie
                 })
             } else {
-                client.push({
+                this._connector.push({
+                    promise: this._router.promise,
                     module: 'diffuser',
-                    method: 'receive',
                     destination: 'receiver',
+                    method: 'receive',
                     hashed: envelope.hashed,
                     from: envelope.from,
                     to: address,
@@ -134,9 +145,21 @@ Dispatcher.prototype.dispatch = function (envelope) {
                 })
             }
             break
-        case 'receiver/recieve':
+        case 'receiver/receive':
             if (this._registrar.contains(envelope.hashed)) {
-                this._receive.act(envelope)
+                this._visitor.act(this._connector, envelope)
+            } else {
+                this._connector.push({
+                    promise: this._router.promise,
+                    module: 'diffuser',
+                    destination: 'source',
+                    method: 'respond',
+                    hashed: envelope.hashed,
+                    from: envelope.from,
+                    to: envelope.from,
+                    status: 'missing',
+                    cookie: envelope.cookie
+                })
             }
             break
         case 'receiver/respond':
