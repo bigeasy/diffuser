@@ -22,14 +22,14 @@ var Demur = require('demur')
 
 var Signal = require('signal')
 
-var Connections = require('./connections')
+var Addresser = require('./addresser')
 
 var Router = require('./lookup')
 
 function Connector (destructible, index) {
     this.feedback = new Procession
     var self = this
-    this._connections = new Connections
+    this._connections = new Addresser
     this._destructible = destructible
     this._index = index
     destructible.destruct.wait(this, function () {

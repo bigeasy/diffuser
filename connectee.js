@@ -9,12 +9,12 @@ var assert = require('assert')
 
 var Window = require('conduit/window')
 
-var Connections = require('./connections')
+var Addresser = require('./addresser')
 
 function Connectee (destructible) {
     this._destructible = destructible
-    this._connections = new Connections
-    this._windows = new Connections
+    this._connections = new Addresser
+    this._windows = new Addresser
     this.inbox = new Procession
     destructible.destruct.wait(this, function () {
         this._diffLocations({})
