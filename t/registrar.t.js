@@ -3,9 +3,9 @@ require('proof')(3, prove)
 function prove (okay) {
     function Hash (value) { return { hash: value, stringified: String(value) } }
     var Registrar = require('../registrar')
-    var client = []
+    var connector = []
     var registrar = new Registrar({
-        client: client,
+        connector: connector,
         index: 2,
         buckets: 7
     })
@@ -55,10 +55,10 @@ function prove (okay) {
         promise: '2/0',
         body: null
     }]
-    okay(client, sent, 'arrive')
+    okay(connector, sent, 'arrive')
     registrar.unregister(Hash(1))
     registrar.register(Hash(5))
-    client.length = 0
+    connector.length = 0
     sent[0] = {
         module: 'diffuser',
         method: 'synchronize',
@@ -75,5 +75,5 @@ function prove (okay) {
         properties: { '1/0': { count: 2 }, '2/0': { count: 2 } }
     })
     registrar.synchronize()
-    okay(client, sent, 'depart')
+    okay(connector, sent, 'depart')
 }

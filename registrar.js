@@ -1,7 +1,7 @@
 var Router = require('./lookup')
 
 function Registrar (options) {
-    this._client = options.client
+    this._connector = options.connector
     this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._index = options.index
 }
@@ -25,7 +25,7 @@ Registrar.prototype.unregister = function (hashed) {
 Registrar.prototype._transfer = function transfer (map) {
     for (var stringified in map) {
         var hashed = map[stringified]
-        this._client.push({
+        this._connector.push({
             module: 'diffuser',
             method: 'synchronize',
             from: this._router.from,
@@ -53,7 +53,7 @@ Registrar.prototype.synchronize = function (from, routes) {
     for (var promise in this._router.properties) {
         var count = this._router.properties[promise].count
         for (var index = 0; index < count; index++) {
-            this._client.push({
+            this._connector.push({
                 module: 'diffuser',
                 method: 'synchronize',
                 from: this._router.from,
