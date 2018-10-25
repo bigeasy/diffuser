@@ -4,7 +4,6 @@ var Vivifyer = require('vivifyer')
 var Countdown = require('./countdown')
 var Procession = require('procession')
 var assert = require('assert')
-var RBTree = require('bintrees').RBTree
 
 function Dispatcher (options) {
     this._index = options.index
@@ -19,6 +18,7 @@ function Dispatcher (options) {
     this._visitor = options.visitor
     this._countdown = new Countdown
     this._cliffhanger = options.cliffhanger
+    assert(this._cliffhanger)
     this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._registrar = options.registrar
     this._connector = options.connector
@@ -26,6 +26,8 @@ function Dispatcher (options) {
 
 Dispatcher.prototype.setRoutes = function (routes) {
     this._router = new Router(routes, this._index)
+    this._visitor.setRouter(this._router)
+    this._receiver.setRouter(this._router)
     this._countdown.start(routes)
     var backlog = this._backlogs.synchronize.get(routes.promise)
     this._backlogs.synchronize.remove(routes.promise)
@@ -84,8 +86,8 @@ Dispatcher.prototype.dispatch = function (envelope) {
             this._connector.push({
                 promise: this._router.promise,
                 module: 'diffuser',
-                method: 'respond',
                 destination: 'source',
+                method: 'respond',
                 hashed: envelope.hashed,
                 from: envelope.from,
                 to: envelope.from,
@@ -103,8 +105,8 @@ Dispatcher.prototype.dispatch = function (envelope) {
             this._connector.push({
                 promise: this._router.promise,
                 module: 'diffuser',
-                method: 'respond',
                 destination: 'source',
+                method: 'respond',
                 hashed: envelope.hashed,
                 from: envelope.from,
                 to: envelope.from,
@@ -147,7 +149,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
             break
         case 'receiver/receive':
             if (this._registrar.contains(envelope.hashed)) {
-                this._visitor.act(this._connector, envelope)
+                this._receiver.act(this._connector, envelope)
             } else {
                 this._connector.push({
                     promise: this._router.promise,
@@ -162,7 +164,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
                 })
             }
             break
-        case 'receiver/respond':
+        case 'source/respond':
             this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
             break
         }

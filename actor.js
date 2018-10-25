@@ -13,6 +13,10 @@ function Actor (destuctible, f) {
     this._queue = new Turnstile.Queue(this, '_act', this.turnstile)
 }
 
+Actor.prototype.setRouter = function (router) {
+    this._router = router
+}
+
 Actor.prototype.act = function (connector, envelope) {
     this._queue.push({ connector: connector, envelope: envelope })
 }
@@ -24,8 +28,10 @@ Actor.prototype._act = cadence(function (async, envelope) {
             this._f.call(null, envelope.body, async())
         }, [], function (values) {
             connector.push({
-                method: 'respond',
+                promise: this._router.promise,
+                module: 'diffuser',
                 destination: 'source',
+                method: 'respond',
                 hashed: envelope.hashed,
                 from: envelope.from,
                 to: envelope.from,
@@ -37,8 +43,10 @@ Actor.prototype._act = cadence(function (async, envelope) {
     }, function (error) {
         logger.error('error', { tag: [ 'actor' ], stack: error.stack })
         connector.push({
-            method: 'respond',
+            promise: this._router.promise,
+            module: 'diffuser',
             destination: 'source',
+            method: 'respond',
             hashed: envelope.hashed,
             from: envelope.from,
             to: envelope.from,

@@ -8,7 +8,7 @@ function prove (okay, callback) {
 
     var cadence = require('cadence')
     cadence(function (async) {
-        var client = []
+        var connector = []
         var Actor = require('../actor')
         async(function () {
             destructible.monitor('actor', Actor, function (body, callback) {
@@ -25,19 +25,20 @@ function prove (okay, callback) {
                 }
             }, async())
         }, function (actor) {
-            actor.act(client, {
+            actor.setRouter({ promise: '1/0' })
+            actor.act(connector, {
                 hashed: { hash: 1, stringified: '1', key: 1 },
                 from: '1/0',
                 cookie: 0,
                 body: 0
             })
-            actor.act(client, {
+            actor.act(connector, {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
                 body: 1
             })
-            actor.act(client, {
+            actor.act(connector, {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
@@ -45,18 +46,22 @@ function prove (okay, callback) {
             })
             setTimeout(async(), 50)
         }, function () {
-            okay(client, [{
-                hashed: { hash: 1, stringified: '1', key: 1 },
-                method: 'respond',
+            okay(connector, [{
+                promise: '1/0',
+                module: 'diffuser',
                 destination: 'source',
+                method: 'respond',
+                hashed: { hash: 1, stringified: '1', key: 1 },
                 cookie: 0,
                 from: '1/0',
                 to: '1/0',
                 status: 'received',
                 values: [ 'a' ]
             }, {
-                method: 'respond',
+                promise: '1/0',
+                module: 'diffuser',
                 destination: 'source',
+                method: 'respond',
                 hashed: {},
                 cookie: 1,
                 from: '1/0',
@@ -64,8 +69,10 @@ function prove (okay, callback) {
                 status: 'received',
                 values: [ 'b' ]
             }, {
-                method: 'respond',
+                promise: '1/0',
+                module: 'diffuser',
                 destination: 'source',
+                method: 'respond',
                 hashed: {},
                 cookie: 1,
                 from: '1/0',
@@ -76,8 +83,9 @@ function prove (okay, callback) {
         }, function () {
             destructible.monitor('actor', Actor, true, async())
         }, function (actor) {
-            client.length = 0
-            actor.act(client, {
+            actor.setRouter({ promise: '1/0' })
+            connector.length = 0
+            actor.act(connector, {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
@@ -85,9 +93,11 @@ function prove (okay, callback) {
             })
             setTimeout(async(), 50)
         }, function () {
-            okay(client, [{
-                method: 'respond',
+            okay(connector, [{
+                promise: '1/0',
+                module: 'diffuser',
                 destination: 'source',
+                method: 'respond',
                 hashed: {},
                 cookie: 1,
                 from: '1/0',

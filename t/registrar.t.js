@@ -6,7 +6,7 @@ function prove (okay) {
     var connector = []
     var registrar = new Registrar({
         connector: connector,
-        index: 2,
+        index: 1,
         buckets: 7
     })
     registrar.setRoutes({
@@ -22,36 +22,36 @@ function prove (okay) {
     var sent = [{
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
         to: { promise: '2/0', index: 1 },
         promise: '2/0',
         body: { hash: 1, stringified: '1' }
     }, {
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
-        to: { promise: '1/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
+        to: { promise: '1/0', index: 0 },
         promise: '2/0',
         body: null
     }, {
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
-        to: { promise: '1/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
+        to: { promise: '1/0', index: 1 },
         promise: '2/0',
         body: null
     }, {
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
-        to: { promise: '2/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
+        to: { promise: '2/0', index: 0 },
         promise: '2/0',
         body: null
     }, {
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
-        to: { promise: '2/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
+        to: { promise: '2/0', index: 1 },
         promise: '2/0',
         body: null
     }]
@@ -62,7 +62,7 @@ function prove (okay) {
     sent[0] = {
         module: 'diffuser',
         method: 'synchronize',
-        from: { promise: '1/0', index: 2 },
+        from: { promise: '1/0', index: 1 },
         to: { promise: '1/0', index: 1 },
         promise: '2/0',
         body: { hash: 5, stringified: '5' }

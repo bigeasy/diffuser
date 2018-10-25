@@ -9,7 +9,7 @@ INDEX=$1
 PATH=$PATH:./node_modules/.bin
 
 olio listen --socket ./socket                                                   \
-    "$(olio serve --workers 8 --name run ./bin/run.bin.js)"                     \
+    "$(olio serve --workers 1 --name run ./bin/run.bin.js)"                     \
     "$(olio serve --workers 1 --name diffuser ./diffuser.bin.js                 \
         --bind 127.0.0.1:828$1                                                  \
         --compassion http://127.0.0.1:8386                                      \

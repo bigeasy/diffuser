@@ -1,50 +1,50 @@
-var cadence = require('cadence')
-var descendent = require('foremost')('descendent')
-var Connectee = require('./connectee')
-var Synchronizer = require('./synchronizer')
-var Connector = require('./connector')
-var Client = require('./client')
-var coalesce = require('extant')
-var Signal = require('signal')
-var Interrupt = require('interrupt').createInterrupter('diffuser')
-var Hash = require('./hash')
-var Router = require('./router')
 var Cliffhanger = require('cliffhanger')
+var Signal = require('signal')
+
+var Interrupt = require('interrupt').createInterrupter('diffuser')
+
 var Actor = require('./actor')
+var Connectee = require('./connectee')
+var Connector = require('./connector')
+var Registrar = require('./registrar')
+var Requester = require('./requester')
+var Dispatcher = require('./dispatcher')
+var Hash = require('./hash')
 
-var Counter = require('./counter')
+var descendent = require('foremost')('descendent')
 
-function Diffuser (destructible, connector, connectee, visited, received, options, callback) {
-    var dispatch = dispatcher.dispatch.bind(dispatcher)
-    var inbox = connectee.inbox.pump(dispatch, destructible.monitor('inbox'))
-    destructible.destruct.wait(inbox, 'destroy')
-    this._connectee = connectee
-    this._synchronizer = synchronizer
-    this._olio = options.olio
-    this._diffuserName = coalesce(options.diffuserName, 'diffuser')
-    this._isRouter = !! options.router
-    this._client = null
-    this._actors = {
-        router: coalesce(options.router, cadence(function (async) { return null })),
-        sink: coalesce(options.sink, cadence(function (async) { return null }))
-    }
-    this._actor = new Actor(destructible, this._actors.sink)
+var cadence = require('cadence')
+var coalesce = require('extant')
+
+function Diffuser (destructible, sibling, connectee, connector, visitor, receiver, options, callback) {
     var cliffhanger = new Cliffhanger
-    this._client = new Client(connector)
     this._registrar = new Registrar({
+        index: options.olio.index,
         cliffhanger: cliffhanger,
-        client: client
+        connector: connector
     })
     this._dispatcher = new Dispatcher({
-        cliffhanger: this._cliffhanger,
-        client: this._client,
+        index: options.olio.index,
+        cliffhanger: cliffhanger,
+        connector: connector,
         registrar: this._registrar,
-        visited: visited,
-        received: received
+        visitor: visitor,
+        receiver: receiver
     })
+    this._requester = new Requester({
+        index: options.olio.index,
+        cliffhanger: cliffhanger,
+        timeout: 5000, // TODO Pass in.
+        Hash: Hash,
+        connector: connector,
+        registrar: this._registrar
+    })
+    this._connectee = connectee
+    this._connector = connector
 
-    this._ready = new Signal
-    this._ready.wait(callback)
+    var dispatch = this._dispatcher.dispatch.bind(this._dispatcher)
+    var inbox = this._connectee.inbox.pump(dispatch, destructible.monitor('inbox'))
+    destructible.destruct.wait(inbox, 'destroy')
 
     var socket = this._connectee.socket.bind(this._connectee)
     descendent.on('diffuser:socket', socket)
@@ -52,52 +52,43 @@ function Diffuser (destructible, connector, connectee, visited, received, option
         descendent.removeListener('diffuser:socket', socket)
     })
     descendent.up(sibling.paths[0], 'diffuser:ready', {
-        name: this._olio.name,
-        index: this._olio.index,
-        isRouter: this._isRouter
+        name: options.olio.name,
+        index: options.olio.index,
+        isRouter: !! options.router
     })
 
     var setRoutes = this._setRoutes.bind(this)
-    destructible.destruct.wait(this._ready.unlatch.bind(this._ready, new Interrupt('unready')))
     descendent.on('diffuser:routes', setRoutes)
     destructible.destruct.wait(function () {
         descendent.removeListener('diffuser:routes', setRoutes)
     })
+
+    this._ready = new Signal
+    destructible.destruct.wait(this._ready.unlatch.bind(this._ready, new Interrupt('unready')))
+    this._ready.wait(callback)
 }
 
 Diffuser.prototype._setRoutes = function (message) {
-    this._dispatcher.setRoutes(message)
-    this._client.setRoutes(message)
-    this._connector.setRoutes(message)
-    this._requester.setRoutes(message)
-    this._registrar.setRoutes(message)
-    this._ready.unlatch(null, this)
+    this._dispatcher.setRoutes(message.body)
+    this._connector.setRoutes(message.body)
+    this._connectee.setRoutes(message.body)
+    this._requester.setRoutes(message.body)
+    this._registrar.setRoutes(message.body)
+    this._ready.unlatch(null, this._requester)
+    this._registrar.synchronize()
 }
-
-Diffuser.prototype._ready = cadence(function (async, destructible) {
-    async(function () {
-        this._olio.sibling(this._diffuserName, async())
-    }, function (sibling) {
-        // The diffuser process is definately listening because it registered
-        // itself prior to starting Olio.
-        ready.wait(async())
-    }, function () {
-        return this
-    })
-})
 
 module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
+    descendent.increment()
+    destructible.destruct.wait(descendent, 'decrement')
     async(function () {
         options.olio.sibling(diffuserName, async())
-    }, function (sibling) {
-        descendent.increment()
-        destructible.destruct.wait(descendent, 'decrement')
         destructible.monitor('connectee', Connectee, async())
         destructible.monitor('connector', Connector, options.olio.index, async())
-        destructible.monitor('visited', Actor, options.router, async())
-        destructible.monitor('received', Actor, options.receiver, async())
-    }, function (connector, conectee, visited, received) {
-        new Diffuser(destructible, connectee, connectee, visited, received, options, async())
+        destructible.monitor('visitor', Actor, options.router, async())
+        destructible.monitor('receiver', Actor, options.receiver, async())
+    }, function (sibling, connectee, connector, visitor, receiver) {
+        new Diffuser(destructible, sibling, connectee, connector, visitor, receiver, options, async())
     })
 })

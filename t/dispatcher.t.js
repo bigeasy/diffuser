@@ -9,8 +9,14 @@ function prove (okay) {
     var dispatcher = new Dispatcher({
         index: 0,
         buckets: 7,
-        visitor: { act: function (client, envelope) { actions.push(envelope) } },
-        receiver: { act: function (client, envelope) { actions.push(envelope) } },
+        visitor: {
+            setRouter: function () {},
+            act: function (client, envelope) { actions.push(envelope) }
+        },
+        receiver: {
+            setRouter: function () {},
+            act: function (client, envelope) { actions.push(envelope) }
+        },
         connector: connector,
         cliffhanger: cliffhanger,
         registrar: {
@@ -339,7 +345,7 @@ function prove (okay) {
     dispatcher.dispatch({
         promise: '2/0',
         module: 'diffuser',
-        destination: 'receiver',
+        destination: 'source',
         method: 'respond',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
@@ -348,7 +354,7 @@ function prove (okay) {
             okay(result, {
                 promise: '2/0',
                 module: 'diffuser',
-                destination: 'receiver',
+                destination: 'source',
                 method: 'respond',
                 to: { promise: '1/0', index: 0 },
                 from: { promise: '1/0', index: 0 },

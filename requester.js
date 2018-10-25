@@ -6,12 +6,13 @@ function Requester (options) {
     this._index = options.index
     this._cliffhanger = options.cliffhanger
     this._Hash = options.Hash
-    this._timeout = coalesce(options.timeout)
+    this._timeout = coalesce(options.timeout, 5000)
     this._connector = options.connector
     this._registrar = options.registrar
 }
 
 Requester.prototype.setRoutes = function (routes) {
+    console.log(routes)
     this._router = new Router(routes, this._index)
 }
 
@@ -25,6 +26,7 @@ Requester.prototype.register = cadence(function (async, key) {
     async(function () {
         this._connector.push({
             promise: this._router.promise,
+            module: 'diffuser',
             destination: 'router',
             method: 'register',
             to: this._router.route(hashed),
@@ -43,6 +45,7 @@ Requester.prototype.unregister = cadence(function (async, key) {
     async(function () {
         this._connector.push({
             promise: this._router.promise,
+            module: 'diffuser',
             destination: 'router',
             method: 'unregister',
             to: this._router.route(hashed),
@@ -60,6 +63,7 @@ Requester.prototype.route = cadence(function (async, destination, key, value) {
     async(function () {
         this._connector.push({
             promise: this._router.promise,
+            module: 'diffuser',
             destination: destination,
             method: 'route',
             to: this._router.route(hashed),

@@ -77,7 +77,7 @@ require('arguable')(module, function (program, callback) {
     Service.prototype.route = cadence(function (async, request, index) {
         async(function () {
             // TODO Yes, pass key to handler, you duplicate otherwise.
-            this.diffuser.route('sink', { name: 'run', index: 0 }, {
+            this.diffuser.route('receiver', { name: 'run', index: 0 }, {
                 module: 'example',
                 method: 'get',
                 key: { name: 'run', index: 0 }
@@ -108,7 +108,8 @@ require('arguable')(module, function (program, callback) {
                             return coalesce(storage[envelope.key])
                         }
                     }),
-                    sink: cadence(function (async, envelope) {
+                    receiver: cadence(function (async, envelope) {
+                        console.log('RECEIVER IS CALLED!!!!')
                         return { value: 1, index: olio.index }
                     })
                 }, async())
@@ -131,7 +132,7 @@ require('arguable')(module, function (program, callback) {
                         setTimeout(async(), 3000)
                 }, function () {
                     console.log('will route')
-                    service.route({ body: {} }, 'key', async())
+                    service.route({ body: {} }, async())
                 }, function (response) {
                     console.log(olio.index, response)
 //                    diffuser.unregister({ name: 'run', index: olio.index }, async())

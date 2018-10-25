@@ -49,6 +49,7 @@ Socketeer.prototype._socket = cadence(function (async, envelope) {
         // TODO Pluck name from association or else destroy socket.
         olio.sibling(name, async())
     }, function (sibling) {
+        console.log(request.headers)
         console.log('sending socket', sibling.paths[message.to.index], message.from, !! socket)
         descendent.up(sibling.paths[message.to.index], 'diffuser:socket', message, socket)
     })

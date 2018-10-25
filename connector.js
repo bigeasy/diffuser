@@ -39,12 +39,12 @@ function Connector (destructible, index) {
 
 Connector.prototype.push = function (envelope) {
     if (this._router.properties[envelope.to.promise] != null) {
-        this._connector.connect(envelope.to).push(envelope)
+        this.connect(envelope.to).push(envelope)
     }
 }
 
 Connector.prototype.setRoutes = function (routes) {
-    this._router = new Router(routes)
+    this._router = new Router(routes, this._index)
     this._diffLocations(this._router.properties)
 }
 

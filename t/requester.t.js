@@ -30,6 +30,7 @@ function prove (async, okay) {
         requester.register(1, async())
         okay(connector.shift(), {
             promise: '2/0',
+            module: 'diffuser',
             destination: 'router',
             method: 'register',
             to: { promise: '2/0', index: 1 },
@@ -43,6 +44,7 @@ function prove (async, okay) {
         requester.unregister(1, async())
         okay(connector.shift(), {
             promise: '2/0',
+            module: 'diffuser',
             destination: 'router',
             method: 'unregister',
             to: { promise: '2/0', index: 1 },
@@ -56,6 +58,7 @@ function prove (async, okay) {
         requester.route('receiver', 1, 'x', async())
         okay(connector.shift(), {
             promise: '2/0',
+            module: 'diffuser',
             destination: 'receiver',
             method: 'route',
             to: { promise: '2/0', index: 1 },

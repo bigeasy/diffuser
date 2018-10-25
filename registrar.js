@@ -36,7 +36,7 @@ Registrar.prototype._transfer = function transfer (map) {
     }
 }
 
-Registrar.prototype.synchronize = function (from, routes) {
+Registrar.prototype.synchronize = function () {
     if (this._router.event.action == 'arrive') {
         this._registrations.forEach(function (map, index) {
             if (this._router.buckets[index] == this._router.event.promise) {
@@ -57,7 +57,7 @@ Registrar.prototype.synchronize = function (from, routes) {
                 module: 'diffuser',
                 method: 'synchronize',
                 from: this._router.from,
-                to: { promise: promise, index: count },
+                to: { promise: promise, index: index },
                 promise: this._router.promise,
                 body: null
             })
