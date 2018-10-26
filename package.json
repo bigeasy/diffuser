@@ -43,7 +43,7 @@
     },
     "devDependencies":
     {
-                            "prolific":                     "18.4.x",
+                            "prolific":                     "18.7.x",
                             "prolific.stdio":               "6.0.x",
                             "prolific.syslog":              "8.1.x",
                             "compassion":                   "1.4.x",
