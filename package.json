@@ -45,7 +45,7 @@
     {
                             "prolific":                     "18.7.x",
                             "prolific.stdio":               "6.0.x",
-                            "prolific.syslog":              "8.1.x",
+                            "prolific.syslog":              "8.2.x",
                             "compassion":                   "1.4.x",
                             "compassion.colleague":         "0.46.x",
                             "mingle":                       "0.14.x",
