@@ -76,7 +76,7 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
     shutdown.wait(destructible, 'destroy')
     var done = destructible.monitor('retries')
     var looped = 0
-    var demur = new Demur
+    var demur = new Demur({ immediate: true })
     var sender = new Sender(destructible, this.feedback)
     var counter = ++COUNTER
     var location = url.parse(this._router.properties[to.promise].location)
