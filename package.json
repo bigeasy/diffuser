@@ -34,7 +34,7 @@
                             "olio":                         "0.19.x",
                             "operation":                    "2.0.x",
                             "procession":                   "0.22.x",
-                            "prolific.logger":              "8.2.x",
+                            "prolific.logger":              "8.4.x",
                             "reactor":                      "10.6.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "4.6.x",
@@ -44,7 +44,6 @@
     "devDependencies":
     {
                             "prolific":                     "18.7.x",
-                            "prolific.stdio":               "6.0.x",
                             "prolific.syslog":              "8.2.x",
                             "compassion":                   "1.4.x",
                             "compassion.colleague":         "0.46.x",
