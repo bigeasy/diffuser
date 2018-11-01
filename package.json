@@ -31,7 +31,7 @@
                             "extant":                       "1.0.x",
                             "hash.fnv":                     "1.0.x",
                             "keyify":                       "0.0.x",
-                            "olio":                         "0.19.x",
+                            "olio":                         "0.20.x",
                             "operation":                    "2.0.x",
                             "procession":                   "0.22.x",
                             "prolific.logger":              "8.4.x",
