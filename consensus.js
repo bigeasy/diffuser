@@ -1,107 +1,78 @@
-// Control-flow utilities.
-var cadence = require('cadence')
-
 // Node.js API.
 var assert = require('assert')
-var crypto = require('crypto')
+
+// Control-flow utilities.
+var cadence = require('cadence')
 
 // Evented map.
 var Cubbyhole = require('cubbyhole')
 
-// Error-first callback interface to HTTP.
-var UserAgent = require('vizsla')
-
-// Bind an object to Sencha Connect middleware.
-var Reactor = require('reactor')
-
-// Logging pipeline.
-var logger = require('prolific.logger').createLogger('addendum')
-
-var Table = require('./table')
-
+// An evented message queue.
 var Procession = require('procession')
 
-function Diffuser (compassionUrl, count) {
+// Our deterministic routing table builder.
+var Table = require('./table')
+
+// Count is the number of buckets to divide among instances.
+function Consensus (count) {
     this.routes = new Procession
-    this._index = 0
-    this._compassionUrl = compassionUrl
     this._cubbyholes = new Cubbyhole
-    this._ua = new UserAgent
     this._table = new Table
     this._count = count
-    this._locations = {}
-    this.reactor = new Reactor(this, function (dispatcher) {
-        dispatcher.dispatch('GET /', 'index')
-        dispatcher.dispatch('GET /ping', 'ping')
-        dispatcher.dispatch('POST /register', 'register')
-        dispatcher.dispatch('POST /bootstrap', 'bootstrap')
-        dispatcher.dispatch('POST /join', 'join')
-        dispatcher.dispatch('POST /snapshot', 'snapshot')
-        dispatcher.dispatch('POST /arrive', 'arrive')
-        dispatcher.dispatch('POST /acclimated', 'acclimated')
-        dispatcher.dispatch('POST /depart', 'depart')
-    })
 }
 
-Diffuser.prototype.index = cadence(function (async) {
-    return [ 200, { 'content-type': 'text/plain' }, 'Diffuser Consensus API\n' ]
-})
-
-Diffuser.prototype.ping = cadence(function (async) {
-    return 200
-})
-
-Diffuser.prototype.register = cadence(function (async, request) {
-    this._token = request.body.token
-    return 200
-})
-
-Diffuser.prototype.bootstrap = cadence(function (async, request) {
-    this._table.bootstrap(request.body.self.arrived, this._count)
-    return 200
-})
-
-Diffuser.prototype.join = cadence(function (async, request) {
+// Provide the current state of the routing tables for a new participant joining
+// the consensus.
+Consensus.prototype.snapshot = cadence(function (async, promise, outbox) {
     async(function () {
-        this._ua.fetch({
-            url: this._compassionUrl,
-        }, {
-            token: this._token,
-            url: './snapshot',
-            parse: 'json',
-            raise: true
-        }, async())
-    }, function (body) {
-        this._table.join(request.body.self.arrived, body)
-        return 200
-    })
-})
-
-Diffuser.prototype.snapshot = cadence(function (async, request) {
-    async(function () {
-       this._cubbyholes.wait(request.body.promise, async())
+       this._cubbyholes.wait(promise, async())
     }, function (stored) {
-        return stored
+        outbox.push(stored)
+        outbox.end()
     })
 })
 
-Diffuser.prototype.arrive = cadence(function (async, request) {
-    this._cubbyholes.set(request.body.government.promise, null, this._table.getSnapshot())
-    this._table.arrive(request.body.government.promise, request.body.arrived.properties)
-    this.routes.push(this._table.getSnapshot({ action: 'arrive', promise: request.body.government.promise }))
-    return 200
+// Dispatch a consensus message.
+Consensus.prototype.dispatch = cadence(function (async, envelope) {
+    switch (envelope.method) {
+    case 'bootstrap':
+        // Make a routing table that includes just us.
+        this._table.bootstrap(envelope.self.arrived, this._count)
+        break
+    case 'join':
+        // Copy the existing routing table from a peer when we join an existing
+        // consensus. Will be followed by an arrive message we'll use to add
+        // ourselves to the table.
+        async(function () {
+            envelope.snapshot.dequeue(async())
+        }, function (body) {
+            this._table.join(envelope.self.arrived, body)
+            envelope.snapshot.dequeue(async())
+        }, function (value) {
+            assert(value == null, 'eos expected')
+        })
+        break
+    case 'arrive':
+        // Add a newly arrived participant to the routing table. Get a snapshot
+        // of the existing table before we add the arrival in case the arrival
+        // asks us for the existing state.
+        this._cubbyholes.set(envelope.government.promise, null, this._table.getSnapshot())
+        this._table.arrive(envelope.government.promise, envelope.entry.arrive.properties)
+        this.routes.push(this._table.getSnapshot({ action: 'arrive', promise: envelope.government.promise }))
+        break
+    case 'acclimated':
+        // Discard our existing state snapshot once an arrival has acclimated.
+        this._cubbyholes.remove(envelope.government.promise)
+        break
+    case 'depart':
+        // Remove a participant from the routing table and discard the exisiting
+        // state snapshot if any.
+        console.log(envelope)
+        this._cubbyholes.remove(envelope.body.departed.promise)
+        this._table.depart(envelope.body.departed.promise, envelope.government.promise)
+        this.routes.push(this._table.getSnapshot({ action: 'depart', promise: envelope.body.departed.promise }))
+        break
+    }
 })
 
-Diffuser.prototype.acclimated = cadence(function (async, request) {
-    this._cubbyholes.remove(request.body.government.promise)
-    return 200
-})
-
-Diffuser.prototype.depart = cadence(function (async, request) {
-    this._cubbyholes.remove(request.body.departed.promise)
-    this._table.depart(request.body.departed.promise, request.body.government.promise)
-    this.routes.push(this._table.getSnapshot({ action: 'depart', promise: request.body.departed.promise }))
-    return 200
-})
-
-module.exports = Diffuser
+module.exports = Consensus

@@ -1,4 +1,4 @@
-require('proof')(2, prove)
+require('proof')(4, prove)
 
 function prove (okay, callback) {
     var Destructible = require('destructible')
@@ -13,7 +13,10 @@ function prove (okay, callback) {
     var UserAgent = require('vizsla')
     var ua = new UserAgent
 
-    var Counterfeiter = require('compassion.counterfeiter')
+    var Population = require('compassion.colleague/population')
+    var Resolver = { Static: require('compassion.colleague/resolver/static') }
+
+    var Containerized = require('compassion.colleague/containerized')
 
     destructible.completed.wait(callback)
 
@@ -21,106 +24,75 @@ function prove (okay, callback) {
 
     cadence(function (async) {
         var diffusers = {}
-        async([function () {
-            destructible.destroy()
-        }], function () {
-            destructible.monitor('counterfeiter', Counterfeiter, {
+        async(function () {
+            var population = new Population(new Resolver.Static([ 'http://127.0.0.1:8486/' ]), new UserAgent)
+            destructible.monitor('containerized', Containerized, {
+                population: population,
                 ping: {
-                    application: 150,
+                    chaperon: 150,
                     paxos: 150,
-                    chaperon: 150
+                    application: 150
                 },
                 timeout: {
-                    paxos: 450,
                     chaperon: 450,
-                    http: 450
+                    paxos: 450,
+                    http: 500
+                },
+                bind: {
+                    networked: {
+                        listen: function (server, callback) {
+                            server.listen(8486, '127.0.0.1', callback)
+                        },
+                        address: '127.0.0.1',
+                        port: 8486
+                    }
                 }
             }, async())
-        }, function (counterfeiter) {
-            var events = counterfeiter.events.shifter()
-            diffusers.first = new Diffuser('http://127.0.0.1:8386/', 7)
+        }, function (colleague) {
+            var Conference = require('compassion.conference')
+            var Counterfeiter = require('compassion.counterfeiter/counterfeiter')(Conference)
+            var Application = require('../consensus')
+            var routes = [function (envelope) {
+                okay(envelope.addresses, [ '1/0' ], 'bootstrap')
+            }, function (envelope) {
+                okay(envelope.addresses, [ '1/0', '2/0' ], 'join')
+            }, function (envelope) {
+                okay(envelope.addresses, [ '1/0' ], 'depart')
+            }, function (envelope) {
+                okay(envelope, null, 'end of routes')
+            }]
             async(function () {
-                var server = http.createServer(diffusers.first.reactor.middleware)
-                destroyer(server)
-                destructible.destruct.wait(server, 'destroy')
-                delta(destructible.monitor('first')).ee(server).on('close')
-                server.listen(8081, '127.0.0.1', async())
-            }, function () {
-                ua.fetch({
-                    url: 'http://127.0.0.1:8386/register',
-                    timeout: 1000,
-                    post: {
-                        token: '-',
-                        island: 'diffuser',
-                        id: 'first',
-                        url: 'http://127.0.0.1:8081/',
-                        bootstrap: true,
-                        join: true,
-                        arrive: true,
-                        acclimated: true,
-                        depart: true,
-                        properties: { isRouter: true, location: 'http://127.0.0.1:9081' }
-                    },
-                    parse: 'json',
-                    raise: true
+                var application = new Application(7)
+                destructible.monitor('routes', application.routes.pump(function (envelope) {
+                    routes.shift()(envelope)
+                }), 'destructible', null)
+                destructible.monitor('counterfeiter', Counterfeiter, colleague, application, {
+                    island: 'island',
+                    id: 'first',
+                    properties: { isRouter: true }
                 }, async())
-                counterfeiter.events.shifter().join(function (event) {
-                    if (
-                        event.type == 'consumed' &&
-                        event.id == 'first' &&
-                        event.body.promise == '1/0'
-                    ) {
-                        return true
-                    }
-                    return false
-                }, async())
-            }, function () {
-                okay(diffusers.first._token != null, 'registered')
-                ua.fetch({ url: 'http://127.0.0.1:8081/', parse: 'text', raise: true }, async())
-            }, function (body) {
-                okay(body, 'Diffuser Consensus API\n', 'index')
-                diffusers.second = new Diffuser('http://127.0.0.1:8386/', 7)
-                var server = http.createServer(diffusers.second.reactor.middleware)
-                destroyer(server)
-                destructible.destruct.wait(server, 'destroy')
-                delta(destructible.monitor('second')).ee(server).on('close')
-                server.listen(8082, '127.0.0.1', async())
-            }, function () {
-                ua.fetch({
-                    url: 'http://127.0.0.1:8386/register',
-                    timeout: 1000,
-                    post: {
-                        token: '-',
-                        island: 'diffuser',
+            }, function (first) {
+                async(function () {
+                    first.consumed.shifter().join(function (envelope) {
+                        return envelope.promise == '1/0'
+                    }, async())
+                }, function () {
+                    var application = new Application(7)
+                    destructible.monitor('counterfeiter', Counterfeiter, colleague, application, {
+                        island: 'island',
                         id: 'second',
-                        url: 'http://127.0.0.1:8082/',
-                        join: true,
-                        arrive: true,
-                        acclimated: true,
-                        depart: true,
-                        properties: { isRouter: true, location: 'http://127.0.0.1:9082' }
-                    },
-                    parse: 'json',
-                    raise: true
-                }, async())
-                counterfeiter.events.shifter().join(function (event) {
-                    if (
-                        event.type == 'consumed' &&
-                        event.id == 'second' &&
-                        event.body.promise == '3/0'
-                    ) {
-                        return true
-                    }
-                    return false
-                }, async())
-            }, function () {
-                counterfeiter.terminate('diffuser', 'second')
-                counterfeiter.events.shifter().join(function (event) {
-                    if (event.type == 'consumed' && event.id == 'first' && event.body.promise == '4/0') {
-                        return true
-                    }
-                    return false
-                }, async())
+                        properties: { isRouter: true }
+                    }, async())
+                }, function (second) {
+                    second.consumed.shifter().join(function (envelope) {
+                        return envelope.promise == '2/0'
+                    }, async())
+                }, function () {
+                    colleague.terminate('island', 'second')
+                    first.consumed.shifter().join(function (envelope) {
+                        return envelope.promise == '3/0'
+                    }, async())
+                })
             })
         })
     })(destructible.monitor('test'))
