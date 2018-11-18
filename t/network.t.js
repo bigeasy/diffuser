@@ -13,20 +13,20 @@ function prove (okay, callback) {
 
     var cadence = require('cadence')
 
-    var Connectee = require('../connectee')
-    var Connector = require('../connector')
+    var Connector = require('../connectee')
 
     var destroyer = require('server-destroy')
 
     cadence(function (async) {
         async(function () {
-            destructible.monitor('connectee', Connectee, async())
+            destructible.monitor('connector', Connector, 1, async())
         }, function (connectee) {
             var fail = { connectee: 0, connector: false }
             var http = require('http')
 
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
+                console.log('connecteed')
                 connectee.socket({
                     from: {
                         promise: request.headers['x-diffuser-from-promise'],
@@ -59,17 +59,19 @@ function prove (okay, callback) {
                 async(function () {
                     connectee.inbox.shifter().dequeue(async())
                     connector.setRoutes({
+                        self: '1/0',
                         properties: {
                             '1/0': { location: 'http://127.0.0.1:8089/' },
                             '2/0': { location: 'http://127.0.0.1:8089/' }
                         }
                     })
-                    var outbox = connector.connect(to)
-                    outbox.push(1)
+                    connector.push({ to: { promise: '1/0', index: 1 }, body: 1 })
                     async(function () {
                         setTimeout(async(), 2500)
                     }, function () {
                         server.listen(8089, '127.0.0.1', async())
+                    }, function () {
+                        console.log('listening')
                     })
                 }, function (value) {
                     okay(value, 1, 'pushed')
