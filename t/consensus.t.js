@@ -52,6 +52,9 @@ function prove (okay, callback) {
             var Conference = require('compassion.conference')
             var Counterfeiter = require('compassion.counterfeiter/counterfeiter')(Conference)
             var Application = require('../consensus')
+            destructible.monitor('debug', colleague.events.pump(function (envelope) {
+             //   console.log(envelope)
+            }), 'destructible', null)
             var routes = [function (envelope) {
                 okay(envelope.addresses, [ '1/0' ], 'bootstrap')
             }, function (envelope) {
@@ -78,7 +81,7 @@ function prove (okay, callback) {
                     }, async())
                 }, function () {
                     var application = new Application(7)
-                    destructible.monitor('counterfeiter', Counterfeiter, colleague, application, {
+                    destructible.monitor('counterfeiter', true, Counterfeiter, colleague, application, {
                         island: 'island',
                         id: 'second',
                         properties: { isRouter: true }
@@ -90,6 +93,7 @@ function prove (okay, callback) {
                 }, function () {
                     colleague.terminate('island', 'second')
                     first.consumed.shifter().join(function (envelope) {
+                        console.log('!!! >', envelope)
                         return envelope.promise == '3/0'
                     }, async())
                 })

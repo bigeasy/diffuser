@@ -26,12 +26,17 @@ var Addresser = require('./addresser')
 
 var Router = require('./lookup')
 
+var Socket = require('procession/socket')(require('./hangup'))
+
+var Staccato = require('staccato')
+
 function Connector (destructible, index) {
     this.feedback = new Procession
     var self = this
     this._connections = new Addresser
     this._destructible = destructible
     this._index = index
+    console.log('x')
     destructible.destruct.wait(this, function () {
         this._diffLocations({})
     })
@@ -70,6 +75,56 @@ Connector.prototype.connect = function (to) {
     return connection.outbox
 }
 
+Connector.prototype._connection = cadence(function (async, destructible, demur, to, window) {
+    console.log('looping')
+    var location = url.parse(this._router.properties[to.promise].location)
+    async([function () {
+    }], function () {
+    async([function () {
+        destructible.destroy()
+    }], [function () {
+        console.log('retries')
+        if (destructible.destroyed) {
+            return [ loop.break ]
+        }
+        var request = http.request({
+            host: location.hostname,
+            port: +location.port,
+            headers: Downgrader.headers({
+                'x-diffuser-from-promise': this._router.from.promise,
+                'x-diffuser-from-index': this._router.from.index,
+                'x-diffuser-to-promise': to.promise,
+                'x-diffuser-to-index': to.index
+            })
+        })
+        delta(async()).ee(request).on('upgrade')
+        request.end()
+        console.log('--- getting ---')
+    }, function (error) {
+        console.log(error.stack)
+        logger.error('request', { stack: error.stack })
+        return [ async.break, destructible ]
+    }], function (request, socket, head) {
+        console.log('socketed')
+        var wait = null
+        async(function () {
+            demur.reset()
+            var readable = new Staccato.Readable(socket)
+            var writable = new Staccato.Writable(socket)
+            destructible.monitor('socket', true, Socket, { to: to, location: location }, readable, writable, head, async())
+        }, function (inbox, outbox) {
+            destructible.monitor('conduit', Conduit, inbox, outbox, async())
+        }, function (conduit) {
+            var connection = conduit.connect({ method: 'window', inbox: true, outbox: true })
+            window.connect(connection.inbox, connection.outbox)
+            return [ destructible ]
+        })
+    })
+    }, function () {
+        console.log('returning', arguments)
+    })
+})
+
 var COUNTER = 0
 Connector.prototype._connect = cadence(function (async, destructible, to, shifter) {
     var shutdown = this._connections.get(to).shutdown
@@ -81,57 +136,54 @@ Connector.prototype._connect = cadence(function (async, destructible, to, shifte
     var counter = ++COUNTER
     var location = url.parse(this._router.properties[to.promise].location)
     destructible.destruct.wait(sender.inbox, 'end')
+    destructible.destruct.wait(function () {
+        console.log('cancel demur')
+    })
     destructible.destruct.wait(demur, 'cancel')
     async([function () {
         done()
     }], function () {
-        destructible.monitor([ 'window', COUNTER ], Window, sender, async())
+        destructible.monitor('window', Window, sender, async())
     }, function (window) {
-        destructible.destruct.wait(window, 'hangup')
-        console.log('pumping', to)
-        shifter.pump(sender.outbox)
-        var loop = async([function () {
+        var connection = this._connections.get(to)
+        shifter.drain(connection.outbox = window.outbox, 'push')
+        // Note that there are three recoverable errors. The first is the
+        // request connection and upgrade negotiation. We have a try/catch for
+        // that error below. Then we can have an error on read or write to the
+        // socket. The `Socket` utility from Procession logs and error and ends
+        // the inbox or outbox procession.
+        //
+        // TODO We probably should put the loop body it's own function and
+        // return the destructible, then wait on the destructible to complete.
+        // We can then add a cancel of the http request to the nested
+        // destructible destruct latch.
+        destructible.destruct.wait(window, 'truncate')
+        var loop = async(function () {
             async(function () {
+                console.log('here')
                 demur.retry(async())
             }, function () {
+                console.log('retries')
                 if (destructible.destroyed) {
                     return [ loop.break ]
                 }
-                var request = http.request({
-                    host: location.hostname,
-                    port: +location.port,
-                    headers: Downgrader.headers({
-                        'x-diffuser-from-promise': this._router.from.promise,
-                        'x-diffuser-from-index': this._router.from.index,
-                        'x-diffuser-to-promise': to.promise,
-                        'x-diffuser-to-index': to.index
-                    })
-                })
-                delta(async()).ee(request).on('upgrade')
-                request.end()
-            }, function (request, socket, head) {
-                var wait = null
-                async(function () {
-                    demur.reset()
-                    var destructible = new Destructible([ 'connection', to ])
-                    destructible.destruct.wait(window, 'disconnect')
-                    destructible.completed.wait(async())
-                    destructible.monitor('conduit', Conduit, window, socket, socket, head, null)
-                    delta(destructible.monitor('socket')).ee(socket).on('close')
-                    wait = shutdown.wait(destructible, 'destroy')
-                }, [function () {
-                    shutdown.cancel(wait)
-                }])
+                destructible.monitor('connection', true, this, '_connection', demur, to, window, async())
+            }, function (destructible) {
+                console.log(destructible.completed.open)
+                destructible.completed.wait(async())
             })
-        }, function (error) {
-            console.log(error.stack)
-            logger.error('error', { stack: error.stack })
-        }])()
+        })()
     }, function () {
         this._connections.remove(to)
     })
 })
 
 module.exports = cadence(function (async, destructible, index) {
+    try {
+    console.log('x')
     return new Connector(destructible, index)
+     } catch (e) {
+        console.log(e.stack)
+     }
+    console.log('x')
 })

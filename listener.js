@@ -1,44 +1,29 @@
 var cadence = require('cadence')
-
-var descendent = require('foremost')('descendent')
-
-var Turnstile = require('turnstile')
-Turnstile.Queue = require('turnstile/queue')
+var Turnstile = require('turnstile/redux')
+var restrictor = require('restrictor')
 
 function Listener (destructible, olio) {
     this._olio = olio
-    descendent.increment()
-    destructible.destruct.wait(descendent, 'decrement')
-
-    var turnstile = new Turnstile
-    this._queue = new Turnstile.Queue(this, '_socket', turnstile)
-
-    turnstile.listen(destructible.monitor('socket'))
-    destructible.destruct.wait(turnstile, 'close')
+    this.turnstile = new Turnstile
+    this.turnstile.listen(destructible.monitor('socket'))
+    destructible.destruct.wait(this.turnstile, 'destroy')
 }
 
-Listener.prototype._socket = cadence(function (async, envelope) {
-    var message = envelope.body.message, socket = envelope.body.socket
-    async(function () {
-        this._olio.sibling(message.to.name, async())
-    }, function (sibling) {
-        var path = sibling.paths[message.to.index]
-        descendent.up(path, 'olio:message', message, socket)
-    })
-})
-
-Listener.prototype.socket = function (request, socket) {
-    var message = {
-        module: 'olio',
-        method: 'connect',
-        to: {
-            name: request.headers['x-diffuser-to-name'],
-            index: +request.headers['x-diffuser-to-index']
+Listener.prototype.socket = restrictor.push(cadence(function (async, envelope) {
+    if (!envelope.canceled) {
+        var request = envelope.body.shift(), socket = envelope.body.shift()
+        var message = {
+            module: 'olio',
+            method: 'connect',
+            to: {
+                name: request.headers['x-diffuser-to-name'],
+                index: +request.headers['x-diffuser-to-index']
+            }
         }
+        this._olio.send(message.to.name, message.to.index, message, socket, async())
     }
-    this._queue.push({ message:message, socket: socket })
-}
+}))
 
-module.exports = function (destructible, olio, callback) {
-    callback(null, new Listener(destructible, olio))
-}
+module.exports = cadence(function (async, destructible, olio, callback) {
+    return new Listener(destructible, olio)
+})
