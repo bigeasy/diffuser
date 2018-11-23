@@ -9,7 +9,7 @@ function Embarkator (destructible, options) {
     this._island = options.island
     this._id = options.id
     this.turnstile.listen(destructible.monitor('turnstile'))
-    destructible.destruct.wait(this.turnstile, 'close')
+    destructible.destruct.wait(this.turnstile, 'destroy')
     this._queue = new Turnstile.Queue(this, '_embark', this.turnstile)
     this._ua = options.ua
 }

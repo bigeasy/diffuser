@@ -1,5 +1,5 @@
 var cadence = require('cadence')
-var Turnstile = require('turnstile/redux')
+var Turnstile = require('turnstile')
 var restrictor = require('restrictor')
 
 function Listener (destructible, olio) {

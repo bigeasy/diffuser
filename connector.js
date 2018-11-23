@@ -28,7 +28,7 @@ var Staccato = require('staccato')
 var Router = require('./lookup')
 var Addresser = require('./addresser')
 
-var Turnstile = require('turnstile/redux')
+var Turnstile = require('turnstile')
 Turnstile.Queue = require('turnstile/queue')
 
 var Demur = require('demur')
@@ -334,12 +334,12 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
 Connector.prototype._reconnect = cadence(function (async, destructible, connection) {
     var demur = new Demur({ immediate: true })
     destructible.destruct.wait(demur, 'cancel')
-    var loop = async(function () {
+    async.loop([], function () {
         async(function () {
             demur.retry(async())
         }, function () {
             if (destructible.destroyed) {
-                return [ loop.break ]
+                return [ async.break ]
             }
             async(function () {
                 destructible.monitor('connection', true, this, '_connection', connection, async())
@@ -350,7 +350,7 @@ Connector.prototype._reconnect = cadence(function (async, destructible, connecti
                 destructible.completed.wait(async())
             })
         })
-    })()
+    })
 })
 
 Connector.prototype._connect = restrictor.push(cadence(function (async, envelope) {

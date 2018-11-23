@@ -6,7 +6,6 @@ function prove (okay, callback) {
 
     var delta = require('delta')
 
-    var Operation = require('operation')
     var Downgrader = require('downgrader')
 
     destructible.completed.wait(callback)
@@ -46,7 +45,7 @@ function prove (okay, callback) {
             var server = http.createServer(function () {})
             destroyer(server)
 
-            server.on('upgrade', Operation([ downgrader, 'upgrade' ]))
+            server.on('upgrade', downgrader.upgrade.bind(downgrader))
 
             delta(destructible.monitor('http')).ee(server).on('close')
             destructible.destruct.wait(server, 'destroy')

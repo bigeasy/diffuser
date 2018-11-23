@@ -9,7 +9,7 @@ function Actor (destuctible, f) {
     this._f = f
     this.turnstile = new Turnstile
     this.turnstile.listen(destuctible.monitor('turnstile'))
-    destuctible.destruct.wait(this.turnstile, 'close')
+    destuctible.destruct.wait(this.turnstile, 'destroy')
     this._queue = new Turnstile.Queue(this, '_act', this.turnstile)
 }
 

@@ -14,7 +14,7 @@ function Updater (destructible, socketeer) {
     this.olio = new Signal
     this._socketeer = socketeer
     this.turnstile.listen(destructible.monitor('turnstile'))
-    destructible.destruct.wait(this.turnstile, 'close')
+    destructible.destruct.wait(this.turnstile, 'destroy')
     this._queue = new Turnstile.Queue(this, '_update', this.turnstile)
 }
 
