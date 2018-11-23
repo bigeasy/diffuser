@@ -1,15 +1,21 @@
 var cadence = require('cadence')
 
-function Diffuser () {
+var Consensus = require('./consensus')
+var Conference = require('compassion.conference')
+var Compassion = require('compassion.colleague/compassion')(Conference)
+
+function Listener () {
 }
 
-Diffuser.prototype.reconfigure = cadence(function (async) {
-    return true
+Listener.prototype.message = cadence(function (async, destructible, inbox, outbox) {
 })
 
-module.exports = cadence(function (destructible, olio, configuration) {
+module.exports = cadence(function (async, destructible, olio, properties) {
+    var consensus = new Consensus(properties.count)
     async(function () {
-    }, function () {
-        return new Diffuser
+        destructible.monitor('compassion', Compassion, olio, consensus, 'island', 'first', {}, async())
+    }, function (confernece) {
+        consensus.confernece = confernece
+        return consensus
     })
 })

@@ -13,12 +13,15 @@ var Procession = require('procession')
 // Our deterministic routing table builder.
 var Table = require('./table')
 
+var Signal = require('signal')
+
 // Count is the number of buckets to divide among instances.
 function Consensus (count) {
     this.routes = new Procession
     this._cubbyholes = new Cubbyhole
     this._table = new Table
     this._count = count
+    this.arrived = new Signal
 }
 
 // Provide the current state of the routing tables for a new participant joining
@@ -53,6 +56,8 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         })
         break
     case 'arrive':
+        // The first arrival will be us and `unlatch` is final.
+        this.arrived.unlatch()
         // Add a newly arrived participant to the routing table. Get a snapshot
         // of the existing table before we add the arrival in case the arrival
         // asks us for the existing state.
