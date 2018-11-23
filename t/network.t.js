@@ -13,7 +13,7 @@ function prove (okay, callback) {
 
     var cadence = require('cadence')
 
-    var Connector = require('../connectee')
+    var Connector = require('../connector')
 
     var destroyer = require('server-destroy')
 
