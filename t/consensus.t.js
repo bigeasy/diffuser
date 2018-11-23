@@ -51,7 +51,7 @@ function prove (okay, callback) {
         }, function (colleague) {
             var Conference = require('compassion.conference')
             var Counterfeiter = require('compassion.counterfeiter/counterfeiter')(Conference)
-            var Application = require('../consensus')
+            var Consensus = require('../consensus')
             destructible.monitor('debug', colleague.events.pump(function (envelope) {
              //   console.log(envelope)
             }), 'destructible', null)
@@ -65,11 +65,11 @@ function prove (okay, callback) {
                 okay(envelope, null, 'end of routes')
             }]
             async(function () {
-                var application = new Application(7)
-                destructible.monitor('routes', application.routes.pump(function (envelope) {
+                var consensus = new Consensus(7)
+                destructible.monitor('routes', consensus.routes.pump(function (envelope) {
                     routes.shift()(envelope)
                 }), 'destructible', null)
-                destructible.monitor('counterfeiter', Counterfeiter, colleague, application, {
+                destructible.monitor('counterfeiter', Counterfeiter, colleague, consensus, {
                     island: 'island',
                     id: 'first',
                     properties: { isRouter: true }
@@ -80,8 +80,8 @@ function prove (okay, callback) {
                         return envelope.promise == '1/0'
                     }, async())
                 }, function () {
-                    var application = new Application(7)
-                    destructible.monitor('counterfeiter', true, Counterfeiter, colleague, application, {
+                    var consensus = new Consensus(7)
+                    destructible.monitor('counterfeiter', true, Counterfeiter, colleague, consensus, {
                         island: 'island',
                         id: 'second',
                         properties: { isRouter: true }
