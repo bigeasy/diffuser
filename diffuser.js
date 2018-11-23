@@ -4,19 +4,16 @@ var Signal = require('signal')
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 
 var Actor = require('./actor')
-var Connectee = require('./connectee')
 var Connector = require('./connector')
 var Registrar = require('./registrar')
 var Requester = require('./requester')
 var Dispatcher = require('./dispatcher')
 var Hash = require('./hash')
 
-var descendent = require('foremost')('descendent')
-
 var cadence = require('cadence')
 var coalesce = require('extant')
 
-function Diffuser (destructible, sibling, connectee, connector, visitor, receiver, options, callback) {
+function Diffuser (destructible, sibling, connector, visitor, receiver, options, callback) {
     var cliffhanger = new Cliffhanger
     this._registrar = new Registrar({
         index: options.olio.index,
@@ -39,14 +36,13 @@ function Diffuser (destructible, sibling, connectee, connector, visitor, receive
         connector: connector,
         registrar: this._registrar
     })
-    this._connectee = connectee
     this._connector = connector
 
     var dispatch = this._dispatcher.dispatch.bind(this._dispatcher)
-    var inbox = this._connectee.inbox.pump(dispatch, destructible.monitor('inbox'))
+    var inbox = this._connector.inbox.pump(dispatch, destructible.monitor('inbox'))
     destructible.destruct.wait(inbox, 'destroy')
 
-    var socket = this._connectee.socket.bind(this._connectee)
+    var socket = this._connector.socket.bind(this._connectee)
     descendent.on('diffuser:socket', socket)
     destructible.destruct.wait(function () {
         descendent.removeListener('diffuser:socket', socket)
@@ -69,26 +65,34 @@ function Diffuser (destructible, sibling, connectee, connector, visitor, receive
 }
 
 Diffuser.prototype._setRoutes = function (message) {
-    this._dispatcher.setRoutes(message.body)
-    this._connector.setRoutes(message.body)
-    this._connectee.setRoutes(message.body)
-    this._requester.setRoutes(message.body)
-    this._registrar.setRoutes(message.body)
-    this._ready.unlatch(null, this._requester)
-    this._registrar.synchronize()
 }
+
+Diffuser.prototype.message = cadence(function (async, envelope) {
+    if (envelope.body.message.module == 'diffuser') {
+        switch (envelope.body.message.method) {
+        case 'socket':
+            this._connector.socket(envelope.body.message, envelope.body.socket)
+            break
+        case 'routes':
+            this._dispatcher.setRoutes(message.body)
+            this._connector.setRoutes(message.body)
+            this._requester.setRoutes(message.body)
+            this._registrar.setRoutes(message.body)
+            this._ready.unlatch(null, this._requester)
+            this._registrar.synchronize()
+            break
+        }
+    }
+})
 
 module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
-    descendent.increment()
-    destructible.destruct.wait(descendent, 'decrement')
     async(function () {
         options.olio.sibling(diffuserName, async())
-        destructible.monitor('connectee', Connectee, async())
         destructible.monitor('connector', Connector, options.olio.index, async())
         destructible.monitor('visitor', Actor, options.router, async())
         destructible.monitor('receiver', Actor, options.receiver, async())
-    }, function (sibling, connectee, connector, visitor, receiver) {
-        new Diffuser(destructible, sibling, connectee, connector, visitor, receiver, options, async())
+    }, function (sibling, connector, visitor, receiver) {
+        new Diffuser(destructible, sibling, connector, visitor, receiver, options, async())
     })
 })

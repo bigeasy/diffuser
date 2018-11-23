@@ -36,6 +36,11 @@ function prove (okay, callback) {
                             format: 'http://%s:%d/',
                             addresses: [ '127.0.0.1:8486' ]
                         }
+                    },
+                    program: {
+                        path: path.resolve(__dirname, './program'),
+                        workers: 1,
+                        properties: {}
                     }
                 }
             }, async())
