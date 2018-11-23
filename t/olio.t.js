@@ -9,12 +9,14 @@ function prove (okay, callback) {
     var Diffuser = require('../olio')
 
     var Mock = require('olio/mock')
+    var path = require('path')
 
     var cadence = require('cadence')
 
     cadence(function (async) {
         async(function () {
             destructible.monitor('mock', Mock, {
+                socket: 't/socket',
                 children: {
                     compassion: {
                         module: 'compassion.colleague/olio',
@@ -32,16 +34,15 @@ function prove (okay, callback) {
                         properties: {
                             module: 'mingle.static',
                             format: 'http://%s:%d/',
-                            argv: [ '127.0.0.1:8486' ]
+                            addresses: [ '127.0.0.1:8486' ]
                         }
                     }
                 }
             }, async())
         }, function (children) {
-            okay(true, 'done')
-            children.child[0].bootstrapped.wait(async())
-        }, function (bootstrapped) {
-            okay(bootstrapped, 'bootstrapped', 'bootstrapped')
+            children.diffuser[0].arrived.wait(async())
+        }, function () {
+            okay(true, 'arrived')
         })
     })(destructible.monitor('test'))
 }
