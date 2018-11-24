@@ -13,7 +13,7 @@ var Hash = require('./hash')
 var cadence = require('cadence')
 var coalesce = require('extant')
 
-function Diffuser (destructible, sibling, connector, visitor, receiver, options, callback) {
+function Diffuser (destructible, olio, sibling, connector, visitor, receiver, options, callback) {
     var cliffhanger = new Cliffhanger
     this._registrar = new Registrar({
         index: options.olio.index,
@@ -43,20 +43,20 @@ function Diffuser (destructible, sibling, connector, visitor, receiver, options,
     destructible.destruct.wait(inbox, 'destroy')
 
     var socket = this._connector.socket.bind(this._connectee)
-    descendent.on('diffuser:socket', socket)
+    olio.on('diffuser:socket', socket)
     destructible.destruct.wait(function () {
-        descendent.removeListener('diffuser:socket', socket)
+        olio.removeListener('diffuser:socket', socket)
     })
-    descendent.up(sibling.paths[0], 'diffuser:ready', {
+    olio.send(sibling.name, 0, 'diffuser:ready', {
         name: options.olio.name,
         index: options.olio.index,
         isRouter: !! options.router
     })
 
     var setRoutes = this._setRoutes.bind(this)
-    descendent.on('diffuser:routes', setRoutes)
+    olio.on('diffuser:routes', setRoutes)
     destructible.destruct.wait(function () {
-        descendent.removeListener('diffuser:routes', setRoutes)
+        olio.removeListener('diffuser:routes', setRoutes)
     })
 
     this._ready = new Signal
@@ -65,25 +65,13 @@ function Diffuser (destructible, sibling, connector, visitor, receiver, options,
 }
 
 Diffuser.prototype._setRoutes = function (message) {
+    this._dispatcher.setRoutes(message.body)
+    this._connector.setRoutes(message.body)
+    this._requester.setRoutes(message.body)
+    this._registrar.setRoutes(message.body)
+    this._ready.unlatch(null, this._requester)
+    this._registrar.synchronize()
 }
-
-Diffuser.prototype.message = cadence(function (async, envelope) {
-    if (envelope.body.message.module == 'diffuser') {
-        switch (envelope.body.message.method) {
-        case 'socket':
-            this._connector.socket(envelope.body.message, envelope.body.socket)
-            break
-        case 'routes':
-            this._dispatcher.setRoutes(message.body)
-            this._connector.setRoutes(message.body)
-            this._requester.setRoutes(message.body)
-            this._registrar.setRoutes(message.body)
-            this._ready.unlatch(null, this._requester)
-            this._registrar.synchronize()
-            break
-        }
-    }
-})
 
 module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
@@ -93,6 +81,6 @@ module.exports = cadence(function (async, destructible, options) {
         destructible.monitor('visitor', Actor, options.router, async())
         destructible.monitor('receiver', Actor, options.receiver, async())
     }, function (sibling, connector, visitor, receiver) {
-        new Diffuser(destructible, sibling, connector, visitor, receiver, options, async())
+        new Diffuser(destructible, options.olio, sibling, connector, visitor, receiver, options, async())
     })
 })
