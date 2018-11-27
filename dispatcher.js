@@ -15,7 +15,6 @@ function Dispatcher (options) {
     this._backlogs.route.shifter = this._backlogs.route.queue.shifter()
     this._router = null
     this._receiver = options.receiver
-    this._visitor = options.visitor
     this._countdown = new Countdown
     this._cliffhanger = options.cliffhanger
     assert(this._cliffhanger)
@@ -26,7 +25,6 @@ function Dispatcher (options) {
 
 Dispatcher.prototype.setRoutes = function (routes) {
     this._router = new Router(routes, this._index)
-    this._visitor.setRouter(this._router)
     this._receiver.setRouter(this._router)
     this._countdown.start(routes)
     var backlog = this._backlogs.synchronize.get(routes.promise)
@@ -116,7 +114,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
             })
             break
         case 'router/route':
-            this._visitor.act(this._connector, envelope)
+            this._receiver.act(this._connector, envelope)
             break
         case 'receiver/route':
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
