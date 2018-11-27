@@ -64,12 +64,14 @@ var Interrupt = require('interrupt').createInterrupter('diffuser')
 // multi-worker child model.
 
 //
-function Connector (destructible, index) {
+function Connector (destructible, island, index) {
     // Our life-cycle manager.
     this._destructible = destructible
 
     // The index of the child process among its siblings.
     this._index = index
+
+    this._island = island
 
     // Collection of windows.
     this._connections = new Addresser
@@ -284,6 +286,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             host: location.hostname,
             port: +location.port,
             headers: Downgrader.headers({
+                'x-diffuser-island': this._island,
                 'x-diffuser-from-promise': this._router.from.promise,
                 'x-diffuser-from-index': this._router.from.index,
                 'x-diffuser-to-promise': connection.address.promise,

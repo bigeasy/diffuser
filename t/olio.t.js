@@ -26,7 +26,11 @@ function prove (okay, callback) {
                     diffuser: {
                         path: path.resolve(__dirname, '../olio'),
                         workers: 1,
-                        properties: { count: 7 }
+                        properties: {
+                            hostname: '127.0.0.1',
+                            port: 8386,
+                            count: 7
+                        }
                     },
                     mingle: {
                         module: 'mingle/olio',
@@ -36,10 +40,16 @@ function prove (okay, callback) {
                             format: 'http://%s:%d/',
                             addresses: [ '127.0.0.1:8486' ]
                         }
-                    }
+                    }/*,
+                    program: {
+                        path: path.resolve(__dirname, './program'),
+                        workers: 1,
+                        properties: {}
+                    }*/
                 }
             }, async())
         }, function (children) {
+            return
             children.diffuser[0].arrived.wait(async())
         }, function () {
             okay(true, 'arrived')

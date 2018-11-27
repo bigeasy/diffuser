@@ -34,10 +34,12 @@ Socketeer.prototype._socket = cadence(function (async, envelope) {
     var request = envelope.body.request, socket = envelope.body.socket
     var message = {
         from: {
+            name: request.headers['x-diffuser-from-name'],
             promise: request.headers['x-diffuser-from-promise'],
             index: +request.headers['x-diffuser-from-index']
         },
         to: {
+            name: request.headers['x-diffuser-to-name'],
             promise: request.headers['x-diffuser-to-promise'],
             index: +request.headers['x-diffuser-to-index']
         }
