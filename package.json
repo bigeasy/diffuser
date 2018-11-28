@@ -48,7 +48,7 @@
                             "prolific":                     "18.12.x",
                             "prolific.syslog":              "8.3.x",
                             "compassion.colleague":         "0.56.x",
-                            "mingle":                       "0.25.x",
+                            "mingle":                       "0.27.x",
                             "mingle.static":                "0.9.x",
                             "proof":                        "5.0.x"
     },
