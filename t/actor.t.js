@@ -11,7 +11,7 @@ function prove (okay, callback) {
         var connector = []
         var Actor = require('../actor')
         async(function () {
-            destructible.monitor('actor', Actor, function (body, callback) {
+            destructible.durable('actor', Actor, function (body, callback) {
                 switch (body) {
                 case 0:
                     callback(null, 'a')
@@ -81,7 +81,7 @@ function prove (okay, callback) {
                 values: [ 'c' ]
             }], 'actor')
         }, function () {
-            destructible.monitor('actor', Actor, true, async())
+            destructible.durable('actor', Actor, true, async())
         }, function (actor) {
             actor.setRouter({ promise: '1/0' })
             connector.length = 0
@@ -106,5 +106,5 @@ function prove (okay, callback) {
                 values: [ null ]
             }], 'noop')
         })
-    })(destructible.monitor('test'))
+    })(destructible.durable('test'))
 }

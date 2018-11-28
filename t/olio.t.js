@@ -15,7 +15,7 @@ function prove (okay, callback) {
 
     cadence(function (async) {
         async(function () {
-            destructible.monitor('mock', Mock, {
+            destructible.durable('mock', Mock, {
                 socket: 't/socket',
                 children: {
                     compassion: {
@@ -52,7 +52,7 @@ function prove (okay, callback) {
             return
             children.diffuser[0].arrived.wait(async())
         }, function () {
-            okay(true, 'arrived')
+            okay('arrived')
         })
-    })(destructible.monitor('test'))
+    })(destructible.durable('test'))
 }

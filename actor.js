@@ -8,7 +8,7 @@ var cadence = require('cadence')
 function Actor (destuctible, f) {
     this._f = f
     this.turnstile = new Turnstile
-    this.turnstile.listen(destuctible.monitor('turnstile'))
+    this.turnstile.listen(destuctible.durable('turnstile'))
     destuctible.destruct.wait(this.turnstile, 'destroy')
     this._queue = new Turnstile.Queue(this, '_act', this.turnstile)
 }

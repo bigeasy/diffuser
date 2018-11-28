@@ -15,7 +15,7 @@ var restrictor = require('restrictor')
 function Initializer (destructible, olio) {
     this.arrived = new Procession
     this.turnstile = new Turnstile
-    this.turnstile.listen(destructible.monitor('turnstile'))
+    this.turnstile.listen(destructible.durable('turnstile'))
     this._messages = new Turnstile.Queue(this, '_message', this.turnstile)
     destructible.destruct.wait(this.turnstile, 'destroy')
     this._ready = new Vivifyer(function () {

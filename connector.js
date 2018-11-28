@@ -178,7 +178,7 @@ Connector.prototype._window = cadence(function (async, destructible, connection)
     connection.destructibles.window = destructible
     async(function () {
         // Construct a Window.
-        destructible.monitor('window-z', Window, async())
+        destructible.durable('window-z', Window, async())
     }, function (window) {
         connection.window = window
 
@@ -195,7 +195,7 @@ Connector.prototype._window = cadence(function (async, destructible, connection)
         // We want to pump the `Window.inbox` into our common `inbox`, but we
         // don't want to close the common `inbox` by pushing `null` which means
         // end-of-queue.
-        destructible.monitor('inbox', window.inbox.pump(this, function (envelope) {
+        destructible.durable('inbox', window.inbox.pump(this, function (envelope) {
             if (envelope != null) {
                 this.inbox.push(envelope)
             }
@@ -214,13 +214,13 @@ Connector.prototype._conduit = cadence(function (async, destructible, connection
         var writable = new Staccato.Writable(socket)
         // TODO How does destroying writable cause the socket to close?
         destructible.destruct.wait(readable, 'destroy')
-        destructible.monitor('socket', true, Socket, { from: connection.address }, readable, writable, async())
+        destructible.ephemeral('socket', Socket, { from: connection.address }, readable, writable, async())
         destructible.destruct.wait(writable, 'destroy')
     }, function (inbox, outbox) {
         outbox.push({ module: 'diffuser', method: 'connect' })
         // Bind our socket to a Conduit server that will reconnect the window
         // and listen for pings.
-        destructible.monitor('conduit', Conduit, inbox, outbox, this, cadence(function (async, request, inbox, outbox) {
+        destructible.durable('conduit', Conduit, inbox, outbox, this, cadence(function (async, request, inbox, outbox) {
             switch (request.method) {
             case 'window':
                 connection.window.connect(inbox, outbox)
@@ -243,7 +243,7 @@ Connector.prototype._getOrCreateWindow = cadence(function (async, promise) {
     if (connection.window == null) {
         // As noted above, the `Window` is a child of the `Connector`, not
         // the `Socket`.
-        this._destructible.monitor([ 'window-xxxx', promise ], true, this, '_window', connection, async())
+        this._destructible.ephemeral([ 'window-xxxx', promise ], this, '_window', connection, async())
     } else {
         return connection
     }
@@ -266,7 +266,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
                 connection.destructibles.socket.destroy()
                 connection.destructibles.socket.completed.wait(async())
             }, function () {
-                connection.destructibles.window.monitor([ 'socket', from ], true, this, '_conduit', connection, socket, async())
+                connection.destructibles.window.ephemeral([ 'socket', from ], this, '_conduit', connection, socket, async())
             })
         })
     }
@@ -308,7 +308,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             var readable = new Staccato.Readable(socket)
             var writable = new Staccato.Writable(socket)
             destructible.destruct.wait(readable, 'destroy')
-            destructible.monitor('socket', Socket, { to: console.address, location: location }, readable, writable, head, async())
+            destructible.durable('socket', Socket, { to: console.address, location: location }, readable, writable, head, async())
         }, function (inbox, outbox) {
             async(function () {
                 console.log('waiting')
@@ -319,7 +319,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                     return [ async.break, false, destructible ]
                 }
                 Interrupt.assert(envelope.module + '/' + envelope.method == 'diffuser/connect', 'bad.handshake')
-                destructible.monitor('conduit', Conduit, inbox, outbox, async())
+                destructible.durable('conduit', Conduit, inbox, outbox, async())
             }, function (conduit) {
                 var request = conduit.connect({ method: 'window', inbox: true, outbox: true })
                 connection.window.connect(request.inbox, request.outbox)
@@ -342,7 +342,7 @@ Connector.prototype._reconnect = cadence(function (async, destructible, connecti
                 return [ async.break ]
             }
             async(function () {
-                destructible.monitor('connection', true, this, '_connection', connection, async())
+                destructible.ephemeral('connection', this, '_connection', connection, async())
             }, function (connected, destructible) {
                 if (connected) {
                     demur.reset()
@@ -360,7 +360,7 @@ Connector.prototype._connect = restrictor.push(cadence(function (async, envelope
         async(function () {
             this._getOrCreateWindow(to, async())
         }, function (connection) {
-            connection.destructibles.window.monitor('reconnect', this, '_reconnect', connection, null)
+            connection.destructibles.window.durable('reconnect', this, '_reconnect', connection, null)
         })
     }
 }))

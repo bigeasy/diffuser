@@ -18,7 +18,7 @@ function prove (okay, callback) {
 
     cadence(function (async) {
         async(function () {
-            destructible.monitor('connector', Connector, 1, async())
+            destructible.durable('connector', Connector, 1, async())
         }, function (connectee) {
             var fail = { connectee: 0, connector: false }
             var http = require('http')
@@ -47,13 +47,13 @@ function prove (okay, callback) {
 
             server.on('upgrade', downgrader.upgrade.bind(downgrader))
 
-            delta(destructible.monitor('http')).ee(server).on('close')
+            delta(destructible.durable('http')).ee(server).on('close')
             destructible.destruct.wait(server, 'destroy')
 
             var to = { promise: '1/0', index: 1 }
             var from = { promise: '0/0', index: 0 }
             async(function () {
-                destructible.monitor('connector', Connector, 0, async())
+                destructible.durable('connector', Connector, 0, async())
             }, function (connector) {
                 async(function () {
                     connectee.inbox.shifter().dequeue(async())
@@ -105,5 +105,5 @@ function prove (okay, callback) {
                 })
             })
         })
-    })(destructible.monitor('test'))
+    })(destructible.durable('test'))
 }

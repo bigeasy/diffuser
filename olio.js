@@ -22,7 +22,7 @@ function Service (destructible, olio, properties) {
 
     this.turnstile = new Turnstile
     destructible.destruct.wait(this.turnstile, 'destroy')
-    this.turnstile.listen(destructible.monitor('turnstile'))
+    this.turnstile.listen(destructible.durable('turnstile'))
 
     var register = this.register.bind(this)
     olio.on('diffuser:register', register)
@@ -55,11 +55,11 @@ Service.prototype.embark = cadence(function (async, destructible, message) {
     this._properties[message.island] = new Cubbyhole
     var consensus = new Consensus(message.buckets)
     async(function () {
-        destructible.monitor('consensus', consensus.routes.pump(this, function (route) {
+        destructible.durable('consensus', consensus.routes.pump(this, function (route) {
             this._setRoutes(message.island, routes)
         }), 'destructible', async())
     }, function () {
-        destructible.monitor('compassion', Compassion, olio, consensus, message.island, message.id, {
+        destructible.durable('compassion', Compassion, olio, consensus, message.island, message.id, {
             location: this._location,
             name: message.name,
             isRouter: message.isRouter,
@@ -72,7 +72,7 @@ Service.prototype.register = function (message) {
     var counter = this._regsitrations.get(message.name)
     if (++counter.count == this._olio.counts[message.name]) {
         this._regsitrations.remove(message.name)
-        this._destructible.monitor([ 'embark', message ], this, '_embark', message, null)
+        this._destructible.durable([ 'embark', message ], this, '_embark', message, null)
     }
 }
 

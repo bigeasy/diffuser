@@ -26,7 +26,7 @@ function prove (okay, callback) {
         var diffusers = {}
         async(function () {
             var population = new Population(new Resolver.Static([ 'http://127.0.0.1:8486/' ]), new UserAgent)
-            destructible.monitor('containerized', Containerized, {
+            destructible.durable('containerized', Containerized, {
                 population: population,
                 ping: {
                     chaperon: 150,
@@ -52,7 +52,7 @@ function prove (okay, callback) {
             var Conference = require('compassion.conference')
             var Counterfeiter = require('compassion.counterfeiter/counterfeiter')(Conference)
             var Consensus = require('../consensus')
-            destructible.monitor('debug', colleague.events.pump(function (envelope) {
+            destructible.durable('debug', colleague.events.pump(function (envelope) {
              //   console.log(envelope)
             }), 'destructible', null)
             var routes = [function (envelope) {
@@ -66,10 +66,10 @@ function prove (okay, callback) {
             }]
             async(function () {
                 var consensus = new Consensus(7)
-                destructible.monitor('routes', consensus.routes.pump(function (envelope) {
+                destructible.durable('routes', consensus.routes.pump(function (envelope) {
                     routes.shift()(envelope)
                 }), 'destructible', null)
-                destructible.monitor('counterfeiter', Counterfeiter, colleague, consensus, {
+                destructible.durable('counterfeiter', Counterfeiter, colleague, consensus, {
                     island: 'island',
                     id: 'first',
                     properties: { isRouter: true }
@@ -81,7 +81,7 @@ function prove (okay, callback) {
                     }, async())
                 }, function () {
                     var consensus = new Consensus(7)
-                    destructible.monitor('counterfeiter', true, Counterfeiter, colleague, consensus, {
+                    destructible.ephemeral('counterfeiter', Counterfeiter, colleague, consensus, {
                         island: 'island',
                         id: 'second',
                         properties: { isRouter: true }
@@ -99,5 +99,5 @@ function prove (okay, callback) {
                 })
             })
         })
-    })(destructible.monitor('test'))
+    })(destructible.durable('test'))
 }

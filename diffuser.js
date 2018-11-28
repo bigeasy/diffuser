@@ -13,7 +13,7 @@ var Hash = require('./hash')
 var cadence = require('cadence')
 var coalesce = require('extant')
 
-function Diffuser (destructible, olio, sibling, connector, visitor, receiver, options, callback) {
+function Diffuser (destructible, olio, sibling, connector, receiver, options, callback) {
     var cliffhanger = new Cliffhanger
     this._registrar = new Registrar({
         index: options.olio.index,
@@ -25,7 +25,6 @@ function Diffuser (destructible, olio, sibling, connector, visitor, receiver, op
         cliffhanger: cliffhanger,
         connector: connector,
         registrar: this._registrar,
-        visitor: visitor,
         receiver: receiver
     })
     this._requester = new Requester({
@@ -39,7 +38,7 @@ function Diffuser (destructible, olio, sibling, connector, visitor, receiver, op
     this._connector = connector
 
     var dispatch = this._dispatcher.dispatch.bind(this._dispatcher)
-    var inbox = this._connector.inbox.pump(dispatch, destructible.monitor('inbox'))
+    var inbox = this._connector.inbox.pump(dispatch, destructible.durable('inbox'))
     destructible.destruct.wait(inbox, 'destroy')
 
     var socket = this._connector.socket.bind(this._connectee)
@@ -77,10 +76,9 @@ module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
     async(function () {
         options.olio.sibling(diffuserName, async())
-        destructible.monitor('connector', Connector, options.olio.index, async())
-        destructible.monitor('visitor', Actor, options.router, async())
-        destructible.monitor('receiver', Actor, options.receiver, async())
-    }, function (sibling, connector, visitor, receiver) {
-        new Diffuser(destructible, options.olio, sibling, connector, visitor, receiver, options, async())
+        destructible.durable('connector', Connector, options.olio.index, async())
+        destructible.durable('receiver', Actor, options.receiver, async())
+    }, function (sibling, connector, receiver) {
+        new Diffuser(destructible, options.olio, sibling, connector, receiver, options, async())
     })
 })
