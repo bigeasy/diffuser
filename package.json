@@ -21,17 +21,17 @@
     "dependencies":
     {
                             "cadence":                      "2.0.x",
-                            "conduit":                      "2.35.x",
+                            "conduit":                      "2.36.x",
                             "cubbyhole":                    "1.3.x",
                             "delta":                        "3.0.x",
                             "demur":                        "0.3.x",
                             "departure":                    "0.0.x",
-                            "destructible":                 "0.40.x",
+                            "destructible":                 "0.41.x",
                             "downgrader":                   "0.1.x",
                             "extant":                       "1.0.x",
                             "hash.fnv":                     "1.0.x",
                             "keyify":                       "0.0.x",
-                            "olio":                         "0.40.x",
+                            "olio":                         "0.41.x",
                             "operation":                    "4.0.x",
                             "procession":                   "2.10.x",
                             "prolific.logger":              "8.4.x",
@@ -44,11 +44,11 @@
     },
     "devDependencies":
     {
-                            "prolific":                     "18.14.x",
+                            "prolific":                     "18.15.x",
                             "prolific.syslog":              "8.3.x",
-                            "compassion.colleague":         "0.59.x",
+                            "compassion.colleague":         "0.60.x",
                             "compassion.counterfeiter":     "0.42.x",
-                            "mingle":                       "0.28.x",
+                            "mingle":                       "0.29.x",
                             "mingle.static":                "0.10.x",
                             "proof":                        "5.0.x"
     },
