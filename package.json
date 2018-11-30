@@ -1,6 +1,6 @@
 {
     "name":                 "diffuser",
-    "version":              "0.0.17",
+    "version":              "0.1.0",
     "description":
 
       "Some sort of message routing thing.",
