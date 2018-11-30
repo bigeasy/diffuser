@@ -12,7 +12,6 @@ function Requester (options) {
 }
 
 Requester.prototype.setRoutes = function (routes) {
-    console.log(routes)
     this._router = new Router(routes, this._index)
 }
 

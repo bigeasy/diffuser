@@ -2,6 +2,8 @@ var Consensus = require('./consensus')
 var Conference = require('compassion.conference')
 var Compassion = require('compassion.colleague/compassion')(Conference)
 
+var coalesce = require('extant')
+
 var destroyer = require('server-destroy')
 var http = require('http')
 var Middleware = require('./middleware')
@@ -15,10 +17,29 @@ var Turnstile = require('turnstile')
 
 var Middleware = require('./middleware')
 
+var Cubbyhole = require('cubbyhole')
+
 function Service (destructible, olio, properties) {
     this._regsitrations = new Vivifyer(function () { return { count: 0 } })
     this._olio = olio
     this._location = 'http://' + properties.hostname + ':' + properties.port + '/'
+
+    var property = coalesce(properties.property, 'diffuser')
+    var siblings = {}
+
+    for (var name in olio.siblings) {
+        var sibling = olio.siblings[name]
+        if (sibling.properties[property]) {
+            siblings[name] = sibling.properties[property]
+        }
+    }
+
+    this._configuration = {
+        location: 'http://' + properties.location.hostname + ':' + properties.location.port + '/',
+        siblings: siblings
+    }
+
+    this._properties = []
 
     this.turnstile = new Turnstile
     destructible.destruct.wait(this.turnstile, 'destroy')
@@ -27,15 +48,17 @@ function Service (destructible, olio, properties) {
     var register = this.register.bind(this)
     olio.on('diffuser:register', register)
     destructible.destruct.wait(olio.removeListener.bind(olio, 'diffuser:register', register))
+
+    this._destructible = destructible
 }
 
 Service.prototype._setRoutes = function (island, routes) {
-    for (var promise in route.properties) {
-        this._properties[island].set(promise, null, route.properties[promise])
-        this._olio.broadcast(route.properties[promise].name, 'diffuser:routes', routes)
+    for (var promise in routes.properties) {
+        this._properties[island].set(promise, null, routes.properties[promise])
+        this._olio.broadcast(routes.properties[promise].name, 'diffuser:routes', routes)
     }
     this._properties[island].keys().forEach(function (promise) {
-        if (route.properties[promise] == null) {
+        if (routes.properties[promise] == null) {
             this._properties[island].remove(promise)
         }
     }, this)
@@ -51,26 +74,31 @@ Service.prototype._setRoutes = function (island, routes) {
 // Oh, I got a good idea. Maybe properties are exposed to everyone.
 
 //
-Service.prototype.embark = cadence(function (async, destructible, message) {
+Service.prototype._embark = cadence(function (async, destructible, message) {
+    var properties = this._configuration.siblings[message.name]
     this._properties[message.island] = new Cubbyhole
+    // --- ^^^ here ---
     var consensus = new Consensus(message.buckets)
     async(function () {
-        destructible.durable('consensus', consensus.routes.pump(this, function (route) {
-            this._setRoutes(message.island, routes)
+        destructible.durable('consensus', consensus.routes.pump(this, function (routes) {
+            if (routes != null) {
+                this._setRoutes(message.island, routes)
+            }
         }), 'destructible', async())
     }, function () {
-        destructible.durable('compassion', Compassion, olio, consensus, message.island, message.id, {
-            location: this._location,
+        destructible.durable('compassion', Compassion, this._olio, consensus, properties.island, properties.id, {
+            location: this._configuration.location,
             name: message.name,
-            isRouter: message.isRouter,
-            count: message.count
+            isRouter: properties.isRouter,
+            count: this._olio.siblings[message.name].count
         }, async())
     })
 })
 
 Service.prototype.register = function (message) {
+    console.log('registered', message)
     var counter = this._regsitrations.get(message.name)
-    if (++counter.count == this._olio.counts[message.name]) {
+    if (++counter.count == this._olio.siblings[message.name].count) {
         this._regsitrations.remove(message.name)
         this._destructible.durable([ 'embark', message ], this, '_embark', message, null)
     }
@@ -96,6 +124,7 @@ Service.prototype.socket = restrictor.push('message', cadence(function (async, r
     async(function () {
         this._properties[message.to.island].wait(message.to.promise, async())
     }, function (properties) {
+    console.log('GOT A SOCKET', properties)
         this._olio.send(properties.name, message.to.index, 'diffuser:socket', message, socket)
     })
 }))
@@ -112,12 +141,11 @@ module.exports = cadence(function (async, destructible, olio, properties) {
     server.on('upgrade', downgrader.upgrade.bind(downgrader))
     downgrader.on('socket', service.socket.bind(service))
     async(function () {
-        server.listen(properties.port, properties.hostname)
+        server.listen(properties.bind.port, properties.bind.iface)
         destroyer(server)
         delta(async()).ee(server).on('listening')
     }, function () {
         destructible.destruct.wait(server, 'destroy')
+        return null
     })
-
-    return null
 })

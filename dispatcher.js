@@ -37,6 +37,9 @@ Dispatcher.prototype._setRegistration = function (hashed, from) {
 }
 
 Dispatcher.prototype.dispatch = function (envelope) {
+    if (envelope == null) {
+        return
+    }
     var to
     assert(envelope.module == 'diffuser')
     assert(Router.compare(envelope.to, this._router.from) == 0)
@@ -80,6 +83,8 @@ Dispatcher.prototype.dispatch = function (envelope) {
     } else {
         switch (envelope.destination + '/' + envelope.method) {
         case 'router/register':
+            console.log('made it', envelope)
+            envelope.got = true
             this._setRegistration(envelope.hashed, envelope.from)
             this._connector.push({
                 promise: this._router.promise,

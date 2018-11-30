@@ -2,7 +2,7 @@ require('proof')(1, prove)
 
 function prove (okay, callback) {
     var Destructible = require('destructible')
-    var destructible = new Destructible('t/olio.t')
+    var destructible = new Destructible(15000, 't/olio.t')
 
     destructible.completed.wait(callback)
 
@@ -10,6 +10,15 @@ function prove (okay, callback) {
 
     var Mock = require('olio/mock')
     var path = require('path')
+    var fs = require('fs')
+
+    try {
+        fs.unlinkSync(path.join(__dirname, 'socket'))
+    } catch (e) {
+        if (e.code != 'ENOENT') {
+            throw e
+        }
+    }
 
     var cadence = require('cadence')
 
@@ -27,9 +36,10 @@ function prove (okay, callback) {
                         path: path.resolve(__dirname, '../olio'),
                         workers: 1,
                         properties: {
-                            hostname: '127.0.0.1',
-                            port: 8386,
-                            count: 7
+                            bind: { iface: '0.0.0.0', port: 8386 },
+                            location: { hostname: '127.0.0.1', port: 8386 },
+                            properties: 'diffuser',
+                            buckets: 7
                         }
                     },
                     mingle: {
@@ -40,17 +50,19 @@ function prove (okay, callback) {
                             format: 'http://%s:%d/',
                             addresses: [ '127.0.0.1:8486' ]
                         }
-                    }/*,
+                    },
                     program: {
                         path: path.resolve(__dirname, './program'),
                         workers: 1,
-                        properties: {}
-                    }*/
+                        properties: {
+                            diffuser: { island: 'program', id: 'first/program', isRouter: true }
+                        }
+                    }
                 }
             }, async())
         }, function (children) {
-            return
-            children.diffuser[0].arrived.wait(async())
+            console.log(children)
+            children.program[0].register({ key: 0 }, async())
         }, function () {
             okay('arrived')
         })

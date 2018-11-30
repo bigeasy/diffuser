@@ -3,8 +3,7 @@ var Diffuser = require('..')
 
 module.exports = cadence(function (async, destuctible, olio, properties) {
     async(function () {
-        console.log('will diffuser')
-        destuctible.monitor('diffuser', Diffuser, {
+        destuctible.durable('diffuser', Diffuser, {
             olio: olio,
             router: function () {
                 console.log(arguments)
@@ -14,8 +13,7 @@ module.exports = cadence(function (async, destuctible, olio, properties) {
             },
             timeout: 5000
         }, async())
-    }, function () {
-        console.log('did create')
-        return null
+    }, function (requester) {
+        return requester
     })
 })

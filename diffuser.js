@@ -37,16 +37,14 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     })
     this._connector = connector
 
-    var dispatch = this._dispatcher.dispatch.bind(this._dispatcher)
-    var inbox = this._connector.inbox.pump(dispatch, destructible.durable('inbox'))
-    destructible.destruct.wait(inbox, 'destroy')
+    destructible.durable('dispatch', this._connector.inbox.pump(this._dispatcher, 'dispatch'), 'destructible', null)
 
-    var socket = this._connector.socket.bind(this._connectee)
+    var socket = this._connector.socket.bind(this._connector)
     olio.on('diffuser:socket', socket)
     destructible.destruct.wait(function () {
         olio.removeListener('diffuser:socket', socket)
     })
-    olio.send(sibling.name, 0, 'diffuser:ready', {
+    olio.send(sibling.name, 0, 'diffuser:register', {
         name: options.olio.name,
         index: options.olio.index,
         isRouter: !! options.router
@@ -64,10 +62,11 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
 }
 
 Diffuser.prototype._setRoutes = function (message) {
-    this._dispatcher.setRoutes(message.body)
-    this._connector.setRoutes(message.body)
-    this._requester.setRoutes(message.body)
-    this._registrar.setRoutes(message.body)
+    console.log('got routes', message)
+    this._dispatcher.setRoutes(message)
+    this._connector.setRoutes(message)
+    this._requester.setRoutes(message)
+    this._registrar.setRoutes(message)
     this._ready.unlatch(null, this._requester)
     this._registrar.synchronize()
 }
@@ -75,7 +74,7 @@ Diffuser.prototype._setRoutes = function (message) {
 module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
     async(function () {
-        options.olio.sibling(diffuserName, async())
+        options.olio.ready(diffuserName, async())
         destructible.durable('connector', Connector, options.olio.index, async())
         destructible.durable('receiver', Actor, options.receiver, async())
     }, function (sibling, connector, receiver) {

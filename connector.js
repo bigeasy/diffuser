@@ -103,7 +103,6 @@ Connector.prototype._diffLocations = function (properties) {
     this._connections.promises().forEach(function (promise) {
         if (!(promise in properties)) {
             this._connections.list(promise).forEach(function (connection) {
-                console.log('destroy window')
                 connection.destructibles.window.destroy()
                 this._connections.remove(connection.address)
             }, this)
@@ -207,15 +206,16 @@ Connector.prototype._window = cadence(function (async, destructible, connection)
 
 // Construct a conduit around an incoming socket.
 Connector.prototype._conduit = cadence(function (async, destructible, connection, socket) {
-    destructible.destruct.wait(socket, 'destroy')
+    socket.steve = 'steve'
     async(function () {
         // Create a new socket.
         var readable = new Staccato.Readable(socket)
         var writable = new Staccato.Writable(socket)
         // TODO How does destroying writable cause the socket to close?
         destructible.destruct.wait(readable, 'destroy')
-        destructible.ephemeral('socket', Socket, { from: connection.address }, readable, writable, async())
         destructible.destruct.wait(writable, 'destroy')
+        // destructible.destruct.wait(socket, 'destroy')
+        destructible.ephemeral('socket', Socket, { from: connection.address }, readable, writable, async())
     }, function (inbox, outbox) {
         outbox.push({ module: 'diffuser', method: 'connect' })
         // Bind our socket to a Conduit server that will reconnect the window
@@ -281,6 +281,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
 //
 Connector.prototype._connection = cadence(function (async, destructible, connection) {
     var location = url.parse(this._router.properties[connection.address.promise].location)
+    var abort
     async([function () {
         var request = http.request({
             host: location.hostname,
@@ -293,7 +294,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                 'x-diffuser-to-index': connection.address.index
             })
         })
-        destructible.destruct.wait(request, 'abort')
+        abort = destructible.destruct.wait(request, 'abort')
         delta(async()).ee(request).on('upgrade')
         request.end()
     }, function (error) {
@@ -302,7 +303,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         logger.error('request', { stack: error.stack })
         return [ async.break, false, destructible ]
     }], function (request, socket, head) {
-        console.log('socketed')
+        destructible.destruct.cancel(abort)
         var wait = null
         async(function () {
             var readable = new Staccato.Readable(socket)
@@ -311,10 +312,8 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             destructible.durable('socket', Socket, { to: console.address, location: location }, readable, writable, head, async())
         }, function (inbox, outbox) {
             async(function () {
-                console.log('waiting')
                 inbox.dequeue(async())
             }, function (envelope) {
-                console.log('waited', envelope)
                 if (envelope == null) {
                     return [ async.break, false, destructible ]
                 }
@@ -326,8 +325,6 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                 return [ true, destructible ]
             })
         })
-    }, function () {
-        console.log('returning', arguments)
     })
 })
 
@@ -354,7 +351,6 @@ Connector.prototype._reconnect = cadence(function (async, destructible, connecti
 })
 
 Connector.prototype._connect = restrictor.push(cadence(function (async, envelope) {
-    console.log(envelope)
     var to = envelope.body.shift()
     if (!envelope.canceled) {
         async(function () {
