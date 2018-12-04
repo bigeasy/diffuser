@@ -82,6 +82,8 @@ function Connector (destructible, island, index) {
     // Work queue for establishing incoming connections. (We only spend a moment
     // in this queue.)
     this.turnstile = new Turnstile
+    this.turnstile.listen(destructible.durable('turnstile'))
+    destructible.destruct.wait(this.turnstile, 'destroy')
 
     // Close all windows when it's time to go.
     destructible.destruct.wait(this, function () { this._diffLocations({}) })
