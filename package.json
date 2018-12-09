@@ -45,7 +45,7 @@
     "devDependencies":
     {
                             "prolific":                     "18.17.x",
-                            "prolific.syslog":              "8.3.x",
+                            "prolific.syslog":              "8.4.x",
                             "compassion.colleague":         "0.60.x",
                             "compassion.counterfeiter":     "0.42.x",
                             "mingle":                       "0.29.x",
