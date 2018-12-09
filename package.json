@@ -34,7 +34,7 @@
                             "olio":                         "0.41.x",
                             "operation":                    "4.0.x",
                             "procession":                   "2.10.x",
-                            "prolific.logger":              "8.4.x",
+                            "prolific.logger":              "8.6.x",
                             "reactor":                      "10.10.x",
                             "restrictor":                   "2.5.x",
                             "server-destroy":               "1.0.x",
