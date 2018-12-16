@@ -30,7 +30,7 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     this._requester = new Requester({
         index: options.olio.index,
         cliffhanger: cliffhanger,
-        timeout: 5000, // TODO Pass in.
+        timeout: coalesce(options.timeout, 5000),
         Hash: Hash,
         connector: connector,
         registrar: this._registrar
