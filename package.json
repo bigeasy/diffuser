@@ -38,7 +38,7 @@
                             "reactor":                      "10.12.x",
                             "restrictor":                   "2.5.x",
                             "server-destroy":               "1.0.x",
-                            "turnstile":                    "4.9.x",
+                            "turnstile":                    "5.0.x",
                             "vivifyer":                     "0.0.x",
                             "vizsla":                       "13.0.x"
     },
