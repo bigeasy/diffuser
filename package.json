@@ -36,7 +36,7 @@
                             "procession":                   "2.10.x",
                             "prolific.logger":              "8.6.x",
                             "reactor":                      "10.12.x",
-                            "restrictor":                   "2.5.x",
+                            "restrictor":                   "3.0.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "5.0.x",
                             "vivifyer":                     "0.0.x",
