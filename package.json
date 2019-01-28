@@ -35,7 +35,7 @@
                             "operation":                    "4.0.x",
                             "procession":                   "2.10.x",
                             "prolific.logger":              "8.6.x",
-                            "reactor":                      "10.12.x",
+                            "reactor":                      "11.0.x",
                             "restrictor":                   "3.0.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "5.0.x",
