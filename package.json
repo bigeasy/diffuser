@@ -33,7 +33,7 @@
                             "keyify":                       "0.0.x",
                             "olio":                         "0.44.x",
                             "operation":                    "4.0.x",
-                            "procession":                   "2.10.x",
+                            "procession":                   "3.0.x",
                             "prolific.logger":              "8.6.x",
                             "reactor":                      "11.0.x",
                             "restrictor":                   "3.0.x",
