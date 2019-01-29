@@ -46,7 +46,7 @@
     {
                             "prolific":                     "21.0.x",
                             "prolific.syslog":              "9.0.x",
-                            "compassion.colleague":         "0.63.x",
+                            "compassion.colleague":         "0.64.x",
                             "compassion.counterfeiter":     "0.43.x",
                             "mingle":                       "0.32.x",
                             "mingle.static":                "0.12.x",
