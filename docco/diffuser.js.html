@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -159,19 +139,16 @@
 <span class="hljs-keyword">var</span> Interrupt = <span class="hljs-built_in">require</span>(<span class="hljs-string">'interrupt'</span>).createInterrupter(<span class="hljs-string">'diffuser'</span>)
 
 <span class="hljs-keyword">var</span> Actor = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./actor'</span>)
-<span class="hljs-keyword">var</span> Connectee = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./connectee'</span>)
 <span class="hljs-keyword">var</span> Connector = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./connector'</span>)
 <span class="hljs-keyword">var</span> Registrar = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./registrar'</span>)
 <span class="hljs-keyword">var</span> Requester = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./requester'</span>)
 <span class="hljs-keyword">var</span> Dispatcher = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./dispatcher'</span>)
 <span class="hljs-keyword">var</span> Hash = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./hash'</span>)
 
-<span class="hljs-keyword">var</span> descendent = <span class="hljs-built_in">require</span>(<span class="hljs-string">'foremost'</span>)(<span class="hljs-string">'descendent'</span>)
-
 <span class="hljs-keyword">var</span> cadence = <span class="hljs-built_in">require</span>(<span class="hljs-string">'cadence'</span>)
 <span class="hljs-keyword">var</span> coalesce = <span class="hljs-built_in">require</span>(<span class="hljs-string">'extant'</span>)
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Diffuser</span> (<span class="hljs-params">destructible, sibling, connectee, connector, visitor, receiver, options, callback</span>) </span>{
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Diffuser</span> (<span class="hljs-params">destructible, olio, sibling, connector, receiver, options, callback</span>) </span>{
     <span class="hljs-keyword">var</span> cliffhanger = <span class="hljs-keyword">new</span> Cliffhanger
     <span class="hljs-keyword">this</span>._registrar = <span class="hljs-keyword">new</span> Registrar({
         <span class="hljs-attr">index</span>: options.olio.index,
@@ -183,39 +160,35 @@
         <span class="hljs-attr">cliffhanger</span>: cliffhanger,
         <span class="hljs-attr">connector</span>: connector,
         <span class="hljs-attr">registrar</span>: <span class="hljs-keyword">this</span>._registrar,
-        <span class="hljs-attr">visitor</span>: visitor,
         <span class="hljs-attr">receiver</span>: receiver
     })
     <span class="hljs-keyword">this</span>._requester = <span class="hljs-keyword">new</span> Requester({
         <span class="hljs-attr">index</span>: options.olio.index,
         <span class="hljs-attr">cliffhanger</span>: cliffhanger,
-        <span class="hljs-attr">timeout</span>: <span class="hljs-number">5000</span>, <span class="hljs-comment">// TODO Pass in.</span>
-        Hash: Hash,
+        <span class="hljs-attr">timeout</span>: coalesce(options.timeout, <span class="hljs-number">5000</span>),
+        <span class="hljs-attr">Hash</span>: Hash,
         <span class="hljs-attr">connector</span>: connector,
         <span class="hljs-attr">registrar</span>: <span class="hljs-keyword">this</span>._registrar
     })
-    <span class="hljs-keyword">this</span>._connectee = connectee
     <span class="hljs-keyword">this</span>._connector = connector
 
-    <span class="hljs-keyword">var</span> dispatch = <span class="hljs-keyword">this</span>._dispatcher.dispatch.bind(<span class="hljs-keyword">this</span>._dispatcher)
-    <span class="hljs-keyword">var</span> inbox = <span class="hljs-keyword">this</span>._connectee.inbox.pump(dispatch, destructible.monitor(<span class="hljs-string">'inbox'</span>))
-    destructible.destruct.wait(inbox, <span class="hljs-string">'destroy'</span>)
+    destructible.durable(<span class="hljs-string">'dispatch'</span>, <span class="hljs-keyword">this</span>._connector.inbox.pump(<span class="hljs-keyword">this</span>._dispatcher, <span class="hljs-string">'dispatch'</span>), <span class="hljs-string">'destructible'</span>, <span class="hljs-literal">null</span>)
 
-    <span class="hljs-keyword">var</span> socket = <span class="hljs-keyword">this</span>._connectee.socket.bind(<span class="hljs-keyword">this</span>._connectee)
-    descendent.on(<span class="hljs-string">'diffuser:socket'</span>, socket)
+    <span class="hljs-keyword">var</span> socket = <span class="hljs-keyword">this</span>._connector.socket.bind(<span class="hljs-keyword">this</span>._connector)
+    olio.on(<span class="hljs-string">'diffuser:socket'</span>, socket)
     destructible.destruct.wait(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        descendent.removeListener(<span class="hljs-string">'diffuser:socket'</span>, socket)
+        olio.removeListener(<span class="hljs-string">'diffuser:socket'</span>, socket)
     })
-    descendent.up(sibling.paths[<span class="hljs-number">0</span>], <span class="hljs-string">'diffuser:ready'</span>, {
+    olio.send(sibling.name, <span class="hljs-number">0</span>, <span class="hljs-string">'diffuser:register'</span>, {
         <span class="hljs-attr">name</span>: options.olio.name,
         <span class="hljs-attr">index</span>: options.olio.index,
         <span class="hljs-attr">isRouter</span>: !! options.router
     })
 
     <span class="hljs-keyword">var</span> setRoutes = <span class="hljs-keyword">this</span>._setRoutes.bind(<span class="hljs-keyword">this</span>)
-    descendent.on(<span class="hljs-string">'diffuser:routes'</span>, setRoutes)
+    olio.on(<span class="hljs-string">'diffuser:routes'</span>, setRoutes)
     destructible.destruct.wait(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        descendent.removeListener(<span class="hljs-string">'diffuser:routes'</span>, setRoutes)
+        olio.removeListener(<span class="hljs-string">'diffuser:routes'</span>, setRoutes)
     })
 
     <span class="hljs-keyword">this</span>._ready = <span class="hljs-keyword">new</span> Signal
@@ -224,31 +197,25 @@
 }
 
 Diffuser.prototype._setRoutes = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">message</span>) </span>{
-    <span class="hljs-keyword">this</span>._dispatcher.setRoutes(message.body)
-    <span class="hljs-keyword">this</span>._connector.setRoutes(message.body)
-    <span class="hljs-keyword">this</span>._connectee.setRoutes(message.body)
-    <span class="hljs-keyword">this</span>._requester.setRoutes(message.body)
-    <span class="hljs-keyword">this</span>._registrar.setRoutes(message.body)
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'got routes'</span>, message)
+    <span class="hljs-keyword">this</span>._dispatcher.setRoutes(message)
+    <span class="hljs-keyword">this</span>._connector.setRoutes(message)
+    <span class="hljs-keyword">this</span>._requester.setRoutes(message)
+    <span class="hljs-keyword">this</span>._registrar.setRoutes(message)
     <span class="hljs-keyword">this</span>._ready.unlatch(<span class="hljs-literal">null</span>, <span class="hljs-keyword">this</span>._requester)
     <span class="hljs-keyword">this</span>._registrar.synchronize()
 }
 
 <span class="hljs-built_in">module</span>.exports = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, options</span>) </span>{
     <span class="hljs-keyword">var</span> diffuserName = coalesce(options.diffuserName, <span class="hljs-string">'diffuser'</span>)
-    descendent.increment()
-    destructible.destruct.wait(descendent, <span class="hljs-string">'decrement'</span>)
     <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        options.olio.sibling(diffuserName, <span class="hljs-keyword">async</span>())
-        destructible.monitor(<span class="hljs-string">'connectee'</span>, Connectee, <span class="hljs-keyword">async</span>())
-        destructible.monitor(<span class="hljs-string">'connector'</span>, Connector, options.olio.index, <span class="hljs-keyword">async</span>())
-        destructible.monitor(<span class="hljs-string">'visitor'</span>, Actor, options.router, <span class="hljs-keyword">async</span>())
-        destructible.monitor(<span class="hljs-string">'receiver'</span>, Actor, options.receiver, <span class="hljs-keyword">async</span>())
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">sibling, connectee, connector, visitor, receiver</span>) </span>{
-        <span class="hljs-keyword">new</span> Diffuser(destructible, sibling, connectee, connector, visitor, receiver, options, <span class="hljs-keyword">async</span>())
+        options.olio.ready(diffuserName, <span class="hljs-keyword">async</span>())
+        destructible.durable(<span class="hljs-string">'connector'</span>, Connector, options.olio.index, <span class="hljs-keyword">async</span>())
+        destructible.durable(<span class="hljs-string">'receiver'</span>, Actor, options.receiver, <span class="hljs-keyword">async</span>())
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">sibling, connector, receiver</span>) </span>{
+        <span class="hljs-keyword">new</span> Diffuser(destructible, options.olio, sibling, connector, receiver, options, <span class="hljs-keyword">async</span>())
     })
-})
-
-</pre></div></div>
+})</pre></div></div>
 
         </li>
 

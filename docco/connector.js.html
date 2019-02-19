@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -150,159 +130,13 @@
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-1">&#182;</a>
               </div>
+              <p>Node.js API.</p>
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> cadence = <span class="hljs-built_in">require</span>(<span class="hljs-string">'cadence'</span>)
-<span class="hljs-keyword">var</span> Procession = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession'</span>)
-
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> assert = <span class="hljs-built_in">require</span>(<span class="hljs-string">'assert'</span>)
 <span class="hljs-keyword">var</span> http = <span class="hljs-built_in">require</span>(<span class="hljs-string">'http'</span>)
-<span class="hljs-keyword">var</span> url = <span class="hljs-built_in">require</span>(<span class="hljs-string">'url'</span>)
-
-<span class="hljs-keyword">var</span> delta = <span class="hljs-built_in">require</span>(<span class="hljs-string">'delta'</span>)
-
-<span class="hljs-keyword">var</span> Downgrader = <span class="hljs-built_in">require</span>(<span class="hljs-string">'downgrader'</span>)
-
-<span class="hljs-keyword">var</span> logger = <span class="hljs-built_in">require</span>(<span class="hljs-string">'prolific.logger'</span>).createLogger(<span class="hljs-string">'diffuser'</span>)
-
-<span class="hljs-keyword">var</span> Sender = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./sender'</span>)
-
-<span class="hljs-keyword">var</span> Destructible = <span class="hljs-built_in">require</span>(<span class="hljs-string">'destructible'</span>)
-
-<span class="hljs-keyword">var</span> Conduit = <span class="hljs-built_in">require</span>(<span class="hljs-string">'conduit'</span>)
-
-<span class="hljs-keyword">var</span> Window = <span class="hljs-built_in">require</span>(<span class="hljs-string">'conduit/window'</span>)
-
-<span class="hljs-keyword">var</span> Demur = <span class="hljs-built_in">require</span>(<span class="hljs-string">'demur'</span>)
-
-<span class="hljs-keyword">var</span> Signal = <span class="hljs-built_in">require</span>(<span class="hljs-string">'signal'</span>)
-
-<span class="hljs-keyword">var</span> Addresser = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./addresser'</span>)
-
-<span class="hljs-keyword">var</span> Router = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lookup'</span>)
-
-<span class="hljs-keyword">var</span> Socket = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession/socket'</span>)(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./hangup'</span>))
-
-<span class="hljs-keyword">var</span> Staccato = <span class="hljs-built_in">require</span>(<span class="hljs-string">'staccato'</span>)
-
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Connector</span> (<span class="hljs-params">destructible, index</span>) </span>{
-    <span class="hljs-keyword">this</span>.feedback = <span class="hljs-keyword">new</span> Procession
-    <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">this</span>._connections = <span class="hljs-keyword">new</span> Addresser
-    <span class="hljs-keyword">this</span>._destructible = destructible
-    <span class="hljs-keyword">this</span>._index = index
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'x'</span>)
-    destructible.destruct.wait(<span class="hljs-keyword">this</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-keyword">this</span>._diffLocations({})
-    })
-}
-
-Connector.prototype.push = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope</span>) </span>{
-    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._router.properties[envelope.to.promise] != <span class="hljs-literal">null</span>) {
-        <span class="hljs-keyword">this</span>.connect(envelope.to).push(envelope)
-    }
-}
-
-Connector.prototype.setRoutes = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">routes</span>) </span>{
-    <span class="hljs-keyword">this</span>._router = <span class="hljs-keyword">new</span> Router(routes, <span class="hljs-keyword">this</span>._index)
-    <span class="hljs-keyword">this</span>._diffLocations(<span class="hljs-keyword">this</span>._router.properties)
-}
-
-Connector.prototype._diffLocations = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">properties</span>) </span>{
-    <span class="hljs-keyword">this</span>._connections.promises().forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">promise</span>) </span>{
-        <span class="hljs-keyword">if</span> (!(promise <span class="hljs-keyword">in</span> properties)) {
-            <span class="hljs-keyword">this</span>._connections.list(promise).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{
-                connection.outbox.end()
-                connection.shutdown.unlatch()
-            })
-        }
-    }, <span class="hljs-keyword">this</span>)
-}
-
-Connector.prototype.connect = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">to</span>) </span>{
-    <span class="hljs-keyword">var</span> connection = <span class="hljs-keyword">this</span>._connections.get(to)
-    <span class="hljs-keyword">if</span> (connection == <span class="hljs-literal">null</span>) {
-        connection = { <span class="hljs-attr">to</span>: to, <span class="hljs-attr">outbox</span>: <span class="hljs-keyword">new</span> Procession, <span class="hljs-attr">shutdown</span>: <span class="hljs-keyword">new</span> Signal }
-        <span class="hljs-keyword">this</span>._connections.put(to, connection)
-        <span class="hljs-keyword">var</span> shifter = connection.outbox.shifter()
-        <span class="hljs-keyword">this</span>._destructible.monitor([ <span class="hljs-string">'connection'</span>, to ], <span class="hljs-literal">true</span>, <span class="hljs-keyword">this</span>, <span class="hljs-string">'_connect'</span>, to, shifter, <span class="hljs-literal">null</span>)
-    }
-    <span class="hljs-keyword">return</span> connection.outbox
-}
-
-Connector.prototype._connection = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, demur, to, window</span>) </span>{
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'looping'</span>)
-    <span class="hljs-keyword">var</span> location = url.parse(<span class="hljs-keyword">this</span>._router.properties[to.promise].location)
-    <span class="hljs-keyword">async</span>([<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-    <span class="hljs-keyword">async</span>([<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        destructible.destroy()
-    }], [<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'retries'</span>)
-        <span class="hljs-keyword">if</span> (destructible.destroyed) {
-            <span class="hljs-keyword">return</span> [ loop.break ]
-        }
-        <span class="hljs-keyword">var</span> request = http.request({
-            <span class="hljs-attr">host</span>: location.hostname,
-            <span class="hljs-attr">port</span>: +location.port,
-            <span class="hljs-attr">headers</span>: Downgrader.headers({
-                <span class="hljs-string">'x-diffuser-from-promise'</span>: <span class="hljs-keyword">this</span>._router.from.promise,
-                <span class="hljs-string">'x-diffuser-from-index'</span>: <span class="hljs-keyword">this</span>._router.from.index,
-                <span class="hljs-string">'x-diffuser-to-promise'</span>: to.promise,
-                <span class="hljs-string">'x-diffuser-to-index'</span>: to.index
-            })
-        })
-        delta(<span class="hljs-keyword">async</span>()).ee(request).on(<span class="hljs-string">'upgrade'</span>)
-        request.end()
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'--- getting ---'</span>)
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(error.stack)
-        logger.error(<span class="hljs-string">'request'</span>, { <span class="hljs-attr">stack</span>: error.stack })
-        <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, destructible ]
-    }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">request, socket, head</span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'socketed'</span>)
-        <span class="hljs-keyword">var</span> wait = <span class="hljs-literal">null</span>
-        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-            demur.reset()
-            <span class="hljs-keyword">var</span> readable = <span class="hljs-keyword">new</span> Staccato.Readable(socket)
-            <span class="hljs-keyword">var</span> writable = <span class="hljs-keyword">new</span> Staccato.Writable(socket)
-            destructible.monitor(<span class="hljs-string">'socket'</span>, <span class="hljs-literal">true</span>, Socket, { <span class="hljs-attr">to</span>: to, <span class="hljs-attr">location</span>: location }, readable, writable, head, <span class="hljs-keyword">async</span>())
-        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">inbox, outbox</span>) </span>{
-            destructible.monitor(<span class="hljs-string">'conduit'</span>, Conduit, inbox, outbox, <span class="hljs-keyword">async</span>())
-        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">conduit</span>) </span>{
-            <span class="hljs-keyword">var</span> connection = conduit.connect({ <span class="hljs-attr">method</span>: <span class="hljs-string">'window'</span>, <span class="hljs-attr">inbox</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">outbox</span>: <span class="hljs-literal">true</span> })
-            <span class="hljs-built_in">window</span>.connect(connection.inbox, connection.outbox)
-            <span class="hljs-keyword">return</span> [ destructible ]
-        })
-    })
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'returning'</span>, <span class="hljs-built_in">arguments</span>)
-    })
-})
-
-<span class="hljs-keyword">var</span> COUNTER = <span class="hljs-number">0</span>
-Connector.prototype._connect = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, to, shifter</span>) </span>{
-    <span class="hljs-keyword">var</span> shutdown = <span class="hljs-keyword">this</span>._connections.get(to).shutdown
-    shutdown.wait(destructible, <span class="hljs-string">'destroy'</span>)
-    <span class="hljs-keyword">var</span> done = destructible.monitor(<span class="hljs-string">'retries'</span>)
-    <span class="hljs-keyword">var</span> looped = <span class="hljs-number">0</span>
-    <span class="hljs-keyword">var</span> demur = <span class="hljs-keyword">new</span> Demur({ <span class="hljs-attr">immediate</span>: <span class="hljs-literal">true</span> })
-    <span class="hljs-keyword">var</span> sender = <span class="hljs-keyword">new</span> Sender(destructible, <span class="hljs-keyword">this</span>.feedback)
-    <span class="hljs-keyword">var</span> counter = ++COUNTER
-    <span class="hljs-keyword">var</span> location = url.parse(<span class="hljs-keyword">this</span>._router.properties[to.promise].location)
-    destructible.destruct.wait(sender.inbox, <span class="hljs-string">'end'</span>)
-    destructible.destruct.wait(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'cancel demur'</span>)
-    })
-    destructible.destruct.wait(demur, <span class="hljs-string">'cancel'</span>)
-    <span class="hljs-keyword">async</span>([<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        done()
-    }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        destructible.monitor(<span class="hljs-string">'window'</span>, Window, sender, <span class="hljs-keyword">async</span>())
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">window</span>) </span>{
-        <span class="hljs-keyword">var</span> connection = <span class="hljs-keyword">this</span>._connections.get(to)
-        shifter.drain(connection.outbox = <span class="hljs-built_in">window</span>.outbox, <span class="hljs-string">'push'</span>)
-</pre></div></div>
+<span class="hljs-keyword">var</span> url = <span class="hljs-built_in">require</span>(<span class="hljs-string">'url'</span>)</pre></div></div>
 
         </li>
 
@@ -313,50 +147,918 @@ Connector.prototype._connect = cadence(<span class="hljs-function"><span class="
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>Note that there are three recoverable errors. The first is the
-request connection and upgrade negotiation. We have a try/catch for
-that error below. Then we can have an error on read or write to the
-socket. The <code>Socket</code> utility from Procession logs and error and ends
-the inbox or outbox procession.</p>
-<p>TODO We probably should put the loop body it’s own function and
-return the destructible, then wait on the destructible to complete.
-We can then add a cancel of the http request to the nested
-destructible destruct latch.</p>
+              <p>Control-flow utilities.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> cadence = <span class="hljs-built_in">require</span>(<span class="hljs-string">'cadence'</span>)
+<span class="hljs-keyword">var</span> delta = <span class="hljs-built_in">require</span>(<span class="hljs-string">'delta'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-3">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Downgrade HTTP to a plain socket.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Downgrader = <span class="hljs-built_in">require</span>(<span class="hljs-string">'downgrader'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-4">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Sockets as multiplexed event queues.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Procession = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession'</span>)
+<span class="hljs-keyword">var</span> Conduit = <span class="hljs-built_in">require</span>(<span class="hljs-string">'conduit/conduit'</span>)
+<span class="hljs-keyword">var</span> Socket = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession/socket'</span>)(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./hangup'</span>))
+<span class="hljs-keyword">var</span> Window = <span class="hljs-built_in">require</span>(<span class="hljs-string">'conduit/window'</span>)
+
+<span class="hljs-keyword">var</span> Monotonic = <span class="hljs-built_in">require</span>(<span class="hljs-string">'monotonic'</span>).asString
+
+<span class="hljs-keyword">var</span> logger = <span class="hljs-built_in">require</span>(<span class="hljs-string">'prolific.logger'</span>).createLogger(<span class="hljs-string">'diffuser'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-5">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Controlled demoltion of evented objects.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Destructible = <span class="hljs-built_in">require</span>(<span class="hljs-string">'destructible'</span>)
+
+<span class="hljs-keyword">var</span> Staccato = <span class="hljs-built_in">require</span>(<span class="hljs-string">'staccato'</span>)
+
+<span class="hljs-keyword">var</span> Router = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lookup'</span>)
+<span class="hljs-keyword">var</span> Addresser = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./addresser'</span>)
+
+<span class="hljs-keyword">var</span> Turnstile = <span class="hljs-built_in">require</span>(<span class="hljs-string">'turnstile'</span>)
+Turnstile.Queue = <span class="hljs-built_in">require</span>(<span class="hljs-string">'turnstile/queue'</span>)
+
+<span class="hljs-keyword">var</span> Demur = <span class="hljs-built_in">require</span>(<span class="hljs-string">'demur'</span>)
+
+<span class="hljs-keyword">var</span> restrictor = <span class="hljs-built_in">require</span>(<span class="hljs-string">'restrictor'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-6">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Exceptions you can catch by type.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Interrupt = <span class="hljs-built_in">require</span>(<span class="hljs-string">'interrupt'</span>).createInterrupter(<span class="hljs-string">'diffuser'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-7">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Our constructor is invoked by the <code>Destructible</code> constructor we export. This
+object is only supposed to be created by and used with <code>Destructible</code>.</p>
+<p>The <code>_connections</code> collection is a collection of windows and conduits. A
+window represents a message queue for messages received for another diffuser
+participant, one of our peers. It’s called a window because our peer
+maintains a queue of messages that are only cleared when assure it that the
+messages have been received. This is a “window” of messages in the stream.</p>
+<p>If our socket to a particular peer breaks, it will create a new socket to
+reconnect to us and resume communication. Its window will replay the queued
+messages and the window on our side end will skip over the ones it has
+already received.</p>
+<p>The <code>Window</code> class is bi-directional, but we’re only really sending
+information in one direction through each socket. This means that each
+pairing of peers will open two sockets. Maybe some day we’ll sort out how to
+open only one socket to use each way, but it is easier to open a socket in</p>
+<p>Our <code>_connections</code> collection is keyed on promise and process index. A
+promise is the unique key in the atomic log that introduced a our peer as a
+new participant. We call this unique key a promise because that’s what Paxos
+calls it. The process index indicates the index of a child process in a
+multi-worker child model.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-8">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Connector</span> (<span class="hljs-params">destructible, island, index</span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-9">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Our life-cycle manager.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._destructible = destructible</pre></div></div>
+
+        </li>
+
+
+        <li id="section-10">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>The index of the child process among its siblings.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._index = index
+
+    <span class="hljs-keyword">this</span>._island = island</pre></div></div>
+
+        </li>
+
+
+        <li id="section-11">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Collection of windows.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._connections = <span class="hljs-keyword">new</span> Addresser</pre></div></div>
+
+        </li>
+
+
+        <li id="section-12">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Common inbox from all windows.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>.inbox = <span class="hljs-keyword">new</span> Procession</pre></div></div>
+
+        </li>
+
+
+        <li id="section-13">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Work queue for establishing incoming connections. (We only spend a moment
+in this queue.)</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>.turnstile = <span class="hljs-keyword">new</span> Turnstile
+    <span class="hljs-keyword">this</span>.turnstile.listen(destructible.durable(<span class="hljs-string">'turnstile'</span>))
+    destructible.destruct.wait(<span class="hljs-keyword">this</span>.turnstile, <span class="hljs-string">'destroy'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-14">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Close all windows when it’s time to go.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    destructible.destruct.wait(<span class="hljs-keyword">this</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-keyword">this</span>._diffLocations({}) })
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-15">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Invoked when a new routing table is created. We will close any windows open
+to instances that no longer exist.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-16">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype.setRoutes = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">routes</span>) </span>{
+    <span class="hljs-keyword">this</span>._router = <span class="hljs-keyword">new</span> Router(routes, <span class="hljs-keyword">this</span>._index)
+    <span class="hljs-keyword">this</span>._diffLocations(routes.properties)
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-17">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Close any open windows that do not have a value for their promise</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-18">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._diffLocations = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">properties</span>) </span>{
+    <span class="hljs-keyword">this</span>._connections.promises().forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">promise</span>) </span>{
+        <span class="hljs-keyword">if</span> (!(promise <span class="hljs-keyword">in</span> properties)) {
+            <span class="hljs-keyword">this</span>._connections.list(promise).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{
+                connection.destructibles.window.destroy()
+                <span class="hljs-keyword">this</span>._connections.remove(connection.address)
+            }, <span class="hljs-keyword">this</span>)
+        }
+    }, <span class="hljs-keyword">this</span>)
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-19">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Get a connection or construct one if one does not exist. The absence of a
+<code>window</code> property will serve to indicate that the connection needs to be
+networked.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-20">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._getConnection = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">address</span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-21">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Get the existing connection.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">var</span> connection = <span class="hljs-keyword">this</span>._connections.get(address)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-22">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Create a connection if none exists.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">if</span> (connection == <span class="hljs-literal">null</span>) {</pre></div></div>
+
+        </li>
+
+
+        <li id="section-23">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>This outbox will be replaced with the window’s outbox once it’s
+created.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">var</span> outbox = <span class="hljs-keyword">new</span> Procession
+        <span class="hljs-keyword">this</span>._connections.put(address, connection = {
+            <span class="hljs-attr">address</span>: address,
+            <span class="hljs-attr">window</span>: <span class="hljs-literal">null</span>,
+            <span class="hljs-attr">outbox</span>: outbox,
+            <span class="hljs-attr">shifter</span>: outbox.shifter(),
+            <span class="hljs-attr">destructibles</span>: {
+                <span class="hljs-attr">window</span>: <span class="hljs-keyword">new</span> Destructible(<span class="hljs-string">'dummy'</span>),
+                <span class="hljs-attr">socket</span>: <span class="hljs-keyword">new</span> Destructible(<span class="hljs-string">'dummy'</span>)
+            }
+        })
+    }
+
+    <span class="hljs-keyword">return</span> connection
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-24">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Push is synchronous. If there is no connection we create one and push events
+into an interim outbox. We use one socket for each pairing. The participant
+with the lesser promise initiates the connection. We also initiate a
+connection if the participant it connecting to itself.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-25">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype.push = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope</span>) </span>{
+    <span class="hljs-keyword">var</span> to = envelope.to</pre></div></div>
+
+        </li>
+
+
+        <li id="section-26">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Drop the message if the destination has been removed from the routing
+table.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._router.properties[to.promise] != <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">var</span> connection = <span class="hljs-keyword">this</span>._getConnection(to)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-27">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>If we have no window and our promise is less than our peers, we
+connect, otherwise we wait for our peer to connect to us.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (connection.window == <span class="hljs-literal">null</span> &amp;&amp; Monotonic.compare(<span class="hljs-keyword">this</span>._router.from.promise, to.promise) &lt;= <span class="hljs-number">0</span>) {
+            <span class="hljs-keyword">this</span>._connect(to)
+        }
+
+        connection.outbox.push(envelope)
+    }
+}</pre></div></div>
+
+        </li>
+
+
+        <li id="section-28">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Windows are queues that survive network failures. Because they can outlive
+their underlying sockets they are created with a destructible
+ We build it under it’s
+own destructible invoked below as a destructible that can terminate
+independently of the application. Note that we keep the sub-destructible in
+our window collection so we can close the window and destroy all it’s helpers
+when it comes time to shutdown.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-29">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._window = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, connection</span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-30">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Keep the <code>Destructible</code> for our window, maybe call it connection, or
+pipe, need more words.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>    connection.destructibles.window = destructible
+    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-31">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>Construct a Window.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        destructible.durable(<span class="hljs-string">'window-z'</span>, Window, <span class="hljs-keyword">async</span>())
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">window</span>) </span>{
+        connection.window = <span class="hljs-built_in">window</span></pre></div></div>
+
+        </li>
+
+
+        <li id="section-32">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Drain any messages waiting for the window’s creation and replace the
+initial outbox with the window’s outbox.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        connection.shifter.drain(<span class="hljs-built_in">window</span>.outbox, <span class="hljs-string">'push'</span>)
+        connection.outbox = <span class="hljs-built_in">window</span>.outbox</pre></div></div>
+
+        </li>
+
+
+        <li id="section-33">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>We use <code>Window.truncate</code> to correctly close the <code>Window.inbox</code>. The
+<code>Window.outbox</code> we can close directly.</p>
 
             </div>
 
             <div class="content"><div class='highlight'><pre>        destructible.destruct.wait(<span class="hljs-built_in">window</span>, <span class="hljs-string">'truncate'</span>)
-        <span class="hljs-keyword">var</span> loop = <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-            <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'here'</span>)
-                demur.retry(<span class="hljs-keyword">async</span>())
+        destructible.destruct.wait(<span class="hljs-built_in">window</span>.outbox, <span class="hljs-string">'end'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-34">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>We want to pump the <code>Window.inbox</code> into our common <code>inbox</code>, but we
+don’t want to close the common <code>inbox</code> by pushing <code>null</code> which means
+end-of-queue.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        destructible.durable(<span class="hljs-string">'inbox'</span>, <span class="hljs-built_in">window</span>.inbox.pump(<span class="hljs-keyword">this</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope</span>) </span>{
+            <span class="hljs-keyword">if</span> (envelope != <span class="hljs-literal">null</span>) {
+                <span class="hljs-keyword">this</span>.inbox.push(envelope)
+            }
+        }), <span class="hljs-string">'destructible'</span>, <span class="hljs-literal">null</span>)
+
+        <span class="hljs-keyword">return</span> [ connection ]
+    })
+})</pre></div></div>
+
+        </li>
+
+
+        <li id="section-35">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>Construct a conduit around an incoming socket.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._conduit = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, connection, socket</span>) </span>{
+    socket.steve = <span class="hljs-string">'steve'</span>
+    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-36">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Create a new socket.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">var</span> readable = <span class="hljs-keyword">new</span> Staccato.Readable(socket)
+        <span class="hljs-keyword">var</span> writable = <span class="hljs-keyword">new</span> Staccato.Writable(socket)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-37">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>TODO How does destroying writable cause the socket to close?</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        destructible.destruct.wait(readable, <span class="hljs-string">'destroy'</span>)
+        destructible.destruct.wait(writable, <span class="hljs-string">'destroy'</span>)</pre></div></div>
+
+        </li>
+
+
+        <li id="section-38">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>destructible.destruct.wait(socket, ‘destroy’)</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        destructible.ephemeral(<span class="hljs-string">'socket'</span>, Socket, { <span class="hljs-attr">from</span>: connection.address }, readable, writable, <span class="hljs-keyword">async</span>())
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">inbox, outbox</span>) </span>{
+        outbox.push({ <span class="hljs-attr">module</span>: <span class="hljs-string">'diffuser'</span>, <span class="hljs-attr">method</span>: <span class="hljs-string">'connect'</span> })</pre></div></div>
+
+        </li>
+
+
+        <li id="section-39">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>Bind our socket to a Conduit server that will reconnect the window
+and listen for pings.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        destructible.durable(<span class="hljs-string">'conduit'</span>, Conduit, inbox, outbox, <span class="hljs-keyword">this</span>, cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, request, inbox, outbox</span>) </span>{
+            <span class="hljs-keyword">switch</span> (request.method) {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'window'</span>:
+                connection.window.connect(inbox, outbox)
+                <span class="hljs-keyword">break</span>
+            <span class="hljs-keyword">case</span> <span class="hljs-string">'ping'</span>:</pre></div></div>
+
+        </li>
+
+
+        <li id="section-40">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>TODO Ping.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">break</span>
+            }
+        }), <span class="hljs-keyword">async</span>())
+    })
+})</pre></div></div>
+
+        </li>
+
+
+        <li id="section-41">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>If we construct a window, it’s <code>Destructible</code> is a child of our main
+<code>Destructible</code>, not the child <code>Destructible</code> for the specific socket. A
+Window is supposed to outlive a socket and reconnect if the socket breaks but
+recovery is possible, so both the socket and window a destructibly children
+of our <code>Connector</code> object manager.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._getOrCreateWindow = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, promise</span>) </span>{
+    <span class="hljs-keyword">var</span> connection = <span class="hljs-keyword">this</span>._getConnection(promise)
+    <span class="hljs-keyword">if</span> (connection.window == <span class="hljs-literal">null</span>) {</pre></div></div>
+
+        </li>
+
+
+        <li id="section-42">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>As noted above, the <code>Window</code> is a child of the <code>Connector</code>, not
+the <code>Socket</code>.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">this</span>._destructible.ephemeral([ <span class="hljs-string">'window-xxxx'</span>, promise ], <span class="hljs-keyword">this</span>, <span class="hljs-string">'_window'</span>, connection, <span class="hljs-keyword">async</span>())
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">return</span> connection
+    }
+})</pre></div></div>
+
+        </li>
+
+
+        <li id="section-43">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>TODO Really need to set some sort of panic for Turnstile, automatic panic,
+where if it gets too full it doesn’t shed, it crashes.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-44">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype.socket = restrictor.push(cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, envelope</span>) </span>{
+    <span class="hljs-keyword">if</span> (!envelope.canceled) {
+        <span class="hljs-keyword">var</span> message = envelope.body.shift(), socket = envelope.body.shift()
+        <span class="hljs-keyword">var</span> <span class="hljs-keyword">from</span> = message.from
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-45">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>Get or create the window.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">this</span>._getOrCreateWindow(<span class="hljs-keyword">from</span>, <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{</pre></div></div>
+
+        </li>
+
+
+        <li id="section-46">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Wait for the previous socket to shutdown.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                connection.destructibles.socket.destroy()
+                connection.destructibles.socket.completed.wait(<span class="hljs-keyword">async</span>())
             }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'retries'</span>)
-                <span class="hljs-keyword">if</span> (destructible.destroyed) {
-                    <span class="hljs-keyword">return</span> [ loop.break ]
-                }
-                destructible.monitor(<span class="hljs-string">'connection'</span>, <span class="hljs-literal">true</span>, <span class="hljs-keyword">this</span>, <span class="hljs-string">'_connection'</span>, demur, to, <span class="hljs-built_in">window</span>, <span class="hljs-keyword">async</span>())
-            }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">destructible</span>) </span>{
-                <span class="hljs-built_in">console</span>.log(destructible.completed.open)
-                destructible.completed.wait(<span class="hljs-keyword">async</span>())
+                connection.destructibles.window.ephemeral([ <span class="hljs-string">'socket'</span>, <span class="hljs-keyword">from</span> ], <span class="hljs-keyword">this</span>, <span class="hljs-string">'_conduit'</span>, connection, socket, <span class="hljs-keyword">async</span>())
             })
-        })()
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-        <span class="hljs-keyword">this</span>._connections.remove(to)
+        })
+    }
+}))</pre></div></div>
+
+        </li>
+
+
+        <li id="section-47">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>Note that there are three recoverable errors. The first is the request
+connection and upgrade negotiation. We have a try/catch for that error below.
+Then we can have an error on read or write to the socket. The <code>Socket</code>
+utility from Procession logs and error and ends the inbox or outbox
+procession.</p>
+
+            </div>
+
+        </li>
+
+
+        <li id="section-48">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>Connector.prototype._connection = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, connection</span>) </span>{
+    <span class="hljs-keyword">var</span> location = url.parse(<span class="hljs-keyword">this</span>._router.properties[connection.address.promise].location)
+    <span class="hljs-keyword">var</span> abort
+    <span class="hljs-keyword">async</span>([<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">var</span> request = http.request({
+            <span class="hljs-attr">host</span>: location.hostname,
+            <span class="hljs-attr">port</span>: +location.port,
+            <span class="hljs-attr">headers</span>: Downgrader.headers({
+                <span class="hljs-string">'x-diffuser-island'</span>: <span class="hljs-keyword">this</span>._island,
+                <span class="hljs-string">'x-diffuser-from-promise'</span>: <span class="hljs-keyword">this</span>._router.from.promise,
+                <span class="hljs-string">'x-diffuser-from-index'</span>: <span class="hljs-keyword">this</span>._router.from.index,
+                <span class="hljs-string">'x-diffuser-to-promise'</span>: connection.address.promise,
+                <span class="hljs-string">'x-diffuser-to-index'</span>: connection.address.index
+            })
+        })
+        abort = destructible.destruct.wait(request, <span class="hljs-string">'abort'</span>)
+        delta(<span class="hljs-keyword">async</span>()).ee(request).on(<span class="hljs-string">'upgrade'</span>)
+        request.end()
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
+        destructible.destroy()
+        <span class="hljs-built_in">console</span>.log(error.stack)
+        logger.error(<span class="hljs-string">'request'</span>, { <span class="hljs-attr">stack</span>: error.stack })
+        <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, <span class="hljs-literal">false</span>, destructible ]
+    }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">request, socket, head</span>) </span>{
+        destructible.destruct.cancel(abort)
+        <span class="hljs-keyword">var</span> wait = <span class="hljs-literal">null</span>
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">var</span> readable = <span class="hljs-keyword">new</span> Staccato.Readable(socket)
+            <span class="hljs-keyword">var</span> writable = <span class="hljs-keyword">new</span> Staccato.Writable(socket)
+            destructible.destruct.wait(readable, <span class="hljs-string">'destroy'</span>)
+            destructible.durable(<span class="hljs-string">'socket'</span>, Socket, { <span class="hljs-attr">to</span>: <span class="hljs-built_in">console</span>.address, <span class="hljs-attr">location</span>: location }, readable, writable, head, <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">inbox, outbox</span>) </span>{
+            <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                inbox.dequeue(<span class="hljs-keyword">async</span>())
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope</span>) </span>{
+                <span class="hljs-keyword">if</span> (envelope == <span class="hljs-literal">null</span>) {
+                    <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, <span class="hljs-literal">false</span>, destructible ]
+                }
+                Interrupt.assert(envelope.module + <span class="hljs-string">'/'</span> + envelope.method == <span class="hljs-string">'diffuser/connect'</span>, <span class="hljs-string">'bad.handshake'</span>)
+                destructible.durable(<span class="hljs-string">'conduit'</span>, Conduit, inbox, outbox, <span class="hljs-keyword">async</span>())
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">conduit</span>) </span>{
+                <span class="hljs-keyword">var</span> request = conduit.connect({ <span class="hljs-attr">method</span>: <span class="hljs-string">'window'</span>, <span class="hljs-attr">inbox</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">outbox</span>: <span class="hljs-literal">true</span> })
+                connection.window.connect(request.inbox, request.outbox)
+                <span class="hljs-keyword">return</span> [ <span class="hljs-literal">true</span>, destructible ]
+            })
+        })
     })
 })
 
-<span class="hljs-built_in">module</span>.exports = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, index</span>) </span>{
-    <span class="hljs-keyword">try</span> {
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'x'</span>)
-    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Connector(destructible, index)
-     } <span class="hljs-keyword">catch</span> (e) {
-        <span class="hljs-built_in">console</span>.log(e.stack)
-     }
-    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'x'</span>)
+Connector.prototype._reconnect = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, connection</span>) </span>{
+    <span class="hljs-keyword">var</span> demur = <span class="hljs-keyword">new</span> Demur({ <span class="hljs-attr">immediate</span>: <span class="hljs-literal">true</span> })
+    destructible.destruct.wait(demur, <span class="hljs-string">'cancel'</span>)
+    <span class="hljs-keyword">async</span>.loop([], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            demur.retry(<span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">if</span> (destructible.destroyed) {
+                <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break ]
+            }
+            <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                destructible.ephemeral(<span class="hljs-string">'connection'</span>, <span class="hljs-keyword">this</span>, <span class="hljs-string">'_connection'</span>, connection, <span class="hljs-keyword">async</span>())
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connected, destructible</span>) </span>{
+                <span class="hljs-keyword">if</span> (connected) {
+                    demur.reset()
+                }
+                destructible.completed.wait(<span class="hljs-keyword">async</span>())
+            })
+        })
+    })
 })
 
-</pre></div></div>
+Connector.prototype._connect = restrictor.push(cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, envelope</span>) </span>{
+    <span class="hljs-keyword">var</span> to = envelope.body.shift()
+    <span class="hljs-keyword">if</span> (!envelope.canceled) {
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">this</span>._getOrCreateWindow(to, <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{
+            connection.destructibles.window.durable(<span class="hljs-string">'reconnect'</span>, <span class="hljs-keyword">this</span>, <span class="hljs-string">'_reconnect'</span>, connection, <span class="hljs-literal">null</span>)
+        })
+    }
+}))
+
+<span class="hljs-built_in">module</span>.exports = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, index</span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Connector(destructible, index)
+})</pre></div></div>
 
         </li>
 

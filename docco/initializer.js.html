@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -165,69 +145,51 @@ Turnstile.Queue = <span class="hljs-built_in">require</span>(<span class="hljs-s
 
 <span class="hljs-keyword">var</span> Procession = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession'</span>)
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Initializer</span> (<span class="hljs-params">destructible</span>) </span>{
-    descendent.increment()
-    destructible.destruct.wait(descendent, <span class="hljs-string">'decrement'</span>)
-    <span class="hljs-keyword">this</span>.olio = <span class="hljs-keyword">new</span> Signal
+<span class="hljs-keyword">var</span> restrictor = <span class="hljs-built_in">require</span>(<span class="hljs-string">'restrictor'</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Initializer</span> (<span class="hljs-params">destructible, olio</span>) </span>{
     <span class="hljs-keyword">this</span>.arrived = <span class="hljs-keyword">new</span> Procession
     <span class="hljs-keyword">this</span>.turnstile = <span class="hljs-keyword">new</span> Turnstile
-    <span class="hljs-keyword">this</span>.turnstile.listen(destructible.monitor(<span class="hljs-string">'turnstile'</span>))
-    destructible.destruct.wait(<span class="hljs-keyword">this</span>.turnstile, <span class="hljs-string">'close'</span>)
+    <span class="hljs-keyword">this</span>.turnstile.listen(destructible.durable(<span class="hljs-string">'turnstile'</span>))
     <span class="hljs-keyword">this</span>._messages = <span class="hljs-keyword">new</span> Turnstile.Queue(<span class="hljs-keyword">this</span>, <span class="hljs-string">'_message'</span>, <span class="hljs-keyword">this</span>.turnstile)
+    destructible.destruct.wait(<span class="hljs-keyword">this</span>.turnstile, <span class="hljs-string">'destroy'</span>)
     <span class="hljs-keyword">this</span>._ready = <span class="hljs-keyword">new</span> Vivifyer(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
         <span class="hljs-keyword">return</span> { <span class="hljs-attr">arrived</span>: <span class="hljs-number">0</span>, <span class="hljs-attr">properties</span>: <span class="hljs-literal">null</span> }
     })
-    descendent.on(<span class="hljs-string">'diffuser:ready'</span>, <span class="hljs-keyword">this</span>.message.bind(<span class="hljs-keyword">this</span>))
+    <span class="hljs-keyword">this</span>._olio = olio
+    <span class="hljs-keyword">var</span> message = <span class="hljs-keyword">this</span>.message.bind(<span class="hljs-keyword">this</span>)
+    olio.on(<span class="hljs-string">'diffuser:ready'</span>, message)
+    destructible.destruct.wait(olio.removeListener.bind(olio, <span class="hljs-string">'diffuser:ready'</span>, message))
 }
 
-Initializer.prototype._message = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, envelope</span>) </span>{
-    <span class="hljs-keyword">var</span> message = envelope.body
-    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-</pre></div></div>
+Initializer.prototype.message = restrictor.push(cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, envelope</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(envelope)
+    <span class="hljs-keyword">if</span> (!envelope.canceled) {
+        <span class="hljs-keyword">var</span> message = envelope.body.shift()
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'arrived'</span>, message)
+            <span class="hljs-keyword">this</span>._olio.sibling(message.name, <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">sibling</span>) </span>{
+            <span class="hljs-keyword">var</span> counter = <span class="hljs-keyword">this</span>._ready.get(message.body.name)
+            <span class="hljs-keyword">if</span> (counter.arrived == <span class="hljs-number">0</span>) {
+                counter.isRouter = message.body.isRouter
+            } <span class="hljs-keyword">else</span> {
+                assert(counter.isRouter == message.body.isRouter)
+            }
+            <span class="hljs-keyword">if</span> (++counter.arrived == sibling.count) {
+                <span class="hljs-keyword">this</span>.arrived.push({
+                    <span class="hljs-attr">name</span>: message.body.name,
+                    <span class="hljs-attr">isRouter</span>: message.body.isRouter,
+                    <span class="hljs-attr">count</span>: sibling.count
+                })
+            }
+        })
+    }
+}))
 
-        </li>
-
-
-        <li id="section-2">
-            <div class="annotation">
-
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-2">&#182;</a>
-              </div>
-              <p>TODO So hard to cancel all this stuff, but push an error through
-please.</p>
-
-            </div>
-
-            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">this</span>.olio.wait(<span class="hljs-keyword">async</span>())
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">olio</span>) </span>{
-        olio.sibling(message.body.name, <span class="hljs-keyword">async</span>())
-    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">sibling</span>) </span>{
-        <span class="hljs-keyword">var</span> counter = <span class="hljs-keyword">this</span>._ready.get(message.body.name)
-        <span class="hljs-keyword">if</span> (counter.arrived == <span class="hljs-number">0</span>) {
-            counter.isRouter = message.body.isRouter
-        } <span class="hljs-keyword">else</span> {
-            assert(counter.isRouter == message.body.isRouter)
-        }
-        <span class="hljs-keyword">if</span> (++counter.arrived == sibling.count) {
-            <span class="hljs-keyword">this</span>.arrived.push({
-                <span class="hljs-attr">name</span>: message.body.name,
-                <span class="hljs-attr">isRouter</span>: message.body.isRouter,
-                <span class="hljs-attr">count</span>: sibling.count
-            })
-        }
-    })
-})
-
-Initializer.prototype.message = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">message</span>) </span>{
-    <span class="hljs-keyword">this</span>._messages.push(message)
-}
-
-<span class="hljs-built_in">module</span>.exports = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible</span>) </span>{
-    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Initializer(destructible)
-})
-
-</pre></div></div>
+<span class="hljs-built_in">module</span>.exports = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, destructible, olio</span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Initializer(destructible, olio)
+})</pre></div></div>
 
         </li>
 

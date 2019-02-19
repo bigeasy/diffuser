@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -163,8 +143,8 @@ Turnstile.Queue = <span class="hljs-built_in">require</span>(<span class="hljs-s
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Actor</span> (<span class="hljs-params">destuctible, f</span>) </span>{
     <span class="hljs-keyword">this</span>._f = f
     <span class="hljs-keyword">this</span>.turnstile = <span class="hljs-keyword">new</span> Turnstile
-    <span class="hljs-keyword">this</span>.turnstile.listen(destuctible.monitor(<span class="hljs-string">'turnstile'</span>))
-    destuctible.destruct.wait(<span class="hljs-keyword">this</span>.turnstile, <span class="hljs-string">'close'</span>)
+    <span class="hljs-keyword">this</span>.turnstile.listen(destuctible.durable(<span class="hljs-string">'turnstile'</span>))
+    destuctible.destruct.wait(<span class="hljs-keyword">this</span>.turnstile, <span class="hljs-string">'destroy'</span>)
     <span class="hljs-keyword">this</span>._queue = <span class="hljs-keyword">new</span> Turnstile.Queue(<span class="hljs-keyword">this</span>, <span class="hljs-string">'_act'</span>, <span class="hljs-keyword">this</span>.turnstile)
 }
 
@@ -217,9 +197,7 @@ Actor.prototype._act = cadence(<span class="hljs-function"><span class="hljs-key
         f = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope, callback</span>) </span>{ callback(<span class="hljs-literal">null</span>, <span class="hljs-literal">null</span>) }
     }
     <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Actor(destructible, f)
-})
-
-</pre></div></div>
+})</pre></div></div>
 
         </li>
 

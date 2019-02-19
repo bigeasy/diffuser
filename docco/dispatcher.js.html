@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -170,7 +150,6 @@
     <span class="hljs-keyword">this</span>._backlogs.route.shifter = <span class="hljs-keyword">this</span>._backlogs.route.queue.shifter()
     <span class="hljs-keyword">this</span>._router = <span class="hljs-literal">null</span>
     <span class="hljs-keyword">this</span>._receiver = options.receiver
-    <span class="hljs-keyword">this</span>._visitor = options.visitor
     <span class="hljs-keyword">this</span>._countdown = <span class="hljs-keyword">new</span> Countdown
     <span class="hljs-keyword">this</span>._cliffhanger = options.cliffhanger
     assert(<span class="hljs-keyword">this</span>._cliffhanger)
@@ -181,7 +160,6 @@
 
 Dispatcher.prototype.setRoutes = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">routes</span>) </span>{
     <span class="hljs-keyword">this</span>._router = <span class="hljs-keyword">new</span> Router(routes, <span class="hljs-keyword">this</span>._index)
-    <span class="hljs-keyword">this</span>._visitor.setRouter(<span class="hljs-keyword">this</span>._router)
     <span class="hljs-keyword">this</span>._receiver.setRouter(<span class="hljs-keyword">this</span>._router)
     <span class="hljs-keyword">this</span>._countdown.start(routes)
     <span class="hljs-keyword">var</span> backlog = <span class="hljs-keyword">this</span>._backlogs.synchronize.get(routes.promise)
@@ -194,10 +172,12 @@ Dispatcher.prototype._setRegistration = <span class="hljs-function"><span class=
 }
 
 Dispatcher.prototype.dispatch = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">envelope</span>) </span>{
+    <span class="hljs-keyword">if</span> (envelope == <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">return</span>
+    }
     <span class="hljs-keyword">var</span> to
     assert(envelope.module == <span class="hljs-string">'diffuser'</span>)
-    assert(Router.compare(envelope.to, <span class="hljs-keyword">this</span>._router.from) == <span class="hljs-number">0</span>)
-</pre></div></div>
+    assert(Router.compare(envelope.to, <span class="hljs-keyword">this</span>._router.from) == <span class="hljs-number">0</span>)</pre></div></div>
 
         </li>
 
@@ -219,8 +199,7 @@ specific peer with their route promises in ascending order.</p>
             <span class="hljs-keyword">this</span>._backlogs.synchronize.get(envelope.promise).push(envelope)
         } <span class="hljs-keyword">else</span> {
             <span class="hljs-keyword">this</span>._backlogs.route.queue.push(envelope)
-        }
-</pre></div></div>
+        }</pre></div></div>
 
         </li>
 
@@ -235,8 +214,7 @@ specific peer with their route promises in ascending order.</p>
 
             </div>
 
-            <div class="content"><div class='highlight'><pre>    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (envelope.method == <span class="hljs-string">'synchronize'</span>) {
-</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (envelope.method == <span class="hljs-string">'synchronize'</span>) {</pre></div></div>
 
         </li>
 
@@ -252,8 +230,7 @@ specific peer with their route promises in ascending order.</p>
             </div>
 
             <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (envelope.body == <span class="hljs-literal">null</span>) {
-            <span class="hljs-keyword">this</span>._countdown.arrive(envelope.promise, envelope.from)
-</pre></div></div>
+            <span class="hljs-keyword">this</span>._countdown.arrive(envelope.promise, envelope.from)</pre></div></div>
 
         </li>
 
@@ -269,8 +246,7 @@ bucket table so we have been updated according to that table.</p>
 
             </div>
 
-            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._countdown.count == <span class="hljs-number">0</span>) {
-</pre></div></div>
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._countdown.count == <span class="hljs-number">0</span>) {</pre></div></div>
 
         </li>
 
@@ -289,8 +265,7 @@ bucket table so we have been updated according to that table.</p>
                 <span class="hljs-keyword">while</span> ((backlog = <span class="hljs-keyword">this</span>._backlogs.route.shifter.shift()) != <span class="hljs-literal">null</span>) {
                     <span class="hljs-keyword">this</span>.dispatch(backlog)
                 }
-            }
-</pre></div></div>
+            }</pre></div></div>
 
         </li>
 
@@ -311,8 +286,7 @@ routes to ourselves.</p>
             <span class="hljs-keyword">this</span>._setRegistration(envelope.body, envelope.from)
         }
     } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._countdown.count != <span class="hljs-number">0</span>) {
-        <span class="hljs-keyword">this</span>._backlogs.route.queue.push(envelope)
-</pre></div></div>
+        <span class="hljs-keyword">this</span>._backlogs.route.queue.push(envelope)</pre></div></div>
 
         </li>
 
@@ -327,8 +301,7 @@ routes to ourselves.</p>
 
             </div>
 
-            <div class="content"><div class='highlight'><pre>    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Router.compare(to = <span class="hljs-keyword">this</span>._router.route(envelope.hashed), <span class="hljs-keyword">this</span>._router.from) != <span class="hljs-number">0</span>) {
-</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Router.compare(to = <span class="hljs-keyword">this</span>._router.route(envelope.hashed), <span class="hljs-keyword">this</span>._router.from) != <span class="hljs-number">0</span>) {</pre></div></div>
 
         </li>
 
@@ -349,6 +322,8 @@ routes to ourselves.</p>
     } <span class="hljs-keyword">else</span> {
         <span class="hljs-keyword">switch</span> (envelope.destination + <span class="hljs-string">'/'</span> + envelope.method) {
         <span class="hljs-keyword">case</span> <span class="hljs-string">'router/register'</span>:
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'made it'</span>, envelope)
+            envelope.got = <span class="hljs-literal">true</span>
             <span class="hljs-keyword">this</span>._setRegistration(envelope.hashed, envelope.from)
             <span class="hljs-keyword">this</span>._connector.push({
                 <span class="hljs-attr">promise</span>: <span class="hljs-keyword">this</span>._router.promise,
@@ -383,7 +358,7 @@ routes to ourselves.</p>
             })
             <span class="hljs-keyword">break</span>
         <span class="hljs-keyword">case</span> <span class="hljs-string">'router/route'</span>:
-            <span class="hljs-keyword">this</span>._visitor.act(<span class="hljs-keyword">this</span>._connector, envelope)
+            <span class="hljs-keyword">this</span>._receiver.act(<span class="hljs-keyword">this</span>._connector, envelope)
             <span class="hljs-keyword">break</span>
         <span class="hljs-keyword">case</span> <span class="hljs-string">'receiver/route'</span>:
             <span class="hljs-keyword">var</span> registration = <span class="hljs-keyword">this</span>._registrations[envelope.hashed.hash % <span class="hljs-keyword">this</span>._registrations.length]
@@ -438,9 +413,7 @@ routes to ourselves.</p>
     }
 }
 
-<span class="hljs-built_in">module</span>.exports = Dispatcher
-
-</pre></div></div>
+<span class="hljs-built_in">module</span>.exports = Dispatcher</pre></div></div>
 
         </li>
 

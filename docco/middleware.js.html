@@ -2,7 +2,7 @@
 
 <html>
 <head>
-  <title>sender.js</title>
+  <title>middleware.js</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
   <link rel="stylesheet" media="all" href="docco.css" />
@@ -30,11 +30,6 @@
                 </a>
 
 
-                <a class="source" href="connectee.js.html">
-                  connectee.js
-                </a>
-
-
                 <a class="source" href="connector.js.html">
                   connector.js
                 </a>
@@ -50,11 +45,6 @@
                 </a>
 
 
-                <a class="source" href="diffuser.bin.js.html">
-                  diffuser.bin.js
-                </a>
-
-
                 <a class="source" href="diffuser.js.html">
                   diffuser.js
                 </a>
@@ -62,11 +52,6 @@
 
                 <a class="source" href="dispatcher.js.html">
                   dispatcher.js
-                </a>
-
-
-                <a class="source" href="embarkator.js.html">
-                  embarkator.js
                 </a>
 
 
@@ -85,13 +70,18 @@
                 </a>
 
 
-                <a class="source" href="listener.js.html">
-                  listener.js
+                <a class="source" href="lookup.js.html">
+                  lookup.js
                 </a>
 
 
-                <a class="source" href="lookup.js.html">
-                  lookup.js
+                <a class="source" href="middleware.js.html">
+                  middleware.js
+                </a>
+
+
+                <a class="source" href="notes.js.html">
+                  notes.js
                 </a>
 
 
@@ -110,23 +100,13 @@
                 </a>
 
 
-                <a class="source" href="sender.js.html">
-                  sender.js
-                </a>
-
-
-                <a class="source" href="socketeer.js.html">
-                  socketeer.js
-                </a>
-
-
                 <a class="source" href="table.js.html">
                   table.js
                 </a>
 
 
-                <a class="source" href="updater.js.html">
-                  updater.js
+                <a class="source" href="table.redux.js.html">
+                  table.redux.js
                 </a>
 
             </div>
@@ -138,7 +118,7 @@
 
           <li id="title">
               <div class="annotation">
-                  <h1>sender.js</h1>
+                  <h1>middleware.js</h1>
               </div>
           </li>
 
@@ -153,27 +133,20 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Procession = <span class="hljs-built_in">require</span>(<span class="hljs-string">'procession'</span>)
-<span class="hljs-keyword">var</span> cadence = <span class="hljs-built_in">require</span>(<span class="hljs-string">'cadence'</span>)
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> cadence = <span class="hljs-built_in">require</span>(<span class="hljs-string">'cadence'</span>)
+<span class="hljs-keyword">var</span> Reactor = <span class="hljs-built_in">require</span>(<span class="hljs-string">'reactor'</span>)
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Sender</span> (<span class="hljs-params">destructible, feedback</span>) </span>{
-    <span class="hljs-keyword">this</span>.outbox = <span class="hljs-keyword">new</span> Procession
-    <span class="hljs-keyword">this</span>.inbox = <span class="hljs-keyword">new</span> Procession
-    <span class="hljs-keyword">this</span>._feedback = feedback
-    <span class="hljs-keyword">this</span>.inbox.pump(<span class="hljs-keyword">this</span>, <span class="hljs-string">'_eos'</span>, destructible.monitor(<span class="hljs-string">'inbox-qq'</span>))
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Middleware</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">this</span>.reactor = <span class="hljs-keyword">new</span> Reactor(<span class="hljs-keyword">this</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">dispatcher</span>) </span>{
+        dispatcher.dispatch(<span class="hljs-string">'GET /'</span>, <span class="hljs-string">'index'</span>)
+    })
 }
 
-Sender.prototype._eos = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, envelope</span>) </span>{
-    <span class="hljs-keyword">if</span> (envelope == <span class="hljs-literal">null</span>) {
-        <span class="hljs-keyword">this</span>.outbox.push(<span class="hljs-literal">null</span>)
-    } <span class="hljs-keyword">else</span> {
-        <span class="hljs-keyword">this</span>._feedback.enqueue(envelope, <span class="hljs-keyword">async</span>())
-    }
+Middleware.prototype.index = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async</span>) </span>{
+    <span class="hljs-keyword">return</span> [ <span class="hljs-number">200</span>, { <span class="hljs-string">'content-type'</span>: <span class="hljs-string">'text/plain'</span> }, <span class="hljs-string">'Diffuser Socket API\n'</span> ]
 })
 
-<span class="hljs-built_in">module</span>.exports = Sender
-
-</pre></div></div>
+<span class="hljs-built_in">module</span>.exports = Middleware</pre></div></div>
 
         </li>
 

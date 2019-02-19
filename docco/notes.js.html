@@ -2,7 +2,7 @@
 
 <html>
 <head>
-  <title>lookup.js</title>
+  <title>notes.js</title>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
   <link rel="stylesheet" media="all" href="docco.css" />
@@ -118,7 +118,7 @@
 
           <li id="title">
               <div class="annotation">
-                  <h1>lookup.js</h1>
+                  <h1>notes.js</h1>
               </div>
           </li>
 
@@ -133,32 +133,24 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> Monotonic = <span class="hljs-built_in">require</span>(<span class="hljs-string">'monotonic'</span>).asString
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> http = <span class="hljs-built_in">require</span>(<span class="hljs-string">'http'</span>)
 
-<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Router</span> (<span class="hljs-params">routes, index</span>) </span>{
-    <span class="hljs-keyword">this</span>.from = { <span class="hljs-attr">promise</span>: routes.self, <span class="hljs-attr">index</span>: index }
-    <span class="hljs-keyword">this</span>.self = routes.self
-    <span class="hljs-keyword">this</span>.promise = routes.promise
-    <span class="hljs-keyword">this</span>.properties = routes.properties
-    <span class="hljs-keyword">this</span>.event = routes.event
-    <span class="hljs-keyword">this</span>.buckets = routes.buckets
-}
+<span class="hljs-keyword">var</span> server = http.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">request, response</span>) </span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'request'</span>, request.url)
+    response.writeHead(<span class="hljs-number">200</span>)
+    response.end()
+})
 
-Router.prototype.route = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">hashed</span>) </span>{
-    <span class="hljs-keyword">var</span> promise = <span class="hljs-keyword">this</span>.buckets[hashed.hash % <span class="hljs-keyword">this</span>.buckets.length]
-    <span class="hljs-keyword">var</span> index = hashed.hash % <span class="hljs-keyword">this</span>.properties[promise].count
-    <span class="hljs-keyword">return</span> { <span class="hljs-attr">promise</span>: promise, <span class="hljs-attr">index</span>: index }
-}
-
-Router.compare = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">left, right</span>) </span>{
-    <span class="hljs-keyword">var</span> compare = Monotonic.compare(left.promise, right.promise)
-    <span class="hljs-keyword">if</span> (compare == <span class="hljs-number">0</span>) {
-        <span class="hljs-keyword">return</span> left.index - right.index
-    }
-    <span class="hljs-keyword">return</span> compare
-}
-
-<span class="hljs-built_in">module</span>.exports = Router</pre></div></div>
+server.listen(<span class="hljs-number">8888</span>, <span class="hljs-string">'127.0.0.1'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'listening'</span>)
+    <span class="hljs-keyword">var</span> request = http.get(<span class="hljs-string">'http://127.0.0.1:8888/'</span>)
+    request.on(<span class="hljs-string">'response'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">response</span>) </span>{ response.resume(); <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'responeded'</span>) })
+    request.on(<span class="hljs-string">'aborted'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'aborted'</span>) })
+    request.on(<span class="hljs-string">'abort'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'abort'</span>) })
+    request.on(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{ <span class="hljs-built_in">console</span>.log(error.stack) })
+    request.on(<span class="hljs-string">'upgrade'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'upgraded'</span>) })
+    setTimeout.bind(<span class="hljs-literal">null</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'will aborting'</span>); request.abort() }, <span class="hljs-number">0</span>)()
+})</pre></div></div>
 
         </li>
 
