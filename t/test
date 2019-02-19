@@ -13,10 +13,6 @@ if [ "$TRAVIS" = "true" ]; then
   echo "running with coverage"
   t/cover
   istanbul report --format text
-  echo ""
-
-  echo "submitting to coveralls.io"
-  (cat coverage/lcov.info | coveralls)
 fi
 
 echo ""
