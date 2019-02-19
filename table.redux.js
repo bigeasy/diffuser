@@ -11,6 +11,7 @@ function Table (redundancy, workers) {
     this.redundancy = redundancy
     this.workers = workers
     this.balanced = []
+    this.version = '0'
 }
 
 var RBTree = require('bintrees').RBTree
@@ -78,6 +79,7 @@ Table.prototype._balance = function balance (buckets, addresses) {
 
 Table.prototype.arrive = function (self, promise) {
     this.addresses.push(promise)
+    var version = this.version = Monotonic.increment(this.version, 0)
     if (this.addresses.length == 1) {
         Interrupt.assert(promise == self, 'bad.bootstrap.promise')
         this.buckets.push(promise)
@@ -85,6 +87,7 @@ Table.prototype.arrive = function (self, promise) {
             module: 'diffuser',
             method: 'bootstrap',
             promise: promise,
+            version: version,
             addresses: this.addresses,
             buckets: this.buckets
         })))
@@ -97,15 +100,27 @@ Table.prototype.arrive = function (self, promise) {
         }
         // TODO Not sure what we need to keep in order to fallback.
         this._balance(buckets, this.addresses)
-        this.balanced.push(buckets)
+        this.balanced.push({
+            promise: promise,
+            buckets: buckets
+        })
         this.events.push(JSON.parse(JSON.stringify({
             module: 'diffuser',
             method: 'balance',
             promise: promise,
+            version: version,
             buckets: this.buckets,
             balanced: buckets,
             addresses: this.addresses
         })))
+    }
+}
+
+Table.prototype.complete = function (promise, responses) {
+    if (this.balanced[0].promise == promise) {
+        this.buckets = this.balanced.pop().buckets
+        if (this.arriving.length != 0) {
+        }
     }
 }
 

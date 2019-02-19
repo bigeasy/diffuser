@@ -14,6 +14,7 @@ function prove (okay) {
         module: 'diffuser',
         method: 'bootstrap',
         promise: '1/0',
+        version: '1',
         addresses: [ '1/0' ],
         buckets: [ '1/0' ]
     }, 'bootstrap')
@@ -24,6 +25,7 @@ function prove (okay) {
         module: 'diffuser',
         method: 'balance',
         promise: '2/0',
+        version: '2',
         addresses: [ '1/0', '2/0' ],
         buckets: [ '1/0' ],
         balanced: [ '2/0', '2/0', '1/0', '1/0' ]
