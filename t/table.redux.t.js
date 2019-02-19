@@ -1,8 +1,8 @@
-require('proof')(1, prove)
+require('proof')(2, prove)
 
 function prove (okay) {
     var Table = require('../table.redux')
-    var table = new Table(3)
+    var table = new Table(3, 1)
 
     var shifter = table.events.shifter()
 
@@ -16,4 +16,15 @@ function prove (okay) {
         addresses: [ '1/0' ],
         buckets: [ '1/0' ]
     }, 'bootstrap')
+
+    table.arrive('1/0', '2/0')
+
+    okay(shifter.shift(), {
+        module: 'diffuser',
+        method: 'balance',
+        promise: '2/0',
+        addresses: [ '1/0', '2/0' ],
+        buckets: [ '1/0' ],
+        balanced: [ '2/0', '2/0', '1/0', '1/0' ]
+    }, 'balance')
 }
