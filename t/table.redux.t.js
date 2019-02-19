@@ -12,7 +12,8 @@ function prove (okay) {
 
     okay(shifter.shift(), {
         module: 'diffuser',
-        method: 'balance',
+        method: 'bootstrap',
+        promise: '1/0',
         addresses: [ '1/0' ],
         buckets: [ '1/0' ]
     }, 'bootstrap')

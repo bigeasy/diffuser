@@ -83,7 +83,8 @@ Table.prototype.arrive = function (self, promise) {
         this.buckets.push(promise)
         this.events.push(JSON.parse(JSON.stringify({
             module: 'diffuser',
-            method: 'balance',
+            method: 'bootstrap',
+            promise: promise,
             addresses: this.addresses,
             buckets: this.buckets
         })))
