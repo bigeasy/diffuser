@@ -15,12 +15,13 @@ Participant.prototype.setTable = function (table) {
 }
 
 Participant.prototype._indicies = function (addresses, hashed, table) {
-    addresses.push(table.buckets[hashed.hash && (table.buckets.length - 1)])
-    var index = table.addresses.indexOf(addresses[0])
+    var primary = table.buckets[hashed.hash && (table.buckets.length - 1)]
+    addresses[primary] = true
+    var index = table.addresses.indexOf(primary)
     var replicas = table.redundancy - 1
     while (replicas != 0) {
         index = index == table.addresses.length - 1 ? 0 : index + 1
-        addresses.push(table.addresses[index])
+        addresses[table.addresses[index]] = true
         replicas--
     }
     if (table.balancing) {
@@ -29,12 +30,9 @@ Participant.prototype._indicies = function (addresses, hashed, table) {
 }
 
 Participant.prototype.submit = function (hashed, cookie, message) {
-    var addresses = []
+    var addresses = {}
     this._indicies(addresses, hashed, this.table)
-    console.log(addresses)
-    addresses = addresses.filter(function (item, index) {
-        return index == addresses.indexOf(item)
-    })
+    addresses = Object.keys(addresses)
     var request = {
         module: 'diffuser',
         method: 'submit',
