@@ -21,7 +21,7 @@ function prove (okay) {
     okay(participant.queue.shift(), {
         module: 'diffuser',
         method: 'submit',
-        key: [ '1', 1, 0 ],
+        key: '["1",1,0]',
         addresses: [ '1/0', '2/0' ],
         body: {
             hashed: { hash: 2, stringified: '2' },
