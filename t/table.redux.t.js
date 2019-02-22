@@ -32,4 +32,6 @@ function prove (okay) {
         balanced: [ '2/0', '2/0', '1/0', '1/0' ],
         redundancy: 2
     }, 'balance')
+
+    table.complete('2')
 }

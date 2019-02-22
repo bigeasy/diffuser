@@ -119,12 +119,7 @@ Table.prototype.arrive = function (self, promise) {
     }
 }
 
-Table.prototype.complete = function (promise, responses) {
-    if (this.balanced[0].promise == promise) {
-        this.buckets = this.balanced.pop().buckets
-        if (this.arriving.length != 0) {
-        }
-    }
+Table.prototype.complete = function (version) {
 }
 
 module.exports = Table
