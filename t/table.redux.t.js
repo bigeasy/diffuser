@@ -16,7 +16,8 @@ function prove (okay) {
         promise: '1/0',
         version: '1',
         addresses: [ '1/0' ],
-        buckets: [ '1/0' ]
+        buckets: [ '1/0' ],
+        redundancy: 1
     }, 'bootstrap')
 
     table.arrive('1/0', '2/0')
@@ -28,6 +29,7 @@ function prove (okay) {
         version: '2',
         addresses: [ '1/0', '2/0' ],
         buckets: [ '1/0' ],
-        balanced: [ '2/0', '2/0', '1/0', '1/0' ]
+        balanced: [ '2/0', '2/0', '1/0', '1/0' ],
+        redundancy: 2
     }, 'balance')
 }

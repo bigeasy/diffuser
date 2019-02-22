@@ -88,10 +88,12 @@ Table.prototype.arrive = function (self, promise) {
             method: 'bootstrap',
             promise: promise,
             version: version,
+            redundancy: 1,
             addresses: this.addresses,
             buckets: this.buckets
         })))
-    } else if (this.buckets.length < this.redundancy) {
+    } else {
+        var redundancy = Math.min(this.addresses.length, this.redundancy)
         // Ensure we have plenty of buckets. See discussion of doubling above.
         var buckets = this.buckets.slice()
         var minimum = this.addresses.length * this.workers * 2
@@ -109,6 +111,7 @@ Table.prototype.arrive = function (self, promise) {
             method: 'balance',
             promise: promise,
             version: version,
+            redundancy: redundancy,
             buckets: this.buckets,
             balanced: buckets,
             addresses: this.addresses
