@@ -4,20 +4,26 @@ var RBTree = require('bintrees').RBTree
 
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 
-function Table (redundancy, workers) {
+function Table (redundancy, multipler) {
     this.events = new Queue
-    this.addresses = []
-    this.buckets = []
+    this.table = null
     this.redundancy = redundancy
-    this.workers = workers
-    this.balanced = []
+    this.multipler = multipler
     this.version = '0'
+    this.arriving = []
+    this.departed = []
 }
 
 var RBTree = require('bintrees').RBTree
 var Monotonic = require('monotonic').asString
 
 Table.prototype.bootstrap = function () {
+    this.table = {
+        version: '0',
+        redundancy: 0,
+        addresses: [],
+        buckets: []
+    }
 }
 
 Table.prototype._balance = function balance (buckets, addresses) {
@@ -58,6 +64,11 @@ Table.prototype._balance = function balance (buckets, addresses) {
     }
 }
 
+// NOTE Going to further hash the results by the instance worker processes, but
+// not add additional buckets. The buckets will determine which instnace. The
+// messages will then be shareded again among the workers. Our table is an
+// instance lookup table.
+
 // We can implement our balancing logic assuming that there the instance with the
 // maximum number of buckets will have zero buckets.
 
@@ -78,48 +89,65 @@ Table.prototype._balance = function balance (buckets, addresses) {
 //
 
 Table.prototype.arrive = function (self, promise) {
-    this.addresses.push(promise)
+    this.arriving.push(promise)
+    if (this.table.pending == null) {
+        this._rebalance(self)
+    }
+}
+
+Table.prototype._rebalance = function (self) {
+    var addresses = this.table.addresses.concat(this.arriving.shift())
     var version = this.version = Monotonic.increment(this.version, 0)
-    if (this.addresses.length == 1) {
-        Interrupt.assert(promise == self, 'bad.bootstrap.promise')
-        this.buckets.push(promise)
-        this.events.push(JSON.parse(JSON.stringify({
+    if (addresses.length == 1) {
+        Interrupt.assert(addresses[0] == self, 'bad.bootstrap.promise')
+        this.events.push({
             module: 'diffuser',
             method: 'bootstrap',
-            promise: promise,
-            version: version,
-            redundancy: 1,
-            addresses: this.addresses,
-            buckets: this.buckets
-        })))
+            table: this.table = {
+                version: version,
+                redundancy: 1,
+                addresses: addresses,
+                buckets: [ addresses[0] ]
+            }
+        })
     } else {
-        var redundancy = Math.min(this.addresses.length, this.redundancy)
+        var redundancy = Math.min(addresses.length, this.redundancy)
         // Ensure we have plenty of buckets. See discussion of doubling above.
-        var buckets = this.buckets.slice()
-        var minimum = this.addresses.length * this.workers * 2
+        var buckets = this.table.buckets.slice()
+        var minimum = addresses.length * this.multipler
         while (buckets.length < minimum) {
             buckets.push.apply(buckets, buckets)
         }
-        // TODO Not sure what we need to keep in order to fallback.
-        this._balance(buckets, this.addresses)
-        this.balanced.push({
-            promise: promise,
-            buckets: buckets
-        })
+        this._balance(buckets, addresses)
+        // You can now see the structure of a pending message.
         this.events.push(JSON.parse(JSON.stringify({
             module: 'diffuser',
             method: 'balance',
-            promise: promise,
-            version: version,
-            redundancy: redundancy,
-            buckets: this.buckets,
-            balanced: buckets,
-            addresses: this.addresses
+            table: this.table = {
+                version: this.table.version,
+                buckets: this.table.buckets,
+                addresses: this.table.addresses,
+                redundancy: this.table.redundancy,
+                pending: {
+                    version: version,
+                    redundancy: redundancy,
+                    buckets: buckets,
+                    addresses: addresses
+                }
+            }
         })))
     }
 }
 
 Table.prototype.complete = function (version) {
+    Interrupt.assert(version == this.table.pending.version, 'complete.wrong.version')
+    if (this.departed.length == 0) {
+        this.events.push(JSON.parse(JSON.stringify({
+            module: 'diffuser',
+            method: 'complete',
+            table: this.table = this.table.pending
+        })))
+    }
 }
 
 module.exports = Table
