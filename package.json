@@ -49,7 +49,7 @@
                             "compassion.colleague":         "0.64.x",
                             "compassion.counterfeiter":     "0.43.x",
                             "mingle":                       "0.32.x",
-                            "mingle.static":                "0.12.x",
+                            "mingle.static":                "1.0.x",
                             "proof":                        "5.0.x"
     },
     "main":                 "diffuser",
