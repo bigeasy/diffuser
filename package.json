@@ -30,7 +30,7 @@
                             "downgrader":                   "1.0.x",
                             "extant":                       "1.0.x",
                             "hash.fnv":                     "1.0.x",
-                            "keyify":                       "0.0.x",
+                            "keyify":                       "1.0.x",
                             "olio":                         "1.0.x",
                             "operation":                    "5.0.x",
                             "procession":                   "3.0.x",
