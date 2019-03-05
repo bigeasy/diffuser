@@ -39,7 +39,7 @@
                             "restrictor":                   "3.0.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "5.0.x",
-                            "vivifyer":                     "0.0.x",
+                            "vivifyer":                     "1.0.x",
                             "vizsla":                       "13.0.x"
     },
     "devDependencies":
