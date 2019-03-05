@@ -25,7 +25,7 @@ function prove (okay, callback) {
     cadence(function (async) {
         async(function () {
             destructible.durable('mock', Mock, {
-                socket: 't/socket',
+                socket: 'test/socket',
                 children: {
                     compassion: {
                         module: 'compassion.colleague/olio',
