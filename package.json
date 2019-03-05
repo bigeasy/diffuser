@@ -50,7 +50,7 @@
                             "compassion.counterfeiter":     "0.43.x",
                             "mingle":                       "1.0.x",
                             "mingle.static":                "1.0.x",
-                            "proof":                        "5.0.x"
+                            "proof":                        "7.0.x"
     },
     "main":                 "diffuser",
     "scripts":
