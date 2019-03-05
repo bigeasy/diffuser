@@ -27,7 +27,7 @@
                             "demur":                        "1.0.x",
                             "departure":                    "0.0.x",
                             "destructible":                 "1.0.x",
-                            "downgrader":                   "0.2.x",
+                            "downgrader":                   "1.0.x",
                             "extant":                       "1.0.x",
                             "hash.fnv":                     "1.0.x",
                             "keyify":                       "0.0.x",
