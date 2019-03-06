@@ -38,10 +38,10 @@ Participant.prototype._indicies = function (addresses, hashed, table) {
     }
 }
 
-// The leader maintains the authoratitive log. It sents commit messages to the
+// The leader maintains the authoritative log. It sends commit messages to the
 // replicas. When they acknowledge the commit, the leader can commit the message
 // as part of the log. Replicas are always one behind. They don't commit the
-// message to the log until the leader sends a new message that delcares the
+// message to the log until the leader sends a new message that declares the
 // most committed message. The commit message piggy backs on the ordering
 // messages so the replicas will have the order but won't know about the commit.
 //
@@ -85,7 +85,7 @@ Participant.prototype.order = function (envelope) {
     this.commit(envelope.body.index, envelope.body.committed)
 }
 
-// During normal operation, when the primary recieves a message, it assumes that
+// During normal operation, when the primary receives a message, it assumes that
 // everyone will get the message eventually, so it can the message to the chain.
 
 Participant.prototype.store = function (envelope) {

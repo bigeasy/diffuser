@@ -65,14 +65,14 @@ Table.prototype._balance = function balance (buckets, addresses) {
 }
 
 // NOTE Going to further hash the results by the instance worker processes, but
-// not add additional buckets. The buckets will determine which instnace. The
-// messages will then be shareded again among the workers. Our table is an
+// not add additional buckets. The buckets will determine which instance. The
+// messages will then be sharded again among the workers. Our table is an
 // instance lookup table.
 
 // We can implement our balancing logic assuming that there the instance with the
 // maximum number of buckets will have zero buckets.
 
-// We always want to have more buckets than there are intances. Furthermore, we
+// We always want to have more buckets than there are instances. Furthermore, we
 // want to ensure that there are more buckets than there are total workers, that
 // is instances by workers per instance. For now we're going to do instances *
 // workers * 2 to get our desired buckets.
@@ -81,7 +81,7 @@ Table.prototype._balance = function balance (buckets, addresses) {
 // (length - 1)` and we can double it by appending a copy of the table to
 // itself. When doing so `hash & (length - 1)` will return the same value for
 // the newly doubled table. The new mask will include an additional most
-// significant bit. All that bit it going to do is determine whehter to look in
+// significant bit. All that bit it going to do is determine whether to look in
 // the first half or the second half of the table, then the remaining bits
 // determine the index within the half. Since the second half is a duplicate of
 // the first half, the value returned is the same.
