@@ -110,7 +110,7 @@ Table.prototype._rebalance = function (self) {
                 buckets: [ addresses[0] ]
             }
         })
-    } else {
+    } else if (!('pending' in this.table)) {
         var redundancy = Math.min(addresses.length, this.redundancy)
         // Ensure we have plenty of buckets. See discussion of doubling above.
         var buckets = this.table.buckets.slice()
