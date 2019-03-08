@@ -1,4 +1,4 @@
-require('proof')(3, prove)
+require('proof')(4, prove)
 
 function prove (okay) {
     var Table = require('../table.redux')
@@ -22,6 +22,14 @@ function prove (okay) {
     }, 'bootstrap')
 
     table.arrive('1/0', '2/0')
+
+    okay(shifter.shift(), {
+        module: 'diffuser',
+        method: 'receive',
+        version: '2'
+    }, 'balance')
+
+    table.received('2')
 
     okay(shifter.shift(), {
         module: 'diffuser',

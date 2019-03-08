@@ -119,24 +119,34 @@ Table.prototype._rebalance = function (self) {
             buckets.push.apply(buckets, buckets)
         }
         this._balance(buckets, addresses)
-        // You can now see the structure of a pending message.
+        this.table = {
+            version: this.table.version,
+            buckets: this.table.buckets,
+            addresses: this.table.addresses,
+            redundancy: this.table.redundancy,
+            pending: {
+                version: version,
+                redundancy: redundancy,
+                buckets: buckets,
+                addresses: addresses
+            }
+        }
         this.events.push(JSON.parse(JSON.stringify({
             module: 'diffuser',
-            method: 'balance',
-            table: this.table = {
-                version: this.table.version,
-                buckets: this.table.buckets,
-                addresses: this.table.addresses,
-                redundancy: this.table.redundancy,
-                pending: {
-                    version: version,
-                    redundancy: redundancy,
-                    buckets: buckets,
-                    addresses: addresses
-                }
-            }
+            method: 'receive',
+            version: this.table.pending.version
         })))
     }
+}
+
+Table.prototype.received = function (version) {
+    Interrupt.assert(version == this.table.pending.version, 'complete.wrong.version')
+    // You can now see the structure of a pending message.
+    this.events.push(JSON.parse(JSON.stringify({
+        module: 'diffuser',
+        method: 'balance',
+        table: this.table
+    })))
 }
 
 Table.prototype.complete = function (version) {
