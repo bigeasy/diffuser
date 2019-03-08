@@ -16,6 +16,7 @@ function prove (okay) {
         table: {
             version: '1',
             addresses: [ '1/0' ],
+            departed: [],
             buckets: [ '1/0' ],
             redundancy: 1
         }
@@ -38,10 +39,12 @@ function prove (okay) {
             version: '1',
             redundancy: 1,
             addresses: [ '1/0' ],
+            departed: [],
             buckets: [ '1/0' ],
             pending: {
                 version: '2',
                 addresses: [ '1/0', '2/0' ],
+                departed: [],
                 buckets: [ '2/0', '2/0', '1/0', '1/0' ],
                 redundancy: 2
             }
@@ -56,6 +59,7 @@ function prove (okay) {
         table: {
             version: '2',
             addresses: [ '1/0', '2/0' ],
+            departed: [],
             buckets: [ '2/0', '2/0', '1/0', '1/0' ],
             redundancy: 2
         }

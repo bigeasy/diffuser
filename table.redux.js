@@ -11,7 +11,6 @@ function Table (redundancy, multipler) {
     this.multipler = multipler
     this.version = '0'
     this.arriving = []
-    this.departed = []
 }
 
 var RBTree = require('bintrees').RBTree
@@ -107,7 +106,8 @@ Table.prototype._rebalance = function (self) {
                 version: version,
                 redundancy: 1,
                 addresses: addresses,
-                buckets: [ addresses[0] ]
+                buckets: [ addresses[0] ],
+                departed: []
             }
         })
     } else {
@@ -124,11 +124,13 @@ Table.prototype._rebalance = function (self) {
             buckets: this.table.buckets,
             addresses: this.table.addresses,
             redundancy: this.table.redundancy,
+            departed: this.table.departed,
             pending: {
                 version: version,
                 redundancy: redundancy,
                 buckets: buckets,
-                addresses: addresses
+                addresses: addresses,
+                departed: []
             }
         }
         this.events.push(JSON.parse(JSON.stringify({
@@ -151,7 +153,7 @@ Table.prototype.received = function (version) {
 
 Table.prototype.complete = function (version) {
     Interrupt.assert(version == this.table.pending.version, 'complete.wrong.version')
-    if (this.departed.length == 0) {
+    if (this.table.departed.length == 0) {
         this.events.push(JSON.parse(JSON.stringify({
             module: 'diffuser',
             method: 'complete',
