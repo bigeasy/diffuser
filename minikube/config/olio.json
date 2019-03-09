@@ -1,0 +1,11 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "diffuser.olio",
+    "namespace": "diffuser"
+  },
+  "data": {
+    "diffuser.olio.js": "module.exports = {}\n"
+  }
+}

@@ -1,0 +1,3 @@
+FROM bigeasy/diffuser:base
+
+#COPY ./ ./

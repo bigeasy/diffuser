@@ -1,0 +1,11 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "diffuser.prolific",
+    "namespace": "diffuser"
+  },
+  "data": {
+    "diffuser.prolific.js": "exports.triage = function () { return function () { return true } }\n\nexports.process = function () {\n    var Syslog = require('prolific.syslog')\n    var syslog = new Syslog({ serializer: require('wafer') })\n    var cadence = require('cadence')\n    return cadence(function (async, destructible) {\n        return function (entry) {\n            if (entry.qualified != 'process#memory') {\n                process.stdout.write(syslog.format(entry))\n            }\n        }\n    })\n}\n"
+  }
+}

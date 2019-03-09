@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PATH="$(dirname $(readlink -f $0))/../../node_modules/.bin":$PATH
+
+prolific --configuration /etc/prolific/diffuser.prolific.js         \
+--                                                                  \
+olio                                                                \
+    --application ./minikube/bin/diffuser.olio.js                   \
+    --configuration /etc/olio/diffuser.olio.js
