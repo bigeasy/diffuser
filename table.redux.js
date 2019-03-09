@@ -162,4 +162,71 @@ Table.prototype.complete = function (version) {
     }
 }
 
+Table.prototype.depart = function (self, promise) {
+    var departed = this.table.departed.concat(promise)
+    ADDRESSES: for (var i = 0; i < this.table.addresses.length; i++) {
+        for (var j = 0; j < this.table.redundancy; j++) {
+            if (!~departed.indexOf(this.table.addresses[j])) {
+                continue ADDRESSES
+            }
+            break ADDRESSES
+        }
+    }
+    if (i < this.table.addresses.length) {
+        this.events.push({
+            module: 'diffuser',
+            method: 'collapsed'
+        })
+    } else if (~this.table.addresses.indexOf(promise)) {
+        if (this.arriving.length == 0) {
+            this._rebalance(self)
+        } else {
+            var version = this.version = Monotonic.increment(this.version, 0)
+            var addresses = this.addresses.slice()
+            addresses[addresses.indexOf(promise)] = this.arriving.pop()
+            this.table = {
+                version: this.table.version,
+                buckets: this.table.buckets,
+                addresses: this.table.addresses,
+                redundancy: this.table.redundancy,
+                departed: this.table.departed,
+                pending: {
+                    version: version,
+                    redundancy: this.redundancy,
+                    buckets: this.buckets.slice(),
+                    addresses: addresses,
+                    departed: []
+                }
+            }
+            this.events.push({
+                module: 'diffuser',
+                method: 'depart',
+                table: {
+                    version: this.table.version,
+                    buckets: this.table.buckets,
+                    addresses: this.table.addresses,
+                    departed: departed,
+                    redundancy: this.table.redundancy,
+                    pending: null
+                }
+            })
+        }
+    } else if (~this.table.pending.addresses.indexOf(promise)) {
+        // The departed participant was in the process of balancing into a new
+        // table, so we just cancel that table.
+        this.events.push({
+            module: 'diffuser',
+            method: 'depart',
+            table: this.table = {
+                version: this.table.version,
+                buckets: this.table.buckets,
+                addresses: this.table.addresses,
+                departed: this.table.departed,
+                redundancy: this.table.redundancy,
+                pending: null
+            }
+        })
+    }
+}
+
 module.exports = Table
