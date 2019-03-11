@@ -36,6 +36,16 @@
                         "command": [
                             "/app/minikube/bin/diffuser"
                         ],
+                        "ports": [
+                            {
+                                "name": "compassion",
+                                "containerPort": 8486
+                            },
+                            {
+                                "name": "dummy",
+                                "containerPort": 8080
+                            }
+                        ],
                         "volumeMounts": [
                             {
                                 "name": "olio",

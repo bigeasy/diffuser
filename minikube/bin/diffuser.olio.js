@@ -30,6 +30,14 @@ exports.configure = function (configuration) {
                     bind: { iface: '0.0.0.0', port: 8386 },
                     location: { hostname: '127.0.0.1', port: 8386 }
                 }
+            },
+            dummy: {
+                path: [ 'minikube/bin/router' ],
+                workers: 1,
+                properties: {
+                    bind: { iface: '0.0.0.0', port: 8080 },
+                    diffuser: { island: 'diffuser', id: configuration.id, isRouter: true }
+                }
             }
         }
     }

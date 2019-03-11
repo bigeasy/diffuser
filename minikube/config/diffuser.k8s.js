@@ -33,6 +33,11 @@ console.log(JSON.stringify({
                     image: 'bigeasy/diffuser:kube',
                     imagePullPolicy: 'Never',
                     command: [ '/app/minikube/bin/diffuser' ],
+                    ports: [{
+                        name: 'compassion', containerPort: 8486
+                    }, {
+                        name: 'dummy', containerPort: 8080
+                    }],
                     volumeMounts: [{
                         name: 'olio', mountPath: '/etc/olio',
                     }, {

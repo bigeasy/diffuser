@@ -86,6 +86,7 @@ Service.prototype._embark = cadence(function (async, destructible, message) {
             }
         }), 'destructible', async())
     }, function () {
+        console.log(properties, message)
         destructible.durable('compassion', Compassion, this._olio, consensus, properties.island, properties.id, {
             location: this._configuration.location,
             name: message.name,

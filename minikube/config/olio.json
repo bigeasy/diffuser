@@ -6,6 +6,6 @@
     "namespace": "diffuser"
   },
   "data": {
-    "diffuser.olio.js": "module.exports = {}\n"
+    "diffuser.olio.js": "module.exports = {\n    id: process.env.HOSTNAME,\n    namespace: 'diffuser'\n}\n"
   }
 }
