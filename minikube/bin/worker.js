@@ -32,6 +32,7 @@ Worker.prototype.receive = cadence(function (async, socket, writable) {
             var json = JSON.parse(line.toString())
             switch (json.method) {
             case 'received':
+                console.log('--- JSON GOT ---', json)
                 this._tracker.record(json.cookie, json.from, 'received')
                 break
             }
@@ -52,11 +53,23 @@ Worker.prototype.serve = cadence(function (async, socket) {
             var json = JSON.parse(line.toString())
             switch (json.method) {
             case 'send':
-                writable.write(JSON.stringify({
-                    method: 'received',
-                    from: this._address,
-                    cookie: json.cookie
-                }) + '\n', async())
+                async(function () {
+                    writable.write(JSON.stringify({
+                        method: 'received',
+                        from: this._address,
+                        cookie: json.cookie
+                    }) + '\n', async())
+                }, function () {
+                    this._diffuser.route('receiver', json.from, {
+                        method: 'route',
+                        from: this._address,
+                        cookie: json.cookie
+                    }, async())
+                }, function (response) {
+                    if (response.status != 'received') {
+                        console.log('routing failed', response)
+                    }
+                })
                 break
             }
         })

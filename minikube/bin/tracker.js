@@ -1,6 +1,7 @@
 var Monotonic = require('monotonic').asString
 var logger = require('prolific.logger').createLogger('dummy')
 var Cache = require('magazine')
+var cadence = require('cadence')
 
 function Tracker () {
     this._cookie = '0'
@@ -26,14 +27,14 @@ Tracker.prototype._complete = function (cartridge) {
 
 Tracker.prototype.request = function (from, addresses) {
     var requests = {}, cookie = this._cookie = Monotonic.increment(this._cookie, 0)
-    var cartridge = this._requests.hold(this._cookie, {
+    var cartridge = this._requests.hold(cookie, {
         cookie: cookie,
         from: from,
         when: Date.now(),
         events: {}
     })
     addresses.forEach(function (to) {
-        cartridge.value.events[to] = { routed: true }
+        cartridge.value.events[to] = {}
         requests[to] = JSON.stringify({
             method: 'send',
             to: to,
@@ -46,9 +47,10 @@ Tracker.prototype.request = function (from, addresses) {
 }
 
 Tracker.prototype.record = function (cookie, to, event) {
+    console.log('recording', { cookie: cookie, to: to, event: event })
     var cartridge = this._requests.hold(cookie, null)
     if (cartridge.value == null) {
-        logger.error('missing', { $message: message })
+        logger.error('missing', { cookie: cookie, to: to, event: event })
         cartridge.remove()
     } else {
         cartridge.value.events[to][event] = true
@@ -56,13 +58,15 @@ Tracker.prototype.record = function (cookie, to, event) {
     }
 }
 
-Tracker.prototype.receive = function (to, message) {
+Tracker.prototype.receive = cadence(function (async, message) {
+    console.log('GOT!', message)
     switch (message.method) {
     case 'route':
-        this._tracker.record(cookie, to, 'routed')
+        this.record(message.cookie, message.from, 'routed')
         break
     }
-}
+    return []
+})
 
 Tracker.prototype.expire = function () {
     var expired = Date.now() - 5000
