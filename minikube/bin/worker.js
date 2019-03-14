@@ -31,8 +31,8 @@ Worker.prototype.receive = cadence(function (async, socket, writable) {
             }
             var json = JSON.parse(line.toString())
             switch (json.method) {
-            case 'sent':
-                this._tracker.record(json.cookie, json.from, 'sent')
+            case 'received':
+                this._tracker.record(json.cookie, json.from, 'received')
                 break
             }
         })
@@ -53,7 +53,7 @@ Worker.prototype.serve = cadence(function (async, socket) {
             switch (json.method) {
             case 'send':
                 writable.write(JSON.stringify({
-                    method: 'sent',
+                    method: 'received',
                     from: this._address,
                     cookie: json.cookie
                 }) + '\n', async())

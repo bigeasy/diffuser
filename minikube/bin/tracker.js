@@ -11,7 +11,7 @@ Tracker.prototype._complete = function (cartridge) {
     var complete = true
     for (var to in cartridge.value.events) {
         var events = cartridge.value.events[to]
-        if (!(events.sent && events.routed)) {
+        if (!(events.received && events.routed)) {
             complete = false
         }
     }
