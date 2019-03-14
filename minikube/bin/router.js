@@ -17,6 +17,8 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         }, async())
     }, function (diffuser) {
         async(function () {
+            diffuser.register(properties.address, async())
+        }, function () {
             olio.sender('mingle', cadence(function (async, destructible, inbox, outbox) {
                 destructible.durable('conduit', Conduit, inbox, outbox, null, async())
             }), async())
