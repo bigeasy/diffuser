@@ -1,4 +1,7 @@
 exports.configure = function (configuration) {
+    var hostname = require('os').networkInterfaces()[configuration.iface].filter(function (iface) {
+        return iface.family == 'IPv4'
+    }).pop().address
     return {
         socket: '/var/run/diffuser.socket',
         children: {
@@ -28,13 +31,14 @@ exports.configure = function (configuration) {
                 workers: 1,
                 properties: {
                     bind: { iface: '0.0.0.0', port: 8386 },
-                    location: { hostname: '127.0.0.1', port: 8386 }
+                    location: { hostname: hostname, port: 8386 }
                 }
             },
             dummy: {
                 path: [ 'minikube/bin/router' ],
                 workers: 1,
                 properties: {
+                    address: hostname,
                     bind: { iface: '0.0.0.0', port: 8080 },
                     diffuser: { island: 'diffuser', id: configuration.id, isRouter: true }
                 }

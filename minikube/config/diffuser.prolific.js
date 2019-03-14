@@ -6,7 +6,11 @@ exports.process = function () {
     var cadence = require('cadence')
     return cadence(function (async, destructible) {
         return function (entry) {
-            if (entry.qualified != 'process#memory') {
+            if (
+                entry.qualified != 'olio#memory' &&
+                entry.qualified != 'prolific#memory' &&
+                entry.qualifier != 'vizsla'
+            ) {
                 process.stdout.write(syslog.format(entry))
             }
         }

@@ -1,4 +1,5 @@
 module.exports = {
     id: process.env.HOSTNAME,
-    namespace: 'diffuser'
+    namespace: 'diffuser',
+    iface: 'eth0'
 }
