@@ -15,7 +15,6 @@ Tracker.prototype._complete = function (cartridge) {
             complete = false
         }
     }
-    console.log('complete?', cartridge.value)
     if (complete) {
         console.log('COMPLETE!!!', cartridge.value)
         logger.info('complete', {})
@@ -65,6 +64,15 @@ Tracker.prototype.receive = function (to, message) {
     }
 }
 
-// TODO Expire.
+Tracker.prototype.expire = function () {
+    var expired = Date.now() - 5000
+    var purge = this._requests.purge()
+    while (purge.cartridge && purge.cartridge.when < expired) {
+        console.log('EXPIRED!', purge.cartridge.value)
+        purge.cartridge.remove()
+        purge.next()
+    }
+    purge.release()
+}
 
 module.exports = Tracker

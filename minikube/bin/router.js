@@ -9,6 +9,8 @@ var Tracker = require('./tracker')
 
 module.exports = cadence(function (async, destructible, olio, properties) {
     var tracker = new Tracker
+    var expirator = setInterval(tracker.expire.bind(tracker), 1000)
+    destructible.destruct.wait(function () { clearInterval(expirator) })
     async(function () {
         destructible.durable('diffuser', Diffuser, {
             olio: olio,
@@ -17,10 +19,8 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         }, async())
     }, function (diffuser) {
         async(function () {
-            console.log('REGISTERING')
             diffuser.register(properties.address, async())
         }, function () {
-            console.log('REGISTERED')
             olio.sender('mingle', cadence(function (async, destructible, inbox, outbox) {
                 destructible.durable('conduit', Conduit, inbox, outbox, null, async())
             }), async())
