@@ -8,7 +8,15 @@ function Tracker () {
 }
 
 Tracker.prototype._complete = function (cartridge) {
-    if (cartridge.value.sent && cartridge.value.routed) {
+    var complete = true
+    for (var to in cartridge.value.events) {
+        var events = cartridge.value.events[to]
+        if (!(events.sent && events.routed)) {
+            complete = false
+        }
+    }
+    console.log('complete?', cartridge.value)
+    if (complete) {
         console.log('COMPLETE!!!', cartridge.value)
         logger.info('complete', {})
         cartridge.remove()
@@ -17,34 +25,42 @@ Tracker.prototype._complete = function (cartridge) {
     }
 }
 
-Tracker.prototype.request = function (to, from) {
-    var cookie = this._cookie = Monotonic.increment(this._cookie, 0)
-    this._requests.hold(this._cookie, {
+Tracker.prototype.request = function (from, addresses) {
+    var requests = {}, cookie = this._cookie = Monotonic.increment(this._cookie, 0)
+    var cartridge = this._requests.hold(this._cookie, {
         cookie: cookie,
-        to: to,
         from: from,
         when: Date.now(),
-        routed: true
-    }).release()
-    return cookie
+        events: {}
+    })
+    addresses.forEach(function (to) {
+        cartridge.value.events[to] = { routed: true }
+        requests[to] = JSON.stringify({
+            method: 'send',
+            to: to,
+            from: from,
+            cookie: cookie
+        }) + '\n'
+    }, this)
+    cartridge.release()
+    return requests
 }
 
-Tracker.prototype.record = function (cookie, event) {
+Tracker.prototype.record = function (cookie, to, event) {
     var cartridge = this._requests.hold(cookie, null)
-    console.log('cartridge', cartridge.value)
     if (cartridge.value == null) {
         logger.error('missing', { $message: message })
         cartridge.remove()
     } else {
-        cartridge.value[event] = true
+        cartridge.value.events[to][event] = true
         this._complete(cartridge)
     }
 }
 
-Tracker.prototype.receive = function (message) {
+Tracker.prototype.receive = function (to, message) {
     switch (message.method) {
     case 'route':
-        this._tracker.record(cookie, 'routed')
+        this._tracker.record(cookie, to, 'routed')
         break
     }
 }

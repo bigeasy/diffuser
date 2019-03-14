@@ -56,6 +56,12 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
         olio.removeListener('diffuser:routes', setRoutes)
     })
 
+    this._expirator = setInterval(this._requester.expire.bind(this._requester), 1000)
+
+    destructible.destruct.wait(this, function () {
+        clearInterval(this._expirator)
+    })
+
     this._ready = new Signal
     destructible.destruct.wait(this._ready.unlatch.bind(this._ready, new Interrupt('unready')))
     this._ready.wait(callback)

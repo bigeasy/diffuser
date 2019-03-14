@@ -1,3 +1,5 @@
+Error.stackTraceLimit = Infinity
+
 var cadence = require('cadence')
 var Signal = require('signal')
 var net = require('net')
@@ -30,7 +32,7 @@ Worker.prototype.receive = cadence(function (async, socket, writable) {
             var json = JSON.parse(line.toString())
             switch (json.method) {
             case 'sent':
-                this._tracker.record(json.cookie, 'sent')
+                this._tracker.record(json.cookie, json.from, 'sent')
                 break
             }
         })
@@ -48,17 +50,15 @@ Worker.prototype.serve = cadence(function (async, socket) {
                 return [ async.break ]
             }
             var json = JSON.parse(line.toString())
-            console.log('serve', json)
             switch (json.method) {
             case 'send':
                 writable.write(JSON.stringify({
                     method: 'sent',
+                    from: this._address,
                     cookie: json.cookie
                 }) + '\n', async())
                 break
             }
-        }, function () {
-            console.log('DID WROTE!!!')
         })
     })
 })
@@ -97,10 +97,8 @@ Worker.prototype.request = cadence(function (async) {
     async.loop([], function () {
         async(function () {
             this._delay.wait(async())
-            console.log('waiting')
             this._timeout = setTimeout(this._delay.notify.bind(this._delay), 1000)
         }, function () {
-            console.log('requesting')
             this._timeout = null
             if (this.destroyed) {
                 return [ async.break ]
@@ -111,27 +109,22 @@ Worker.prototype.request = cadence(function (async) {
                 var addresses = endpoints.map(function (endpoint) {
                     return url.parse(endpoint).hostname
                 })
-                console.log(addresses)
-                async.forEach([ addresses ], function (address) {
-                    async(function () {
-                        if (this._clients[address]) {
-                            return [ this._clients[address] ]
-                        }
-                        this._destructable.ephemeral(address, this, 'connect', address, async())
-                    }, function (client) {
-                        if (client == null) {
-                            return [ async.continue ]
-                        }
-                        var cookie = this._tracker.request(address, this._address)
-                        client.writable.write(JSON.stringify({
-                            method: 'send',
-                            to: address,
-                            from: this._address,
-                            cookie: cookie
-                        }) + '\n', async())
-                    }, function () {
-                        console.log('WROTE TO', address)
-                    })
+                async.map([ addresses ], function (address) {
+                    if (this._clients[address]) {
+                        return [ this._clients[address] ]
+                    }
+                    this._destructable.ephemeral(address, this, 'connect', address, async())
+                })
+            }, function (clients) {
+                clients = clients.filter(function (client) {
+                    return client != null
+                })
+                var addresses = clients.map(function (client) {
+                    return client.address
+                })
+                var requests = this._tracker.request(this._address, addresses)
+                async.forEach([ clients ], function (client) {
+                    client.writable.write(requests[client.address], async())
                 })
             })
         })
@@ -147,7 +140,6 @@ Worker.prototype.destroy = function () {
 }
 
 module.exports = cadence(function (async, destructible, tracker, diffuser, resolver, address) {
-    console.log('constructing!!!', address)
     var worker = new Worker(destructible, tracker, diffuser, resolver, address)
     worker.request(destructible.durable('request'))
     return worker
