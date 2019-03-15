@@ -2,6 +2,8 @@ var Consensus = require('./consensus')
 var Conference = require('compassion.conference')
 var Compassion = require('compassion.colleague/compassion')(Conference)
 
+var ISLAND = 'diffuser'
+
 var coalesce = require('extant')
 
 var destroyer = require('server-destroy')
@@ -39,7 +41,7 @@ function Service (destructible, olio, properties) {
         siblings: siblings
     }
 
-    this._properties = []
+    this._properties = new Cubbyhole
 
     this.turnstile = new Turnstile
     destructible.destruct.wait(this.turnstile, 'destroy')
@@ -52,14 +54,14 @@ function Service (destructible, olio, properties) {
     this._destructible = destructible
 }
 
-Service.prototype._setRoutes = function (island, routes) {
+Service.prototype._setRoutes = function (routes) {
     for (var promise in routes.properties) {
-        this._properties[island].set(promise, null, routes.properties[promise])
+        this._properties.set(promise, null, routes.properties[promise])
         this._olio.broadcast(routes.properties[promise].name, 'diffuser:routes', routes)
     }
-    this._properties[island].keys().forEach(function (promise) {
+    this._properties.keys().forEach(function (promise) {
         if (routes.properties[promise] == null) {
-            this._properties[island].remove(promise)
+            this._properties.remove(promise)
         }
     }, this)
 }
@@ -76,13 +78,11 @@ Service.prototype._setRoutes = function (island, routes) {
 //
 Service.prototype._embark = cadence(function (async, destructible, message) {
     var properties = this._configuration.siblings[message.name]
-    this._properties[message.island] = new Cubbyhole
-    // --- ^^^ here ---
     var consensus = new Consensus(message.buckets)
     async(function () {
         destructible.durable('consensus', consensus.routes.pump(this, function (routes) {
             if (routes != null) {
-                this._setRoutes(message.island, routes)
+                this._setRoutes(routes)
             }
         }), 'destructible', async())
     }, function () {
@@ -112,20 +112,18 @@ Service.prototype.register = function (message) {
 Service.prototype.socket = restrictor.push('message', cadence(function (async, request, socket) {
     var message = {
         from: {
-            island: request.headers['x-diffuser-from-island'],
             promise: request.headers['x-diffuser-from-promise'],
             index: +request.headers['x-diffuser-from-index']
         },
         to: {
-            island: request.headers['x-diffuser-to-island'],
             promise: request.headers['x-diffuser-to-promise'],
             index: +request.headers['x-diffuser-to-index']
         }
     }
     async(function () {
-        this._properties[message.to.island].wait(message.to.promise, async())
+        this._properties.wait(message.to.promise, async())
     }, function (properties) {
-    console.log('GOT A SOCKET', properties)
+        console.log('GOT A SOCKET', properties, message)
         this._olio.send(properties.name, message.to.index, 'diffuser:socket', message, socket)
     })
 }))

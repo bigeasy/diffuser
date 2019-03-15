@@ -289,9 +289,8 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             host: location.hostname,
             port: +location.port,
             headers: Downgrader.headers({
-                'x-diffuser-island': this._island,
                 'x-diffuser-from-promise': this._router.from.promise,
-                'x-diffuser-from-index': this._router.from.index,
+                'x-diffuser-from-index': this._router.from.index == connection.address.index ? 'self' : this._router.from.index,
                 'x-diffuser-to-promise': connection.address.promise,
                 'x-diffuser-to-index': connection.address.index
             })
@@ -364,5 +363,5 @@ Connector.prototype._connect = restrictor.push(cadence(function (async, envelope
 }))
 
 module.exports = cadence(function (async, destructible, index) {
-    return new Connector(destructible, index)
+    return new Connector(destructible, null, index)
 })

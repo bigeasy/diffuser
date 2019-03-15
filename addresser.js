@@ -29,7 +29,7 @@ Addresser.prototype.remove = function (to) {
 Addresser.prototype.put = function (to, value) {
     var connections = this._promises[to.promise]
     if (connections == null) {
-        connections = this._promises[to.promise] = []
+        connections = this._promises[to.promise] = {}
     }
     var previous = connections[to.index]
     connections[to.index] = value
