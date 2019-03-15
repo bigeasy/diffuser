@@ -285,12 +285,14 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
     var location = url.parse(this._router.properties[connection.address.promise].location)
     var abort
     async([function () {
+        var fromIndex = this._router.from.promise == connection.address.promise &&
+            this._router.from.index == connection.address.index ? -1 : this._router.from.index
         var request = http.request({
             host: location.hostname,
             port: +location.port,
             headers: Downgrader.headers({
                 'x-diffuser-from-promise': this._router.from.promise,
-                'x-diffuser-from-index': this._router.from.index == connection.address.index ? 'self' : this._router.from.index,
+                'x-diffuser-from-index': fromIndex,
                 'x-diffuser-to-promise': connection.address.promise,
                 'x-diffuser-to-index': connection.address.index
             })
