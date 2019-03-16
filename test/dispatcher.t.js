@@ -274,6 +274,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         // TODO Why is status sometimes in body sometimes not?
         status: 'missing',
+        values: null,
         cookie: '1'
     }], 'missing')
     dispatcher.dispatch({
@@ -318,6 +319,7 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 0, stringified: '0' },
         status: 'missing',
+        values: null,
         cookie: '1'
     }], 'receive missing')
     dispatcher.dispatch({

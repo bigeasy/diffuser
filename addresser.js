@@ -1,3 +1,5 @@
+var Monotonic = require('monotonic').asString
+
 function Addresser () {
     this._promises = {}
 }
@@ -10,17 +12,17 @@ Addresser.prototype.list = function (promise) {
     if (!(promise in this._promises)) {
         return []
     }
-    return this._promises[promise].filter(function (connection) {
-        return connection != null
-    })
+    var list = []
+    for (var index in this._promises[promise]) {
+        list.push(this._promises[promise][index])
+    }
+    return list.sort(function (left, right) { return left.index - right.index })
 }
 
 Addresser.prototype.remove = function (to) {
     if (to.promise in this._promises) {
-        this._promises[to.promise][to.index] = null
-        if (this._promises[to.promise].filter(function (connection) {
-            return connection != null
-        }).length == 0) {
+        delete this._promises[to.promise][to.index]
+        if (Object.keys(this._promises[to.promise]).length == 0) {
             delete this._promises[to.promise]
         }
     }
