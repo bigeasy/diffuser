@@ -1,0 +1,4 @@
+minikube/image/base && minikube/image/kube
+kubectl --namespace diffuser scale deployment diffuser --replicas=0
+kubectl --namespace diffuser scale deployment diffuser --replicas=1
+kubectl --namespace diffuser get pods
