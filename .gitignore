@@ -5,3 +5,4 @@
 /.proof.out
 /coverage
 /.nyc_output
+/minikube/config/*.made.json
