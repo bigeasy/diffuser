@@ -57,8 +57,8 @@ function Service (destructible, olio, properties) {
 Service.prototype._setRoutes = function (routes) {
     for (var promise in routes.properties) {
         this._properties.set(promise, null, routes.properties[promise])
-        this._olio.broadcast(routes.properties[promise].name, 'diffuser:routes', routes)
     }
+    this._olio.broadcast(routes.properties[promise].name, 'diffuser:routes', routes)
     this._properties.keys().forEach(function (promise) {
         if (routes.properties[promise] == null) {
             this._properties.remove(promise)
