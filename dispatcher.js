@@ -75,7 +75,10 @@ Dispatcher.prototype.dispatch = function (envelope) {
     } else if (this._countdown.count != 0) {
         this._backlogs.route.queue.push(envelope)
     // TODO No. We may have to reroute, right?
-    } else if (Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0) {
+    } else if (
+        envelope.destination != 'source' &&
+        Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0
+    ) {
         // TODO We should count hops and make sure we're not in a loop.
         envelope.promise = this._router.promise
         envelope.to = to
