@@ -137,6 +137,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
                     from: envelope.from,
                     to: envelope.from,
                     status: 'missing',
+                    values: null,
                     cookie: envelope.cookie
                 })
             } else {
@@ -166,6 +167,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
                     from: envelope.from,
                     to: envelope.from,
                     status: 'missing',
+                    values: null,
                     cookie: envelope.cookie
                 })
             }

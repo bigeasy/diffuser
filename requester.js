@@ -16,7 +16,7 @@ Requester.prototype.setRoutes = function (routes) {
 }
 
 Requester.prototype.expire = function () {
-    this._cliffhanger.expire(Date.now() - this._timeout, [ null, { status: 'timeout' } ])
+    this._cliffhanger.expire(Date.now() - this._timeout, [ null, { status: 'timeout', values: null } ])
 }
 
 Requester.prototype.register = cadence(function (async, key) {
