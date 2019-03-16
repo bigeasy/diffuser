@@ -1,4 +1,4 @@
-require('proof')(7, require('cadence')(prove))
+require('proof')(9, require('cadence')(prove))
 
 function prove (async, okay) {
     var Requester = require('../requester')
@@ -59,17 +59,32 @@ function prove (async, okay) {
         okay(connector.shift(), {
             promise: '2/0',
             module: 'diffuser',
-            destination: 'receiver',
+            destination: 'router',
             method: 'route',
             to: { promise: '2/0', index: 1 },
             from: { promise: '1/0', index: 1 },
             hashed: { hash: 1, stringified: '1', key: 1 },
             cookie: '3',
             body: 'x'
-        }, 'register')
+        }, 'route receiver')
         cliffhanger.resolve('3', [ null, { status: 'received', values: [ 0 ] } ])
     }, function (routed) {
-        okay(routed, { status: 'received', values: [ 0 ] }, 'routed')
+        okay(routed, { status: 'received', values: [ 0 ] }, 'routed receiver')
+        requester.route('router', 1, 'x', async())
+        okay(connector.shift(), {
+            promise: '2/0',
+            module: 'diffuser',
+            destination: 'router',
+            method: 'receive',
+            to: { promise: '2/0', index: 1 },
+            from: { promise: '1/0', index: 1 },
+            hashed: { hash: 1, stringified: '1', key: 1 },
+            cookie: '4',
+            body: 'x'
+        }, 'route router')
+        cliffhanger.resolve('4', [ null, { status: 'received', values: [ 0 ] } ])
+    }, function (routed) {
+        okay(routed, { status: 'received', values: [ 0 ] }, 'routed router')
         requester.register(1, async())
         async(function () {
             setTimeout(async(), 101)

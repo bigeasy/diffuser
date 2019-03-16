@@ -59,12 +59,13 @@ Requester.prototype.unregister = cadence(function (async, key) {
 
 Requester.prototype.route = cadence(function (async, destination, key, value) {
     var hashed = this._Hash.call(null, key)
+    var method = destination == 'router' ? 'receive'  : 'route'
     async(function () {
         this._connector.push({
             promise: this._router.promise,
             module: 'diffuser',
-            destination: destination,
-            method: 'route',
+            destination: 'router',
+            method: method,
             to: this._router.route(hashed),
             from: this._router.from,
             hashed: hashed,

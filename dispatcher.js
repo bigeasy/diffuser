@@ -76,12 +76,13 @@ Dispatcher.prototype.dispatch = function (envelope) {
         this._backlogs.route.queue.push(envelope)
     // TODO No. We may have to reroute, right?
     } else if (
-        envelope.destination != 'source' &&
+        envelope.destination == 'router' &&
         Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0
     ) {
         // TODO We should count hops and make sure we're not in a loop.
         envelope.promise = this._router.promise
         envelope.to = to
+        console.log('REROUTE', envelope)
         this._connector.push(envelope)
     } else {
         switch (envelope.destination + '/' + envelope.method) {
@@ -121,10 +122,10 @@ Dispatcher.prototype.dispatch = function (envelope) {
                 body: { exists: exists, deleted: deleted }
             })
             break
-        case 'router/route':
+        case 'router/receive':
             this._receiver.act(this._connector, envelope)
             break
-        case 'receiver/route':
+        case 'router/route':
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
             var address = registration[envelope.hashed.stringified]
             if (address == null) {
