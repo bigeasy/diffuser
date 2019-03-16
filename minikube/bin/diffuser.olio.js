@@ -40,7 +40,9 @@ exports.configure = function (configuration) {
                 properties: {
                     address: hostname,
                     bind: { iface: '0.0.0.0', port: 8080 },
-                    diffuser: { island: 'diffuser', id: configuration.id, isRouter: true }
+                    diffuser: {
+                        island: 'diffuser', id: configuration.id, isRouter: true, buckets: 7
+                    }
                 }
             }
         }

@@ -78,7 +78,7 @@ Service.prototype._setRoutes = function (routes) {
 //
 Service.prototype._embark = cadence(function (async, destructible, message) {
     var properties = this._configuration.siblings[message.name]
-    var consensus = new Consensus(message.buckets)
+    var consensus = new Consensus(properties.buckets)
     async(function () {
         destructible.durable('consensus', consensus.routes.pump(this, function (routes) {
             if (routes != null) {
@@ -86,7 +86,7 @@ Service.prototype._embark = cadence(function (async, destructible, message) {
             }
         }), 'destructible', async())
     }, function () {
-        console.log(properties, message)
+        console.log('CONFIGURATION', properties, message)
         destructible.durable('compassion', Compassion, this._olio, consensus, properties.island, properties.id, {
             location: this._configuration.location,
             name: message.name,
