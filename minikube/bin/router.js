@@ -15,6 +15,7 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         destructible.durable('diffuser', Diffuser, {
             olio: olio,
             receiver: tracker.receive.bind(tracker),
+            buckets: properties.diffuser.buckets,
             timeout: 5000
         }, async())
     }, function (diffuser) {

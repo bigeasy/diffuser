@@ -18,7 +18,8 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     this._registrar = new Registrar({
         index: options.olio.index,
         cliffhanger: cliffhanger,
-        connector: connector
+        connector: connector,
+        buckets: options.buckets
     })
     this._dispatcher = new Dispatcher({
         index: options.olio.index,

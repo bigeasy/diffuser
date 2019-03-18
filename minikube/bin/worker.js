@@ -1,5 +1,3 @@
-Error.stackTraceLimit = Infinity
-
 var cadence = require('cadence')
 var Signal = require('signal')
 var net = require('net')
@@ -82,6 +80,10 @@ Worker.prototype.socket = function (socket) {
 
 Worker.prototype.connect = cadence(function (async, destructible, address) {
     var socket = new net.Socket
+    socket.on('error', function (error) {
+        console.log('OTHER SOCKET ERROR')
+        console.log(error.stack)
+    })
     async([function () {
         async(function () {
             delta(async()).ee(socket).on('connect')

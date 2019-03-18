@@ -60,20 +60,24 @@ Requester.prototype.unregister = cadence(function (async, key) {
 Requester.prototype.route = cadence(function (async, destination, key, value) {
     var hashed = this._Hash.call(null, key)
     var method = destination == 'router' ? 'receive'  : 'route'
+    var to = this._router.route(hashed)
     async(function () {
         this._connector.push({
             promise: this._router.promise,
             module: 'diffuser',
             destination: 'router',
             method: method,
-            to: this._router.route(hashed),
+            to: to,
             from: this._router.from,
             hashed: hashed,
             cookie: this._cliffhanger.invoke(async()),
             body: value
         })
     }, function (response) {
-        return { status: response.status, values: response.values }
+        if (response.status == 'missing') {
+            console.log(this._router.properties[to.promise].location)
+        }
+        return { status: response.status, to: to, key: key, value: value, values: response.values }
     })
 })
 

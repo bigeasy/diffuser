@@ -42,11 +42,12 @@ Dispatcher.prototype.dispatch = function (envelope) {
     }
     var to
     assert(envelope.module == 'diffuser')
-    assert(Router.compare(envelope.to, this._router.from) == 0)
+    assert(this._router == null || Router.compare(envelope.to, this._router.from) == 0)
     // We've not yet received a route from consensus, so let's pretend we didn't
     // even get this envelope yet. Note that envelopes will always be sent from a
     // specific peer with their route promises in ascending order.
     if (Monotonic.compare(envelope.promise, this._countdown.promise) > 0) {
+        console.log('BACKLOG', envelope)
         if (envelope.method == 'synchronize') {
             this._backlogs.synchronize.get(envelope.promise).push(envelope)
         } else {
@@ -54,6 +55,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
         }
     // We have a synchronize message and we're preparted to count it down.
     } else if (envelope.method == 'synchronize') {
+        console.log('SYNC', envelope)
         // A null body indicates the end of stream of update messages.
         if (envelope.body == null) {
             this._countdown.arrive(envelope.promise, envelope.from)
@@ -73,12 +75,14 @@ Dispatcher.prototype.dispatch = function (envelope) {
             this._setRegistration(envelope.body, envelope.from)
         }
     } else if (this._countdown.count != 0) {
+        console.log('COUNTDOWN', envelope)
         this._backlogs.route.queue.push(envelope)
     // TODO No. We may have to reroute, right?
     } else if (
         envelope.destination == 'router' &&
         Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0
     ) {
+        console.log('REROUTE (DREADED)', envelope)
         // TODO We should count hops and make sure we're not in a loop.
         envelope.promise = this._router.promise
         envelope.to = to
@@ -87,7 +91,6 @@ Dispatcher.prototype.dispatch = function (envelope) {
     } else {
         switch (envelope.destination + '/' + envelope.method) {
         case 'router/register':
-            console.log('made it', envelope)
             envelope.got = true
             this._setRegistration(envelope.hashed, envelope.from)
             this._connector.push({
@@ -175,6 +178,9 @@ Dispatcher.prototype.dispatch = function (envelope) {
             break
         case 'source/respond':
             this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
+            break
+        default:
+            console.log('DROPPED', envelope)
             break
         }
     }

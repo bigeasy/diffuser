@@ -15,6 +15,8 @@ var Table = require('./table')
 
 var Signal = require('signal')
 
+var asssert = require('assert')
+
 // Count is the number of buckets to divide among instances.
 function Consensus (count) {
     this.routes = new Procession
@@ -28,8 +30,10 @@ function Consensus (count) {
 // the consensus.
 Consensus.prototype.snapshot = cadence(function (async, promise, outbox) {
     async(function () {
-       this._cubbyholes.wait(promise, async())
+        console.log('GET SNAPSHOT', promise)
+        this._cubbyholes.wait(promise, async())
     }, function (stored) {
+        console.log('GOT SNAPSHOT', stored)
         outbox.push(stored)
         outbox.end()
     })
@@ -49,6 +53,8 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         async(function () {
             envelope.snapshot.dequeue(async())
         }, function (body) {
+            console.log('APPLY SNAPSHOT', body)
+            assert(body != null)
             this._table.join(envelope.self.arrived, body)
             envelope.snapshot.dequeue(async())
         }, function (value) {
@@ -67,6 +73,7 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         break
     case 'acclimated':
         // Discard our existing state snapshot once an arrival has acclimated.
+        console.log('BLAST SNAPSHOT', envelope.government.promise)
         this._cubbyholes.remove(envelope.government.promise)
         break
     case 'depart':

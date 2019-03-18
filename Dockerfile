@@ -1,5 +1,5 @@
-FROM node:alpine
-MAINTAINER Alan Gutierrez <alan@wink.com>
+FROM node:10-alpine
+MAINTAINER Alan Gutierrez <alan@prettyrobots.com>
 
 WORKDIR /app
 

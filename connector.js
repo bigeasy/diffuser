@@ -297,6 +297,10 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                 'x-diffuser-to-index': connection.address.index
             })
         })
+        request.on('error', function (error) {
+            console.log('safety catch')
+            console.log(error.stack)
+        })
         abort = destructible.destruct.wait(request, 'abort')
         delta(async()).ee(request).on('upgrade')
         request.end()
@@ -306,6 +310,10 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         logger.error('request', { stack: error.stack })
         return [ async.break, false, destructible ]
     }], function (request, socket, head) {
+        socket.on('error', function (error) {
+            console.log('safety catch')
+            console.log(error.stack)
+        })
         destructible.destruct.cancel(abort)
         var wait = null
         async(function () {
