@@ -74,10 +74,13 @@ Requester.prototype.route = cadence(function (async, destination, key, value) {
             body: value
         })
     }, function (response) {
+        /*
         if (response.status == 'missing') {
             console.log(this._router.properties[to.promise].location)
         }
         return { status: response.status, to: to, key: key, value: value, values: response.values }
+        */
+        return { status: response.status, values: response.values }
     })
 })
 
