@@ -121,6 +121,7 @@ Worker.prototype.request = cadence(function (async) {
             async(function () {
                 this._mingle.connect({}).inbox.dequeue(async())
             }, function (endpoints) {
+                endpoints = endpoints || []
                 var addresses = endpoints.map(function (endpoint) {
                     return url.parse(endpoint).hostname
                 })
