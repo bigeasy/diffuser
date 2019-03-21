@@ -7,6 +7,8 @@ var Conduit = require('conduit')
 var Worker = require('./worker')
 var Tracker = require('./tracker')
 
+var Keyify = require('keyify')
+
 module.exports = cadence(function (async, destructible, olio, properties) {
     var tracker = new Tracker
     var expirator = setInterval(tracker.expire.bind(tracker), 1000)
@@ -19,14 +21,15 @@ module.exports = cadence(function (async, destructible, olio, properties) {
             timeout: 5000
         }, async())
     }, function (diffuser) {
+        var identifier = { address: properties.address, index: olio.index }
         async(function () {
-            diffuser.register(properties.address, async())
+            diffuser.register(Keyify.stringify(identifier), async())
         }, function () {
             olio.sender('mingle', cadence(function (async, destructible, inbox, outbox) {
                 destructible.durable('conduit', Conduit, inbox, outbox, null, async())
             }), async())
         }, function (mingle) {
-            destructible.durable('worker', Worker, tracker, diffuser, mingle.processes[0].conduit, properties.address, async())
+            destructible.durable('worker', Worker, tracker, diffuser, mingle.processes[0].conduit, identifier, async())
         }, function (worker) {
             var server = net.createServer(function (socket) { worker.socket(socket) })
             delta(async()).ee(server).on('listening')

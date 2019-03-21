@@ -53,7 +53,7 @@ Tracker.prototype.record = function (cookie, to, event) {
         logger.error('missing', { cookie: cookie, to: to, event: event })
         cartridge.remove()
     } else {
-        cartridge.value.events[to][event] = true
+        cartridge.value.events[to.address][event] = true
         this._complete(cartridge)
     }
 }

@@ -7,12 +7,14 @@ var Staccato = require('staccato')
 var byline = require('byline')
 var logger = require('prolific.logger').createLogger('dummy')
 
-function Worker (destructible, tracker, diffuser, mingle, address) {
+var Keyify = require('keyify')
+
+function Worker (destructible, tracker, diffuser, mingle, identifier) {
     this._tracker = tracker
     this._destructable = destructible
     this._diffuser = diffuser
     this._delay = new Signal
-    this._address = address
+    this._identifier = identifier
     this._mingle = mingle
     this._instance = '0'
     this._clients = {}
@@ -54,13 +56,13 @@ Worker.prototype.serve = cadence(function (async, socket) {
                 async(function () {
                     writable.write(JSON.stringify({
                         method: 'received',
-                        from: this._address,
+                        from: this._identifier,
                         cookie: json.cookie
                     }) + '\n', async())
                 }, function () {
-                    this._diffuser.route('receiver', json.from, {
+                    this._diffuser.route('receiver', Keyify.stringify(json.from), {
                         method: 'route',
-                        from: this._address,
+                        from: this._identifier,
                         cookie: json.cookie
                     }, async())
                 }, function (response) {
@@ -89,6 +91,7 @@ Worker.prototype.connect = cadence(function (async, destructible, address) {
             delta(async()).ee(socket).on('connect')
             socket.connect(8080, address)
         }, function () {
+            destructible.destruct.wait(socket, 'destroy')
             destructible.destruct.wait(this, function () {
                 delete this._clients[address]
             })
@@ -138,7 +141,7 @@ Worker.prototype.request = cadence(function (async) {
                 var addresses = clients.map(function (client) {
                     return client.address
                 })
-                var requests = this._tracker.request(this._address, addresses)
+                var requests = this._tracker.request(this._identifier, addresses)
                 async.forEach([ clients ], function (client) {
                     client.writable.write(requests[client.address], async())
                 })
