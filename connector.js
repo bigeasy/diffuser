@@ -38,6 +38,13 @@ var restrictor = require('restrictor')
 // Exceptions you can catch by type.
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 
+function increment (value) {
+    if (value == 0xffffffff) {
+        return 0
+    }
+    return value + 1
+}
+
 // Our constructor is invoked by the `Destructible` constructor we export. This
 // object is only supposed to be created by and used with `Destructible`.
 //
@@ -127,6 +134,8 @@ Connector.prototype._getConnection = function (address) {
         // created.
         var outbox = new Procession
         this._connections.put(address, connection = {
+            read: 0xffffffff,
+            written: 0xffffffff,
             address: address,
             window: null,
             outbox: outbox,
@@ -149,9 +158,11 @@ Connector.prototype._getConnection = function (address) {
 //
 Connector.prototype.push = function (envelope) {
     var to = envelope.to
-    // Drop the message if the destination has been removed from the routing
-    // table.
-    if (this._router.properties[to.promise] != null) {
+    // Shortcircuit send to self, drop the message if the destination has been
+    // removed from the routing table.
+    if (to.promise == this._router.from.promise && to.index == this._router.from.index) {
+        this.inbox.push(envelope)
+    } else if (this._router.properties[to.promise] != null) {
         var connection = this._getConnection(to)
 
         // If we have no window and our promise is less than our peers, we
@@ -159,6 +170,9 @@ Connector.prototype.push = function (envelope) {
         if (connection.window == null && Monotonic.compare(this._router.from.promise, to.promise) <= 0) {
             this._connect(to)
         }
+
+        envelope.series = connection.written
+        connection.written = increment(connection.written)
 
         connection.outbox.push(envelope)
     }
@@ -198,6 +212,8 @@ Connector.prototype._window = cadence(function (async, destructible, connection)
         // end-of-queue.
         destructible.durable('inbox', window.inbox.pump(this, function (envelope) {
             if (envelope != null) {
+                assert(envelope.series == connection.read)
+                connection.read = increment(connection.read)
                 this.inbox.push(envelope)
             }
         }), 'destructible', null)
