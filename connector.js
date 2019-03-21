@@ -167,8 +167,16 @@ Connector.prototype.push = function (envelope) {
 
         // If we have no window and our promise is less than our peers, we
         // connect, otherwise we wait for our peer to connect to us.
-        if (connection.window == null && Monotonic.compare(this._router.from.promise, to.promise) <= 0) {
-            this._connect(to)
+        if (connection.window == null) {
+            var client, compare = Monotonic.compare(this._router.from.promise, to.promise)
+            if (compare == 0) {
+                client = this._router.from.index < to.index
+            } else {
+                client = compare < 0
+            }
+            if (client) {
+                this._connect(to)
+            }
         }
 
         envelope.series = connection.written

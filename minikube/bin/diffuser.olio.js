@@ -36,7 +36,7 @@ exports.configure = function (configuration) {
             },
             dummy: {
                 path: [ 'minikube/bin/router' ],
-                workers: 1,
+                workers: 3,
                 properties: {
                     address: hostname,
                     bind: { iface: '0.0.0.0', port: 8080 },
