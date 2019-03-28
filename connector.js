@@ -94,6 +94,20 @@ function Connector (destructible, island, index) {
 
     // Close all windows when it's time to go.
     destructible.destruct.wait(this, function () { this._diffLocations({}) })
+
+    setInterval(function () {
+        if (this._router && this._router.isLeader && this._router.from.index == 0) {
+            var list = []
+            this._connections.promises().forEach(function (promise) {
+                list.push.apply(list, this._connections.list(promise))
+            }, this)
+            if (list.length != 0) {
+                var monkied = list[Math.floor(Math.random() * Math.floor(list.length))]
+                console.log('MONKEY TIME!', this._router.from, monkied.address)
+                this._getConnection(monkied.address).socket.destroy()
+            }
+        }
+    }.bind(this), 10000).unref()
 }
 
 // Invoked when a new routing table is created. We will close any windows open
@@ -138,6 +152,7 @@ Connector.prototype._getConnection = function (address) {
             written: 0xffffffff,
             address: address,
             window: null,
+            socket: null,
             outbox: outbox,
             shifter: outbox.shifter(),
             destructibles: {
@@ -232,7 +247,7 @@ Connector.prototype._window = cadence(function (async, destructible, connection)
 
 // Construct a conduit around an incoming socket.
 Connector.prototype._conduit = cadence(function (async, destructible, connection, socket) {
-    socket.steve = 'steve'
+    connection.socket = socket
     async(function () {
         // Create a new socket.
         var readable = new Staccato.Readable(socket)
@@ -334,6 +349,17 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         logger.error('request', { stack: error.stack })
         return [ async.break, false, destructible ]
     }], function (request, socket, head) {
+        connection.socket = socket
+        socket.on('close', function () {
+            destructible.destroy()
+            console.log('YES I AM CLOSED')
+        })
+        socket.on('close', function () {
+            console.log('YES I AM ENDED')
+        })
+        destructible.destruct.wait(function () {
+            console.log('_connection DESTRUCTING')
+        })
         socket.on('error', function (error) {
             console.log('safety catch')
             console.log(error.stack)
@@ -374,6 +400,7 @@ Connector.prototype._reconnect = cadence(function (async, destructible, connecti
                 return [ async.break ]
             }
             async(function () {
+                console.log('RECONNECT!')
                 destructible.ephemeral('connection', this, '_connection', connection, async())
             }, function (connected, destructible) {
                 if (connected) {

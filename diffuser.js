@@ -85,6 +85,7 @@ module.exports = cadence(function (async, destructible, options) {
         destructible.durable('connector', Connector, options.olio.index, async())
         destructible.durable('receiver', Actor, options.receiver, async())
     }, function (sibling, connector, receiver) {
+        console.log('DIFFUSER READY')
         new Diffuser(destructible, options.olio, sibling, connector, receiver, options, async())
     })
 })
