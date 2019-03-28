@@ -282,6 +282,9 @@ Connector.prototype._getOrCreateWindow = cadence(function (async, promise) {
 Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) {
     if (!envelope.canceled) {
         var message = envelope.body.shift(), socket = envelope.body.shift()
+        socket.on('error', function () {
+            console.log('safety catch server side')
+        })
         var from = message.from
         async(function () {
             // Get or create the window.
@@ -334,9 +337,24 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         logger.error('request', { stack: error.stack })
         return [ async.break, false, destructible ]
     }], function (request, socket, head) {
+        connection.socket = socket
+        socket.on('close', function () {
+            destructible.destroy()
+            console.log('YES I AM CLOSED')
+        })
+        socket.on('close', function () {
+            console.log('YES I AM ENDED')
+        })
+        destructible.destruct.wait(function () {
+            console.log('_connection DESTRUCTING')
+            socket.destroy()
+        })
         socket.on('error', function (error) {
             console.log('safety catch')
             console.log(error.stack)
+        })
+        socket.on('error', function () {
+            console.log('safety catch connection side')
         })
         destructible.destruct.cancel(abort)
         var wait = null
