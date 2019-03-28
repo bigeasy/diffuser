@@ -26,7 +26,7 @@ function prove (okay, callback) {
         async(function () {
             destructible.durable('mock', Mock, {
                 socket: 'test/socket',
-                children: {
+                constituents: {
                     compassion: {
                         module: 'compassion.colleague/olio',
                         workers: 1,
@@ -60,9 +60,9 @@ function prove (okay, callback) {
                     }
                 }
             }, async())
-        }, function (children) {
-            console.log(children)
-            children.program[0].register({ key: 0 }, async())
+        }, function (constituents) {
+            console.log(constituents)
+            constituents.program[0].register({ key: 0 }, async())
         }, function () {
             okay('arrived')
         })
