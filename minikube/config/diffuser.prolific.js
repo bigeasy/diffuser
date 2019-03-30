@@ -10,7 +10,7 @@ exports.process = function () {
             destructible.durable('udp', UDP, async())
         }, function (udp) {
             function funnel (message) {
-                send({
+                udp.send({
                     hostname: process.env.FUNNEL_SERVICE_HOST,
                     port: +process.env.FUNNEL_SERVICE_PORT
                 }, JSON.stringify(message) + '\n')
