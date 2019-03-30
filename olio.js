@@ -145,6 +145,7 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         delta(async()).ee(server).on('listening')
     }, function () {
         destructible.destruct.wait(server, 'destroy')
+        delta(destructible.durable('http')).ee(server).on('close')
         return null
     })
 })

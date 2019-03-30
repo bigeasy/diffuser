@@ -71,7 +71,7 @@ function increment (value) {
 // multi-worker child model.
 
 //
-function Connector (destructible, island, index) {
+function Connector (destructible, island, index, monkey) {
     // Our life-cycle manager.
     this._destructible = destructible
 
@@ -95,19 +95,22 @@ function Connector (destructible, island, index) {
     // Close all windows when it's time to go.
     destructible.destruct.wait(this, function () { this._diffLocations({}) })
 
-    setInterval(function () {
-        if (this._router && this._router.isLeader && this._router.from.index == 0) {
-            var list = []
-            this._connections.promises().forEach(function (promise) {
-                list.push.apply(list, this._connections.list(promise))
-            }, this)
-            if (list.length != 0) {
-                var monkied = list[Math.floor(Math.random() * Math.floor(list.length))]
-                console.log('MONKEY TIME!', this._router.from, monkied.address)
-                this._getConnection(monkied.address).socket.destroy()
+    if (monkey) {
+        setInterval(function () {
+            if (this._router && this._router.isLeader && this._router.from.index == 0) {
+                var list = []
+                this._connections.promises().forEach(function (promise) {
+                    list.push.apply(list, this._connections.list(promise))
+                }, this)
+                if (list.length != 0) {
+                    var monkied = list[Math.floor(Math.random() * Math.floor(list.length))]
+                    console.log('MONKEY TIME!', this._router.from, monkied.address)
+                    logger.trace('monkey', { from: this._router.from, to: monkied.address })
+                    this._getConnection(monkied.address).socket.destroy()
+                }
             }
-        }
-    }.bind(this), 10000).unref()
+        }.bind(this), 10000).unref()
+    }
 }
 
 // Invoked when a new routing table is created. We will close any windows open
@@ -210,13 +213,16 @@ Connector.prototype.push = function (envelope) {
 // when it comes time to shutdown.
 
 //
-Connector.prototype._window = cadence(function (async, destructible, connection) {
+Connector.prototype._window = cadence(function (async, destructible, connection, from) {
     // Keep the `Destructible` for our window, maybe call it connection, or
     // pipe, need more words.
     connection.destructibles.window = destructible
     async(function () {
+        Interrupt.assert(this._router != null, 'router.null')
         // Construct a Window.
-        destructible.durable('window-z', Window, async())
+        destructible.durable('window', Window, {
+            id: { republic: this._router.republic, from: this._router.from, to: connection.address }
+        }, async())
     }, function (window) {
         connection.window = window
 
@@ -279,12 +285,12 @@ Connector.prototype._conduit = cadence(function (async, destructible, connection
 // Window is supposed to outlive a socket and reconnect if the socket breaks but
 // recovery is possible, so both the socket and window a destructibly children
 // of our `Connector` object manager.
-Connector.prototype._getOrCreateWindow = cadence(function (async, promise) {
-    var connection = this._getConnection(promise)
+Connector.prototype._getOrCreateWindow = cadence(function (async, to, from) {
+    var connection = this._getConnection(to)
     if (connection.window == null) {
         // As noted above, the `Window` is a child of the `Connector`, not
         // the `Socket`.
-        this._destructible.ephemeral([ 'window-xxxx', promise ], this, '_window', connection, async())
+        this._destructible.ephemeral([ 'window-xxxx', to ], this, '_window', connection, from, async())
     } else {
         return connection
     }
@@ -303,7 +309,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
         var from = message.from
         async(function () {
             // Get or create the window.
-            this._getOrCreateWindow(from, async())
+            this._getOrCreateWindow(from, message.to, async())
         }, function (connection) {
             // Wait for the previous socket to shutdown.
             async(function () {
@@ -362,7 +368,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         })
         destructible.destruct.wait(function () {
             console.log('_connection DESTRUCTING')
-            // socket.destroy()
+            socket.destroy()
         })
         socket.on('error', function (error) {
             console.log('safety catch')
@@ -423,13 +429,13 @@ Connector.prototype._connect = restrictor.push(cadence(function (async, envelope
     var to = envelope.body.shift()
     if (!envelope.canceled) {
         async(function () {
-            this._getOrCreateWindow(to, async())
+            this._getOrCreateWindow(to, this._router.from, async())
         }, function (connection) {
             connection.destructibles.window.durable('reconnect', this, '_reconnect', connection, null)
         })
     }
 }))
 
-module.exports = cadence(function (async, destructible, index) {
-    return new Connector(destructible, null, index)
+module.exports = cadence(function (async, destructible, index, monkey) {
+    return new Connector(destructible, null, index, monkey)
 })

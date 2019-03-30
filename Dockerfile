@@ -6,6 +6,6 @@ WORKDIR /app
 COPY package*.json .
 
 RUN npm install --no-package-lock --no-save
-RUN npm install --no-package-lock --no-save prolific.syslog wafer mingle.kubernetes
+RUN npm install --no-package-lock --no-save prolific.syslog wafer mingle.kubernetes inlet.udp inlet.prolific prolific.udp
 
 COPY ./ ./

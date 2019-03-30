@@ -44,6 +44,7 @@ Registrar.prototype.synchronize = function () {
             }
         }, this)
     } else {
+        console.log(this._registrations)
         this._registrations.forEach(function (map, index) {
             for (var stringified in map) {
                 this._transfer(map)

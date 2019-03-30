@@ -40,11 +40,6 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
 
     destructible.durable('dispatch', this._connector.inbox.pump(this._dispatcher, 'dispatch'), 'destructible', null)
 
-    var socket = this._connector.socket.bind(this._connector)
-    olio.on('diffuser:socket', socket)
-    destructible.destruct.wait(function () {
-        olio.removeListener('diffuser:socket', socket)
-    })
     olio.send(sibling.name, 0, 'diffuser:register', {
         name: options.olio.name,
         index: options.olio.index,
@@ -55,6 +50,16 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     olio.on('diffuser:routes', setRoutes)
     destructible.destruct.wait(function () {
         olio.removeListener('diffuser:routes', setRoutes)
+    })
+    var socket = function (message, socket) { socket.destroy() }
+    olio.on('diffuser:socket', socket)
+    olio.once('diffuser:routes', function () {
+        olio.removeListener('diffuser:socket', socket)
+        socket = connector.socket.bind(connector)
+        olio.on('diffuser:socket', socket)
+    })
+    destructible.destruct.wait(function () {
+        olio.removeListener('diffuser:socket', socket)
     })
 
     this._expirator = setInterval(this._requester.expire.bind(this._requester), 1000)
@@ -82,7 +87,7 @@ module.exports = cadence(function (async, destructible, options) {
     var diffuserName = coalesce(options.diffuserName, 'diffuser')
     async(function () {
         options.olio.ready(diffuserName, async())
-        destructible.durable('connector', Connector, options.olio.index, async())
+        destructible.durable('connector', Connector, options.olio.index, options.monkey, async())
         destructible.durable('receiver', Actor, options.receiver, async())
     }, function (sibling, connector, receiver) {
         new Diffuser(destructible, options.olio, sibling, connector, receiver, options, async())
