@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PATH="$(dirname $(readlink -f $0))/../../node_modules/.bin":$PATH
+
+prolific --configuration /etc/prolific/funnel.prolific.js           \
+--                                                                  \
+olio                                                                \
+    --application ./minikube/bin/funnel.olio.js                     \
+    --configuration /etc/olio/funnel.olio.js

@@ -4,7 +4,7 @@ exports.configure = function (configuration) {
     }).pop().address
     return {
         socket: '/var/run/diffuser.socket',
-        children: {
+        constituents: {
             mingle: {
                 module: 'mingle/olio',
                 workers: 1,
@@ -41,7 +41,7 @@ exports.configure = function (configuration) {
                     address: hostname,
                     bind: { iface: '0.0.0.0', port: 8080 },
                     diffuser: {
-                        island: 'diffuser', id: configuration.id, isRouter: true, buckets: 7
+                        island: 'diffuser', id: configuration.id, isRouter: true, buckets: 13
                     }
                 }
             }

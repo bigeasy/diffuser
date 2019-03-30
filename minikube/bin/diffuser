@@ -2,6 +2,7 @@
 
 PATH="$(dirname $(readlink -f $0))/../../node_modules/.bin":$PATH
 
+cat /etc/prolific/diffuser.prolific.js
 prolific --configuration /etc/prolific/diffuser.prolific.js         \
 --                                                                  \
 olio                                                                \
