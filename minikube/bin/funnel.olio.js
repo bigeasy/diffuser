@@ -16,8 +16,9 @@ exports.configure = function (configuration) {
                 workers: 1,
                 properties: {
                     to: 'prolific',
-                    iface: iface,
-                    port: 8514,
+                    json: true,
+                    iface: '0.0.0.0',
+                    port: 514,
                     extractor: path.join(__dirname, 'extractor.js')
                 }
             }

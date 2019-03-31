@@ -15,8 +15,8 @@ exports.process = function () {
                     port: +process.env.FUNNEL_SERVICE_PORT
                 }, JSON.stringify(message) + '\n')
             }
-            return [ function (entry) {
-                if (entry.qualifier == 'conduit/window') {
+            return function (entry) {
+                if (entry.qualifier == 'conduit.window') {
                     funnel(entry)
                 } else if (
                     entry.qualified != 'olio#memory' &&
@@ -25,7 +25,7 @@ exports.process = function () {
                 ) {
                     process.stdout.write(syslog.format(entry))
                 }
-            } ]
+            }
         })
     })
 }

@@ -8,7 +8,8 @@ console.log(JSON.stringify({
         ports: [{
             name: 'funnel',
             port: 514,
-            targetPort: 514
+            targetPort: 514,
+            protocol: 'UDP'
         }],
         selector: {
             environment: 'minikube',
