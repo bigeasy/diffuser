@@ -69,7 +69,12 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         // asks us for the existing state.
         this._cubbyholes.set(envelope.government.promise, null, this._table.getSnapshot())
         this._table.arrive(envelope.government.promise, envelope.entry.arrive.properties)
-        this.routes.push(this._table.getSnapshot({ action: 'arrive', promise: envelope.government.promise }))
+        console.log('>>>', envelope)
+        this.routes.push(this._table.getSnapshot({
+            action: 'arrive',
+            promise: envelope.government.promise,
+            isLeader: envelope.self.arrived == envelope.government.arrived.promise[envelope.government.majority[0]]
+        }))
         break
     case 'acclimated':
         // Discard our existing state snapshot once an arrival has acclimated.
@@ -82,7 +87,11 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         console.log(envelope)
         this._cubbyholes.remove(envelope.body.departed.promise)
         this._table.depart(envelope.body.departed.promise, envelope.government.promise)
-        this.routes.push(this._table.getSnapshot({ action: 'depart', promise: envelope.body.departed.promise }))
+        this.routes.push(this._table.getSnapshot({
+            action: 'depart',
+            promise: envelope.body.departed.promise,
+            isLeader: envelope.self.arrived == envelope.government.arrived.promise[envelope.government.majority[0]]
+        }))
         break
     }
 })

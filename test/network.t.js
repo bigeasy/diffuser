@@ -62,7 +62,8 @@ function prove (okay, callback) {
                         properties: {
                             '1/0': { location: 'http://127.0.0.1:8089/' },
                             '2/0': { location: 'http://127.0.0.1:8089/' }
-                        }
+                        },
+                        event: {}
                     })
                     connector.push({ to: { promise: '1/0', index: 1 }, body: 1 })
                     async(function () {
@@ -79,18 +80,21 @@ function prove (okay, callback) {
                         properties: {
                             '1/0': { location: 'http://127.0.0.1:8089/' },
                             '2/0': { location: 'http://127.0.0.1:8089/' }
-                        }
+                        },
+                        event: {}
                     })
                     // Set locations so that we hang up on `1/0`.
                     connector.setRoutes({
                         properties: {
                             '2/0': { location: 'http://127.0.0.1:8089/' }
-                        }
+                        },
+                        event: {}
                     })
                     connector.setRoutes({
                         properties: {
                             '2/0': { location: 'http://127.0.0.1:8089/' }
-                        }
+                        },
+                        event: {}
                     })
                     setTimeout(async(), 2500)
                 }, function () {

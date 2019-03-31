@@ -8,4 +8,5 @@ module.exports = { promise: '1/0',
         count: 8,
         url: 'http://127.0.0.1:8486/island/example/islander/id-1/run/' } },
   addresses: [ '1/0' ],
-  buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ] }
+  buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ],
+  event: { isLeader: true } }
