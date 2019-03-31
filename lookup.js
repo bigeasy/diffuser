@@ -3,6 +3,7 @@ var Monotonic = require('monotonic').asString
 function Router (routes, index) {
     this.from = { promise: routes.self, index: index }
     this.self = routes.self
+    this.republic = routes.event.republic
     this.isLeader = routes.event.isLeader
     this.promise = routes.promise
     this.properties = routes.properties

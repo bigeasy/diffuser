@@ -16,7 +16,7 @@ exports.process = function () {
                 }, JSON.stringify(message) + '\n')
             }
             return function (entry) {
-                if (entry.qualifier == 'conduit.window') {
+                if (entry.qualifier == 'conduit.window' || entry.qualified == 'diffuser#monkey') {
                     funnel(entry)
                 } else if (
                     entry.qualified != 'olio#memory' &&

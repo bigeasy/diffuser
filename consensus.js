@@ -73,6 +73,7 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         this.routes.push(this._table.getSnapshot({
             action: 'arrive',
             promise: envelope.government.promise,
+            repblic: envelope.government.repblic,
             isLeader: envelope.self.arrived == envelope.government.arrived.promise[envelope.government.majority[0]]
         }))
         break
@@ -90,6 +91,7 @@ Consensus.prototype.dispatch = cadence(function (async, envelope) {
         this.routes.push(this._table.getSnapshot({
             action: 'depart',
             promise: envelope.body.departed.promise,
+            repblic: envelope.government.repblic,
             isLeader: envelope.self.arrived == envelope.government.arrived.promise[envelope.government.majority[0]]
         }))
         break
