@@ -316,7 +316,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
                 connection.destructibles.socket.destroy()
                 connection.destructibles.socket.completed.wait(async())
             }, function () {
-                connection.destructibles.window.ephemeral([ 'socket', from ], this, '_conduit', connection, socket, async())
+                connection.destructibles.window.ephemeral([ 'socket.server', from ], this, '_conduit', connection, socket, async())
             })
         })
     }
@@ -368,7 +368,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         })
         destructible.destruct.wait(function () {
             console.log('_connection DESTRUCTING')
-            socket.destroy()
+            // socket.destroy()
         })
         socket.on('error', function (error) {
             console.log('safety catch')
@@ -383,7 +383,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             var readable = new Staccato.Readable(socket)
             var writable = new Staccato.Writable(socket)
             destructible.destruct.wait(readable, 'destroy')
-            destructible.durable('socket', Socket, { to: console.address, location: location }, readable, writable, head, async())
+            destructible.durable('socket.client', Socket, { to: console.address, location: location }, readable, writable, head, async())
         }, function (inbox, outbox) {
             async(function () {
                 inbox.dequeue(async())
