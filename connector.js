@@ -216,10 +216,10 @@ Connector.prototype._window = cadence(function (async, destructible, connection,
     // pipe, need more words.
     connection.destructibles.window = destructible
     async(function () {
-        console.log('ROUTER >>>', this._router)
+        Interrupt.assert(this._router != null, 'router.null')
         // Construct a Window.
         destructible.durable('window', Window, {
-            id: { from: from, to: connection.address }
+            id: { republic: this._router.republic, from: this._router.from, to: connection.address }
         }, async())
     }, function (window) {
         connection.window = window

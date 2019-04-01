@@ -32,8 +32,14 @@ module.exports = cadence(function (async, destructible, olio, properties) {
             destructible.durable('worker', Worker, tracker, diffuser, mingle.processes[0].conduit, identifier, async())
         }, function (worker) {
             var server = net.createServer(function (socket) { worker.socket(socket) })
-            delta(async()).ee(server).on('listening')
-            server.listen(properties.bind.port, properties.bind.iface)
+            async(function () {
+                delta(async()).ee(server).on('listening')
+                server.listen(properties.bind.port, properties.bind.iface)
+            }, function () {
+/*                destructible.destruct.wait(server, 'close')
+                delta(async()).ee(server).on('close')*/
+                return null
+            })
         })
     })
 })

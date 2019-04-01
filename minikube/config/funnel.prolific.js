@@ -11,23 +11,34 @@ exports.process = function () {
     }
     return cadence(function (async, destructible) {
         var windows = {}
+        var republics = []
         return function (entry) {
             if (entry.qualified == 'diffuser#monkey') {
                 var key = entry.from.promise + ':' + entry.from.index + ' => ' +
                     entry.to.promise + ':' + entry.to.index
                 console.log(entry.qualified, key)
             } else if (entry.qualifier == 'conduit.window') {
-                var key = entry.id
+                var key = entry.id, republic = key.republic
+                if (!~republics.indexOf(key.republic)) {
+                    republics.push(key.republic)
+                }
+                if (windows == null) {
+                    windows = {}
+                }
                 switch (entry.label) {
                 case 'flushing':
                 case 'connecting':
-                    key = { from: key.to, to: key.from }
+                case 'missing':
+                    key = { republic: republics.indexOf(key.republic), from: key.to, to: key.from }
+                    break
+                default:
+                    key = { republic: republics.indexOf(key.republic), from: key.from, to: key.to }
                     break
                 }
-                var key = key.from.promise + ':' + key.from.index + ' => ' +
+                var key = key.republic + ' ' + key.from.promise + ':' + key.from.index + ' => ' +
                     key.to.promise + ':' + key.to.index
                 if (windows[key] == null) {
-                    windows[key] = {}
+                    windows[key] = { send: [], sendsToLog: 0 }
                 }
                 switch (entry.label) {
                 case 'created':
@@ -37,6 +48,16 @@ exports.process = function () {
                     windows[key].created = true
                     windows[key].id = entry.id
                     console.log(entry.qualified, key)
+                    break
+                case 'send':
+                    windows[key].send.push(entry)
+                    if (windows[key].send.length > 3) {
+                        windows[key].send.shift()
+                    }
+                    if (windows[key].sendsToLog != 0) {
+                        windows[key].sendsToLog--
+                        console.log(entry.qualified, key, inspect(entry))
+                    }
                     break
                 case 'flush':
                     windows[key].flush = entry
@@ -49,7 +70,11 @@ exports.process = function () {
                     console.log(entry.qualified, key)
                     break
                 case 'ahead':
+                    windows[key].sendsToLog = 3
                     console.log(entry.qualified, key, inspect(entry), inspect(windows[key]))
+                    break
+                case 'missing':
+                    console.log(entry.qualified, key, inspect(entry))
                     break
                 }
             }
