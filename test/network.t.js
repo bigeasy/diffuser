@@ -22,7 +22,14 @@ function prove (okay, callback) {
         }, function (connectee) {
             var fail = { connectee: 0, connector: false }
             var http = require('http')
-
+            connectee.setRoutes({
+                self: '1/0',
+                properties: {
+                    '1/0': { location: 'http://127.0.0.1:8089/' },
+                    '2/0': { location: 'http://127.0.0.1:8089/' }
+                },
+                event: {}
+            })
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
                 console.log('connecteed')
