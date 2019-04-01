@@ -36,8 +36,8 @@ module.exports = cadence(function (async, destructible, olio, properties) {
                 delta(async()).ee(server).on('listening')
                 server.listen(properties.bind.port, properties.bind.iface)
             }, function () {
-/*                destructible.destruct.wait(server, 'close')
-                delta(async()).ee(server).on('close')*/
+                destructible.destruct.wait(server, 'close')
+                delta(destructible.durable('http')).ee(server).on('close')
                 return null
             })
         })
