@@ -368,7 +368,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         })
         destructible.destruct.wait(function () {
             console.log('_connection DESTRUCTING')
-            // socket.destroy()
+            socket.destroy()
         })
         socket.on('error', function (error) {
             console.log('safety catch')

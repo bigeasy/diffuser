@@ -51,7 +51,10 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     destructible.destruct.wait(function () {
         olio.removeListener('diffuser:routes', setRoutes)
     })
-    var socket = function (message, socket) { socket.destroy() }
+    var socket = function (message, socket) {
+        socket.end()
+        socket.destroy()
+    }
     olio.on('diffuser:socket', socket)
     olio.once('diffuser:routes', function () {
         olio.removeListener('diffuser:socket', socket)
