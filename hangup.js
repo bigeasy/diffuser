@@ -1,5 +1,5 @@
 var logger = require('prolific.logger').createLogger('diffuser')
 
-module.exports = function (entry) {
-    logger.error(entry.label, entry)
+module.exports = function (error) {
+    logger.error('socket', { stack: error.stack })
 }

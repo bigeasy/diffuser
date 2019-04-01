@@ -12,9 +12,9 @@ function prove (okay) {
         }, {
             level: 'error',
             qualifier: 'diffuser',
-            label: 'label',
-            entry: { label: 'label', value: 1 }
+            label: 'socket',
+            entry: { stack: 'stack' }
         }, 'error')
     }
-    hangup({ label: 'label', value: 1 })
+    hangup({ stack: 'stack' })
 }
