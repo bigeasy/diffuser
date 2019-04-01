@@ -6,3 +6,4 @@
 /test
 /minikube
 /_node_modules
+/Dockerfile*
