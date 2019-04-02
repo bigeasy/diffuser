@@ -1,13 +1,8 @@
 var cadence = require('cadence')
 var Signal = require('signal')
-var net = require('net')
 var url = require('url')
-var delta = require('delta')
-var Staccato = require('staccato')
-var byline = require('byline')
+var UserAgent = require('vizsla')
 var logger = require('prolific.logger').createLogger('dummy')
-
-var Keyify = require('keyify')
 
 function Worker (destructible, tracker, diffuser, mingle, identifier) {
     this._tracker = tracker
@@ -18,101 +13,11 @@ function Worker (destructible, tracker, diffuser, mingle, identifier) {
     this._mingle = mingle
     this._instance = '0'
     this._clients = {}
+    this._ua = new UserAgent
 }
-
-Worker.prototype.receive = cadence(function (async, socket, writable) {
-    var readable = new Staccato.Readable(byline(socket))
-    async.loop([], function () {
-        async(function () {
-            readable.read(async())
-        }, function (line) {
-            if (line == null) {
-                return [ async.break ]
-            }
-            var json = JSON.parse(line.toString())
-            switch (json.method) {
-            case 'received':
-                console.log('--- JSON GOT ---', json)
-                this._tracker.record(json.cookie, json.from, 'received')
-                break
-            }
-        })
-    })
-})
-
-Worker.prototype.serve = cadence(function (async, socket) {
-    var readable = new Staccato.Readable(byline(socket))
-    var writable = new Staccato.Writable(socket)
-    async.loop([], function () {
-        async(function () {
-            readable.read(async())
-        }, function (line) {
-            if (line == null) {
-                return [ async.break ]
-            }
-            var json = JSON.parse(line.toString())
-            switch (json.method) {
-            case 'send':
-                async(function () {
-                    writable.write(JSON.stringify({
-                        method: 'received',
-                        from: this._identifier,
-                        cookie: json.cookie
-                    }) + '\n', async())
-                }, function () {
-                    this._diffuser.route('receiver', Keyify.stringify(json.from), {
-                        method: 'route',
-                        from: this._identifier,
-                        cookie: json.cookie
-                    }, async())
-                }, function (response) {
-                    if (response.status != 'received') {
-                        console.log('routing failed', response)
-                    }
-                })
-                break
-            }
-        })
-    })
-})
-
-Worker.prototype.socket = function (socket) {
-    this.serve(socket, this._destructable.ephemeral([ 'socket', socket.remoteAddress ]))
-}
-
-Worker.prototype.connect = cadence(function (async, destructible, address) {
-    var socket = new net.Socket
-    socket.on('error', function (error) {
-        console.log('OTHER SOCKET ERROR')
-        console.log(error.stack)
-    })
-    async([function () {
-        async(function () {
-            delta(async()).ee(socket).on('connect')
-            socket.connect(8080, address)
-        }, function () {
-            destructible.destruct.wait(socket, 'destroy')
-            destructible.destruct.wait(this, function () {
-                delete this._clients[address]
-            })
-            var writable = new Staccato.Writable(socket)
-            this._clients[address] = {
-                address: address,
-                socket: socket,
-                writable: writable
-            }
-            this.receive(socket, writable, destructible.durable('receive'))
-        }, function () {
-            return [ this._clients[address] ]
-        })
-    }, function (error) {
-        console.log(error.stack)
-        return [ null ]
-    }])
-})
 
 Worker.prototype.request = cadence(function (async) {
-    async.loop([], function () {
+    var request = async.loop([], function () {
         async(function () {
             this._delay.wait(async())
             this._timeout = setTimeout(this._delay.notify.bind(this._delay), 1000)
@@ -128,22 +33,26 @@ Worker.prototype.request = cadence(function (async) {
                 var addresses = endpoints.map(function (endpoint) {
                     return url.parse(endpoint).hostname
                 })
-                async.map([ addresses ], function (address) {
-                    if (this._clients[address]) {
-                        return [ this._clients[address] ]
-                    }
-                    this._destructable.ephemeral(address, this, 'connect', address, async())
-                })
-            }, function (clients) {
-                clients = clients.filter(function (client) {
-                    return client != null
-                })
-                var addresses = clients.map(function (client) {
-                    return client.address
-                })
                 var requests = this._tracker.request(this._identifier, addresses)
-                async.forEach([ clients ], function (client) {
-                    client.writable.write(requests[client.address], async())
+                async.forEach([ addresses ], function (address) {
+                    if (this.destroyed) {
+                        return [ request.break ]
+                    }
+                    var json = requests[address]
+                    async(function () {
+                        this._fetch = this._ua.fetch({
+                            url: 'http://' + address + ':8080/route',
+                            post: json,
+                            timeout: 5000,
+                            parse: 'json'
+                        }, async())
+                    }, function (body, response) {
+                        console.log(body, response.statusCode)
+                        this._fetch = null
+                        if (body != null) {
+                            this._tracker.record(json.cookie, { address: address }, 'received')
+                        }
+                    })
                 })
             })
         })
@@ -151,15 +60,20 @@ Worker.prototype.request = cadence(function (async) {
 })
 
 Worker.prototype.destroy = function () {
+    this._ua.destroy()
+    if (this._fetch) {
+        this._fetch.cancel()
+    }
+    this.destroyed = true
     if (this._timeout != null) {
         clearTimeout(this._timeout)
     }
-    this.delay.unlatch()
-    this.destroyed = true
+    this._delay.unlatch()
 }
 
 module.exports = cadence(function (async, destructible, tracker, diffuser, resolver, address) {
     var worker = new Worker(destructible, tracker, diffuser, resolver, address)
+    destructible.destruct.wait(worker, 'destroy')
     worker.request(destructible.durable('request'))
     return worker
 })

@@ -44,13 +44,16 @@
     },
     "devDependencies":
     {
+                            "connect":                      "3.6.6",
                             "prolific":                     "24.0.x",
                             "prolific.syslog":              "9.0.x",
                             "compassion.colleague":         "4.0.x",
                             "compassion.counterfeiter":     "1.0.x",
                             "mingle":                       "4.0.x",
                             "mingle.static":                "1.0.x",
-                            "proof":                        "7.0.x"
+                            "proof":                        "7.0.x",
+                            "reactor":                      "13.0.x",
+                            "vizsla":                       "13.0.x"
     },
     "main":                 "diffuser",
     "scripts":

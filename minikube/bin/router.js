@@ -1,8 +1,16 @@
 var cadence = require('cadence')
 var delta = require('delta')
 var Diffuser = require('../..')
-var net = require('net')
+var http = require('http')
+var destroyer = require('server-destroy')
 var Conduit = require('conduit')
+
+var Reactor = require('reactor')
+var connect = require('connect')
+
+var destroyer = require('server-destroy')
+
+var Middleware = require('./middleware')
 
 var Worker = require('./worker')
 var Tracker = require('./tracker')
@@ -23,6 +31,7 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         }, async())
     }, function (diffuser) {
         var identifier = { address: properties.address, index: olio.index }
+        var middleware = new Middleware(diffuser, identifier)
         async(function () {
             diffuser.register(Keyify.stringify(identifier), async())
         }, function () {
@@ -32,12 +41,15 @@ module.exports = cadence(function (async, destructible, olio, properties) {
         }, function (mingle) {
             destructible.durable('worker', Worker, tracker, diffuser, mingle.processes[0].conduit, identifier, async())
         }, function (worker) {
-            var server = net.createServer(function (socket) { worker.socket(socket) })
+            var server = http.createServer(connect()
+                .use(Reactor.json())
+                .use(middleware.middleware))
+            destroyer(server)
             async(function () {
                 delta(async()).ee(server).on('listening')
                 server.listen(properties.bind.port, properties.bind.iface)
             }, function () {
-                destructible.destruct.wait(server, 'close')
+                destructible.destruct.wait(server, 'destroy')
                 delta(destructible.durable('http')).ee(server).on('close')
                 return null
             })

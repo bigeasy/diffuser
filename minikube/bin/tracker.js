@@ -35,12 +35,12 @@ Tracker.prototype.request = function (from, addresses) {
     })
     addresses.forEach(function (to) {
         cartridge.value.events[to] = {}
-        requests[to] = JSON.stringify({
+        requests[to] = {
             method: 'send',
             to: to,
             from: from,
             cookie: cookie
-        }) + '\n'
+        }
     }, this)
     cartridge.release()
     return requests
