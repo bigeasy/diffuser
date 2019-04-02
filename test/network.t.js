@@ -28,7 +28,7 @@ function prove (okay, callback) {
                     '1/0': { location: 'http://127.0.0.1:8089/' },
                     '2/0': { location: 'http://127.0.0.1:8089/' }
                 },
-                event: {}
+                event: { republic: 0 }
             })
             var downgrader = new Downgrader
             downgrader.on('socket', function (request, socket) {
@@ -70,9 +70,10 @@ function prove (okay, callback) {
                             '1/0': { location: 'http://127.0.0.1:8089/' },
                             '2/0': { location: 'http://127.0.0.1:8089/' }
                         },
-                        event: {}
+                        event: { republic: 0 }
                     })
                     connector.push({ to: { promise: '1/0', index: 1 }, body: 1 })
+                    console.log('here')
                     async(function () {
                         setTimeout(async(), 2500)
                     }, function () {
@@ -88,20 +89,20 @@ function prove (okay, callback) {
                             '1/0': { location: 'http://127.0.0.1:8089/' },
                             '2/0': { location: 'http://127.0.0.1:8089/' }
                         },
-                        event: {}
+                        event: { republic: 0 }
                     })
                     // Set locations so that we hang up on `1/0`.
                     connector.setRoutes({
                         properties: {
                             '2/0': { location: 'http://127.0.0.1:8089/' }
                         },
-                        event: {}
+                        event: { republic: 0 }
                     })
                     connector.setRoutes({
                         properties: {
                             '2/0': { location: 'http://127.0.0.1:8089/' }
                         },
-                        event: {}
+                        event: { republic: 0 }
                     })
                     setTimeout(async(), 2500)
                 }, function () {

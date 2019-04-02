@@ -12,8 +12,10 @@ var Downgrader = require('downgrader')
 
 // Sockets as multiplexed event queues.
 var Procession = require('procession')
+var Reader = require('procession/reader')
+var Writer = require('procession/writer')
+
 var Conduit = require('conduit/conduit')
-var Socket = require('procession/socket')(require('./hangup'))
 var Window = require('conduit/window')
 
 var Monotonic = require('monotonic').asString
@@ -37,6 +39,8 @@ var restrictor = require('restrictor')
 
 // Exceptions you can catch by type.
 var Interrupt = require('interrupt').createInterrupter('diffuser')
+
+var stackify = require('./stackify')
 
 function increment (value) {
     if (value == 0xffffffff) {
@@ -253,21 +257,33 @@ Connector.prototype._window = cadence(function (async, destructible, connection,
 
 // Construct a conduit around an incoming socket.
 Connector.prototype._conduit = cadence(function (async, destructible, connection, socket) {
+    var identifier = {
+        republic: this._router.republic,
+        from: this._router.from,
+        to: connection.address
+    }
     connection.socket = socket
     async(function () {
         // Create a new socket.
-        var readable = new Staccato.Readable(socket)
-        var writable = new Staccato.Writable(socket)
-        // TODO How does destroying writable cause the socket to close?
-        destructible.destruct.wait(readable, 'destroy')
-        destructible.destruct.wait(writable, 'destroy')
-        // destructible.destruct.wait(socket, 'destroy')
-        destructible.ephemeral('socket', Socket, { from: connection.address }, readable, writable, async())
-    }, function (inbox, outbox) {
-        outbox.push({ module: 'diffuser', method: 'connect' })
+        var reader = new Reader(new Procession, socket)
+        destructible.destruct.wait(reader, 'destroy')
+        reader.read(destructible.durable('read'))
+
+        var writer = new Writer(new Procession, socket)
+        destructible.destruct.wait(writer, 'destroy')
+        writer.write(destructible.durable('write'))
+
+        destructible.destruct.wait(function () {
+            socket.destroy()
+            logger.notice('socket.server.disconnect', identifier)
+        })
+        socket.on('error', stackify(logger, 'socket.server', identifier))
+
+        writer.outbox.push({ module: 'diffuser', method: 'connect' })
+
         // Bind our socket to a Conduit server that will reconnect the window
         // and listen for pings.
-        destructible.durable('conduit', Conduit, inbox, outbox, this, cadence(function (async, request, inbox, outbox) {
+        destructible.durable('conduit', Conduit, reader.inbox, writer.outbox, this, cadence(function (async, request, inbox, outbox) {
             switch (request.method) {
             case 'window':
                 connection.window.connect(inbox, outbox)
@@ -303,9 +319,6 @@ Connector.prototype._getOrCreateWindow = cadence(function (async, to, from) {
 Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) {
     if (!envelope.canceled) {
         var message = envelope.body.shift(), socket = envelope.body.shift()
-        socket.on('error', function () {
-            console.log('safety catch server side')
-        })
         var from = message.from
         async(function () {
             // Get or create the window.
@@ -322,6 +335,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
     }
 }))
 
+var COUNT = 0
 // Note that there are three recoverable errors. The first is the request
 // connection and upgrade negotiation. We have a try/catch for that error below.
 // Then we can have an error on read or write to the socket. The `Socket`
@@ -332,6 +346,11 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
 Connector.prototype._connection = cadence(function (async, destructible, connection) {
     var location = url.parse(this._router.properties[connection.address.promise].location)
     var abort
+    var identifier = {
+        republic: this._router.republic,
+        from: this._router.from,
+        to: connection.address
+    }
     async([function () {
         var fromIndex = this._router.from.promise == connection.address.promise &&
             this._router.from.index == connection.address.index ? -1 : this._router.from.index
@@ -345,59 +364,45 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                 'x-diffuser-to-index': connection.address.index
             })
         })
-        request.on('error', function (error) {
-            console.log('safety catch')
-            console.log(error.stack)
-        })
+        request.on('error', stackify(logger, 'socket.request', identifier))
         abort = destructible.destruct.wait(request, 'abort')
         delta(async()).ee(request).on('upgrade')
         request.end()
     }, function (error) {
         destructible.destroy()
         console.log(error.stack)
-        logger.error('request', { stack: error.stack })
         return [ async.break, false, destructible ]
     }], function (request, socket, head) {
-        connection.socket = socket
-        socket.on('close', function () {
-            destructible.destroy()
-            console.log('YES I AM CLOSED')
-        })
-        socket.on('close', function () {
-            console.log('YES I AM ENDED')
-        })
-        destructible.destruct.wait(function () {
-            console.log('_connection DESTRUCTING')
-            socket.destroy()
-        })
-        socket.on('error', function (error) {
-            console.log('safety catch')
-            console.log(error.stack)
-        })
-        socket.on('error', function () {
-            console.log('safety catch connection side')
-        })
         destructible.destruct.cancel(abort)
-        var wait = null
+        connection.socket = socket
+
+        var reader = new Reader(new Procession, socket, head)
+        destructible.destruct.wait(reader, 'destroy')
+        reader.read(destructible.durable('read'))
+
+        var writer = new Writer(new Procession, socket, head)
+        destructible.destruct.wait(writer, 'destroy')
+        writer.write(destructible.durable('write'))
+
+        destructible.destruct.wait(function () {
+            socket.destroy()
+            logger.notice('socket.client.disconnect', identifier)
+        })
+        socket.on('error', stackify(logger, 'socket.client', identifier))
+
         async(function () {
-            var readable = new Staccato.Readable(socket)
-            var writable = new Staccato.Writable(socket)
-            destructible.destruct.wait(readable, 'destroy')
-            destructible.durable('socket.client', Socket, { to: console.address, location: location }, readable, writable, head, async())
-        }, function (inbox, outbox) {
-            async(function () {
-                inbox.dequeue(async())
-            }, function (envelope) {
-                if (envelope == null) {
-                    return [ async.break, false, destructible ]
-                }
-                Interrupt.assert(envelope.module + '/' + envelope.method == 'diffuser/connect', 'bad.handshake')
-                destructible.durable('conduit', Conduit, inbox, outbox, async())
-            }, function (conduit) {
-                var request = conduit.connect({ method: 'window', inbox: true, outbox: true })
-                connection.window.connect(request.inbox, request.outbox)
-                return [ true, destructible ]
-            })
+            reader.inbox.dequeue(async())
+        }, function (envelope) {
+            if (envelope == null) {
+                return [ async.break, false, destructible ]
+            }
+            Interrupt.assert(envelope.module == 'diffuser' &&
+                envelope.method == 'connect', 'bad.handshake')
+            destructible.durable('conduit', Conduit, reader.inbox, writer.outbox, async())
+        }, function (conduit) {
+            var request = conduit.connect({ method: 'window', inbox: true, outbox: true })
+            connection.window.connect(request.inbox, request.outbox)
+            return [ true, destructible ]
         })
     })
 })
