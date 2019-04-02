@@ -4,6 +4,7 @@ exports.configure = function (configuration) {
     }).pop().address
     return {
         socket: '/var/run/diffuser.socket',
+        scram: 10000,
         constituents: {
             mingle: {
                 module: 'mingle/olio',
