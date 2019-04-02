@@ -26,7 +26,7 @@
                             "delta":                        "3.0.x",
                             "demur":                        "1.0.x",
                             "departure":                    "1.0.x",
-                            "destructible":                 "1.0.x",
+                            "destructible":                 "2.0.x",
                             "downgrader":                   "1.0.x",
                             "extant":                       "1.0.x",
                             "hash.fnv":                     "1.0.x",
