@@ -273,9 +273,24 @@ Connector.prototype._conduit = cadence(function (async, destructible, connection
         destructible.destruct.wait(writer, 'destroy')
         writer.write(destructible.durable('write'))
 
+        var inspector = null
         destructible.destruct.wait(function () {
             socket.destroy()
             logger.notice('socket.server.disconnect', identifier)
+            inspector = setInterval(function () {
+                logger.error('server.socket.hang', {
+                    state: {
+                        writer: writer.state,
+                        writable: writer.writable.state,
+                        reader: reader.state,
+                        readable: reader.readable.state
+                    }
+                })
+            }, 1000)
+        })
+        destructible.completed.wait(function () {
+            socket.destroy()
+            clearInterval(inspector)
         })
         socket.on('error', stackify(logger, 'socket.server', identifier))
 
@@ -329,7 +344,7 @@ Connector.prototype.socket = restrictor.push(cadence(function (async, envelope) 
                 connection.destructibles.socket.destroy()
                 connection.destructibles.socket.completed.wait(async())
             }, function () {
-                connection.destructibles.window.ephemeral([ 'socket.server', from ], this, '_conduit', connection, socket, async())
+                connection.destructibles.window.ephemeral([ 'socket.server', from ], 5000, this, '_conduit', connection, socket, async())
             })
         })
     }
@@ -384,9 +399,24 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
         destructible.destruct.wait(writer, 'destroy')
         writer.write(destructible.durable('write'))
 
+        var inspector = null
         destructible.destruct.wait(function () {
             socket.destroy()
             logger.notice('socket.client.disconnect', identifier)
+            inspector = setInterval(function () {
+                logger.error('client.socket.hang', {
+                    state: {
+                        writer: writer.state,
+                        writable: writer.writable.state,
+                        reader: reader.state,
+                        readable: reader.readable.state
+                    }
+                })
+            }, 1000)
+        })
+        destructible.completed.wait(function () {
+            socket.destroy()
+            clearInterval(inspector)
         })
         socket.on('error', stackify(logger, 'socket.client', identifier))
 
@@ -418,7 +448,6 @@ Connector.prototype._reconnect = cadence(function (async, destructible, connecti
                 return [ async.break ]
             }
             async(function () {
-                console.log('RECONNECT!')
                 destructible.ephemeral('connection', this, '_connection', connection, async())
             }, function (connected, destructible) {
                 if (connected) {
@@ -436,7 +465,7 @@ Connector.prototype._connect = restrictor.push(cadence(function (async, envelope
         async(function () {
             this._getOrCreateWindow(to, this._router.from, async())
         }, function (connection) {
-            connection.destructibles.window.durable('reconnect', this, '_reconnect', connection, null)
+            connection.destructibles.window.durable('reconnect', 5000, this, '_reconnect', connection, null)
         })
     }
 }))
