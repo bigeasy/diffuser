@@ -1,3 +1,5 @@
+var util = require('util')
+
 function inspect (object) {
     return util.inspect(object, { depth: Infinity })
 }
