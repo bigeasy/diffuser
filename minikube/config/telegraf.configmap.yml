@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegraf
+  namespace: diffuser
+  labels:
+    name: telegraf
+    environment: minikube
+data:
+  telegraf.conf: |+
+    [global_tags]
+      env = "minikube"
+    [agent]
+      hostname = "$HOSTNAME"
+    [[outputs.influxdb]]
+      urls = ["http://influxdb.tick.svc.cluster.local:8086"] # required
+      database = "telegraf" # required
+
+      timeout = "5s"
+
+    [[inputs.cpu]]
+      percpu = true
+      totalcpu = true
+      collect_cpu_time = false
+      report_active = false
+    [[inputs.disk]]
+      ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
+    [[inputs.diskio]]
+    [[inputs.kernel]]
+    [[inputs.mem]]
+    [[inputs.processes]]
+    [[inputs.swap]]
+    [[inputs.system]]
+    [[inputs.docker]]
+      endpoint = "unix:///var/run/docker.sock"
+      # see https://github.com/influxdata/telegraf/issues/3110
+      docker_label_exclude = ["annotation*"]
+    [[inputs.kubernetes]]
+      url = "http://192.168.99.104:10255"
