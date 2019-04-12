@@ -38,7 +38,7 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     })
     this._connector = connector
 
-    destructible.durable('dispatch', this._connector.inbox.pump(this._dispatcher, 'dispatch'), 'destructible', null)
+    destructible.durable('receive', this._connector.inbox.pump(this._dispatcher, 'receive'), 'destructible', null)
 
     olio.send(sibling.name, 0, 'diffuser:register', {
         name: options.olio.name,

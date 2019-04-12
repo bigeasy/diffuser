@@ -6,14 +6,13 @@ var Procession = require('procession')
 var assert = require('assert')
 var logger = require('prolific.logger').createLogger('diffuser')
 
+var Interrupt = require('interrupt').createInterrupter('diffuser')
+
 function Dispatcher (options) {
     this._index = options.index
     this._router = null
-    this._backlogs = {
-        synchronize: new Vivifyer(function () { return [] }),
-        route: { queue: new Procession, shifter: null }
-    }
-    this._backlogs.route.shifter = this._backlogs.route.queue.shifter()
+    this._backlog = { queue: new Procession, shifter: null }
+    this._backlog.shifter = this._backlog.queue.shifter()
     this._router = null
     this._receiver = options.receiver
     this._countdown = new Countdown
@@ -22,25 +21,75 @@ function Dispatcher (options) {
     this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._registrar = options.registrar
     this._connector = options.connector
+    this._series = {}
 }
 
 Dispatcher.prototype.setRoutes = function (routes) {
     this._router = new Router(routes, this._index)
     this._receiver.setRouter(this._router)
     this._countdown.start(routes)
-    var backlog = this._backlogs.synchronize.get(routes.promise)
-    this._backlogs.synchronize.remove(routes.promise)
-    backlog.forEach(this.dispatch.bind(this))
+    this._playBacklog()
+    if (routes.event.action == 'depart') {
+        delete this._series[routes.promise]
+    }
 }
 
 Dispatcher.prototype._setRegistration = function (hashed, from) {
     this._registrations[hashed.hash % this._registrations.length][hashed.stringified] = from
 }
+Dispatcher.prototype.receive = function (envelope) {
+    if (envelope != null) {
+        var series = this._series[envelope.from.promise]
+        if (series == null) {
+            series = this._series[envelope.from.promise] = []
+        }
+        var counters = series[envelope.from.index]
+        if (counters == null) {
+            counters = series[envelope.from.index] = {
+                received: 0xffffffff,
+                dispatched: 0xffffffff
+            }
+        }
+        Interrupt.assert(envelope.series == counters.received, 'bad.receive.series', {
+            envelope: envelope,
+            counters: counters
+        })
+        if (counters.received == 0xffffffff) {
+            counters.received = 0
+        } else {
+            counters.received++
+        }
+        this._dispatch(envelope)
+    }
+}
 
-Dispatcher.prototype.dispatch = function (envelope) {
+Dispatcher.prototype._dispatched = function (envelope, counters) {
+    Interrupt.assert(envelope.series == counters.dispatched, 'bad.dispatch.series', {
+        envelope: envelope,
+        counters: counters
+    })
+    if (counters.dispatched == 0xffffffff) {
+        counters.dispatched = 0
+    } else {
+        counters.dispatched++
+    }
+}
+
+Dispatcher.prototype._playBacklog = function () {
+    var backlog
+    var shifter = this._backlog.shifter
+    this._backlog = { queue: new Procession, shifter: null }
+    this._backlog.shifter = this._backlog.queue.shifter()
+    while ((backlog = shifter.shift()) != null) {
+        this._dispatch(backlog)
+    }
+}
+
+Dispatcher.prototype._dispatch = function (envelope) {
     if (envelope == null) {
         return
     }
+    var counters = this._series[envelope.from.promise][envelope.from.index]
     var to
     var action = null
     assert(envelope.module == 'diffuser')
@@ -50,13 +99,10 @@ Dispatcher.prototype.dispatch = function (envelope) {
     // specific peer with their route promises in ascending order.
     if (Monotonic.compare(envelope.promise, this._countdown.promise) > 0) {
         action = 'backlog'
-        if (envelope.method == 'synchronize') {
-            this._backlogs.synchronize.get(envelope.promise).push(envelope)
-        } else {
-            this._backlogs.route.queue.push(envelope)
-        }
+        this._backlog.queue.push(envelope)
     // We have a synchronize message and we're preparted to count it down.
     } else if (envelope.method == 'synchronize') {
+        this._dispatched(envelope, counters)
         action = 'sync'
         // A null body indicates the end of stream of update messages.
         if (envelope.body == null) {
@@ -65,10 +111,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
             // bucket table so we have been updated according to that table.
             if (this._countdown.count == 0) {
                 // We play all the route backlogs.
-                var backlog
-                while ((backlog = this._backlogs.route.shifter.shift()) != null) {
-                    this.dispatch(backlog)
-                }
+                this._playBacklog()
             }
         // Regardless of all that versioning guff above, we only have one bucket
         // table at a time and we only record a registration if the bucket
@@ -78,12 +121,13 @@ Dispatcher.prototype.dispatch = function (envelope) {
         }
     } else if (this._countdown.count != 0) {
         action = 'countdown'
-        this._backlogs.route.queue.push(envelope)
+        this._backlog.queue.push(envelope)
     // TODO No. We may have to reroute, right?
     } else if (
         envelope.destination == 'router' &&
         Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0
     ) {
+        this._dispatched(envelope, counters)
         action = 'reroute'
         // TODO We should count hops and make sure we're not in a loop.
         envelope.promise = this._router.promise
@@ -91,6 +135,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
         console.log('REROUTE', envelope)
         this._connector.push(envelope)
     } else {
+        this._dispatched(envelope, counters)
         switch (envelope.destination + '/' + envelope.method) {
         case 'router/register':
             action = 'register'

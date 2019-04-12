@@ -30,25 +30,27 @@ function prove (okay) {
         properties: { '1/0': { count: 1 } },
         buckets: [ '1/0', '1/0', '1/0', '1/0', '1/0', '1/0', '1/0' ]
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '1/0',
         destination: 'router',
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 0xffffffff,
         body: null
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        series: 0xffffffff,
         body: null
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
@@ -56,6 +58,7 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
+        series: 0,
         body: null
     })
     dispatcher.setRoutes({
@@ -65,7 +68,7 @@ function prove (okay) {
         properties: { '1/0': { count: 1 }, '2/0': { count: 1 } },
         buckets: [ '1/0', '1/0', '1/0', '2/0', '2/0', '2/0', '2/0' ]
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
@@ -73,33 +76,37 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
+        series: 1,
         body: null
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 0,
         body: { hash: 1, stringified: '1' }
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 1,
         body: { hash: 5, stringified: '5' }
     })
-    dispatcher.dispatch({
+    dispatcher.receive({
         module: 'diffuser',
         promise: '2/0',
         destination: 'router',
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 2,
         body: null
     })
     okay(actions.splice(0), [{
@@ -110,6 +117,7 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
+        series: 0,
         body: null
     }, {
         module: 'diffuser',
@@ -119,9 +127,10 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
+        series: 1,
         body: null
     }], 'synchronize')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -129,6 +138,7 @@ function prove (okay) {
         hashed: { hash: 5, stringified: '5' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 3,
         cookie: '1'
     })
     okay(connector.splice(0), [{
@@ -139,9 +149,10 @@ function prove (okay) {
         to: { promise: '2/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 5, stringified: '5' },
+        series: 3,
         cookie: '1'
     }], 'reroute')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -149,6 +160,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 4,
         cookie: '1',
         body: null
     })
@@ -164,7 +176,7 @@ function prove (okay) {
         cookie: '1',
         body: { exists: false, deleted: false }
     }], 'unregister missing')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -172,6 +184,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        series: 2,
         cookie: '1',
         body: null
     })
@@ -187,7 +200,7 @@ function prove (okay) {
         cookie: '1',
         body: { exists: true, deleted: false }
     }], 'wrong source unregister')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -195,6 +208,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 5,
         cookie: '1',
         body: null
     })
@@ -210,7 +224,7 @@ function prove (okay) {
         cookie: '1',
         body: { exists: true, deleted: true }
     }], 'unregister')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -218,6 +232,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 6,
         cookie: '1',
         body: null
     })
@@ -232,7 +247,7 @@ function prove (okay) {
         status: 'received',
         cookie: '1'
     }], 'register')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -240,6 +255,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 7,
         cookie: '1',
         body: {}
     })
@@ -254,7 +270,7 @@ function prove (okay) {
         cookie: '1',
         body: {}
     }], 'route')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -262,6 +278,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 8,
         cookie: '1'
     })
     okay(connector.splice(0), [{
@@ -277,7 +294,7 @@ function prove (okay) {
         values: null,
         cookie: '1'
     }], 'missing')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'router',
@@ -285,6 +302,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 9,
         cookie: '1',
         body: {}
     })
@@ -299,7 +317,7 @@ function prove (okay) {
         cookie: '1',
         body: {}
     }], 'route')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'receiver',
@@ -307,6 +325,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        series: 10,
         cookie: '1',
         body: {}
     })
@@ -322,7 +341,7 @@ function prove (okay) {
         values: null,
         cookie: '1'
     }], 'receive missing')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'receiver',
@@ -330,6 +349,7 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
+        series: 11,
         cookie: '1',
         body: {}
     })
@@ -341,10 +361,11 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
+        series: 11,
         cookie: '1',
         body: {}
     }], 'receive missing')
-    dispatcher.dispatch({
+    dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
         destination: 'source',
@@ -352,6 +373,7 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
+        series: 12,
         cookie: cliffhanger.invoke(function (error, result) {
             okay(result, {
                 promise: '2/0',
@@ -361,6 +383,7 @@ function prove (okay) {
                 to: { promise: '1/0', index: 0 },
                 from: { promise: '1/0', index: 0 },
                 hashed: { hash: 1, stringified: '1' },
+                series: 12,
                 cookie: '1',
                 body: {}
             }, 'response')
