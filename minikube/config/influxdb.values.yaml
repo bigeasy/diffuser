@@ -1,0 +1,6 @@
+## The InfluxDB image uses several environment variables to automatically
+## configure certain parts of the server.
+## Ref: https://hub.docker.com/_/influxdb/
+env:
+  - name: INFLUXDB_HTTP_FLUX_ENABLED
+    value: "true"

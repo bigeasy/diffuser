@@ -4,6 +4,7 @@ var Vivifyer = require('vivifyer')
 var Countdown = require('./countdown')
 var Procession = require('procession')
 var assert = require('assert')
+var logger = require('prolific.logger').createLogger('diffuser')
 
 function Dispatcher (options) {
     this._index = options.index
@@ -41,13 +42,14 @@ Dispatcher.prototype.dispatch = function (envelope) {
         return
     }
     var to
+    var action = null
     assert(envelope.module == 'diffuser')
     assert(this._router == null || Router.compare(envelope.to, this._router.from) == 0)
     // We've not yet received a route from consensus, so let's pretend we didn't
     // even get this envelope yet. Note that envelopes will always be sent from a
     // specific peer with their route promises in ascending order.
     if (Monotonic.compare(envelope.promise, this._countdown.promise) > 0) {
-        console.log('BACKLOG', envelope)
+        action = 'backlog'
         if (envelope.method == 'synchronize') {
             this._backlogs.synchronize.get(envelope.promise).push(envelope)
         } else {
@@ -55,7 +57,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
         }
     // We have a synchronize message and we're preparted to count it down.
     } else if (envelope.method == 'synchronize') {
-        console.log('SYNC', envelope)
+        action = 'sync'
         // A null body indicates the end of stream of update messages.
         if (envelope.body == null) {
             this._countdown.arrive(envelope.promise, envelope.from)
@@ -75,14 +77,14 @@ Dispatcher.prototype.dispatch = function (envelope) {
             this._setRegistration(envelope.body, envelope.from)
         }
     } else if (this._countdown.count != 0) {
-        console.log('COUNTDOWN', envelope)
+        action = 'countdown'
         this._backlogs.route.queue.push(envelope)
     // TODO No. We may have to reroute, right?
     } else if (
         envelope.destination == 'router' &&
         Router.compare(to = this._router.route(envelope.hashed), this._router.from) != 0
     ) {
-        console.log('REROUTE (DREADED)', envelope)
+        action = 'reroute'
         // TODO We should count hops and make sure we're not in a loop.
         envelope.promise = this._router.promise
         envelope.to = to
@@ -91,6 +93,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
     } else {
         switch (envelope.destination + '/' + envelope.method) {
         case 'router/register':
+            action = 'register'
             envelope.got = true
             this._setRegistration(envelope.hashed, envelope.from)
             this._connector.push({
@@ -106,6 +109,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
             })
             break
         case 'router/unregister':
+            action = 'unregister'
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
             var exists = !! registration[envelope.hashed.stringified], deleted = false
             if (exists && Router.compare(registration[envelope.hashed.stringified], envelope.from) == 0) {
@@ -126,9 +130,11 @@ Dispatcher.prototype.dispatch = function (envelope) {
             })
             break
         case 'router/receive':
+            action = 'receive'
             this._receiver.act(this._connector, envelope)
             break
         case 'router/route':
+            action = 'route'
             var registration = this._registrations[envelope.hashed.hash % this._registrations.length]
             var address = registration[envelope.hashed.stringified]
             if (address == null) {
@@ -159,6 +165,7 @@ Dispatcher.prototype.dispatch = function (envelope) {
             }
             break
         case 'receiver/receive':
+            action = 'receiver'
             if (this._registrar.contains(envelope.hashed)) {
                 this._receiver.act(this._connector, envelope)
             } else {
@@ -177,13 +184,19 @@ Dispatcher.prototype.dispatch = function (envelope) {
             }
             break
         case 'source/respond':
+            action = 'respond'
             this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
             break
         default:
-            console.log('DROPPED', envelope)
+            action = 'drop'
             break
         }
     }
+    logger.trace('dispatch', {
+        component: 'dispatcher',
+        action: 'action',
+        $envelope: envelope
+    })
 }
 
 module.exports = Dispatcher

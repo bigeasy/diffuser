@@ -35,12 +35,10 @@
                             "operation":                    "5.0.x",
                             "procession":                   "4.0.x",
                             "prolific.logger":              "9.0.x",
-                            "reactor":                      "13.0.x",
                             "restrictor":                   "3.0.x",
                             "server-destroy":               "1.0.x",
                             "turnstile":                    "5.0.x",
-                            "vivifyer":                     "1.0.x",
-                            "vizsla":                       "13.0.x"
+                            "vivifyer":                     "1.0.x"
     },
     "devDependencies":
     {
