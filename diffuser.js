@@ -82,8 +82,8 @@ Diffuser.prototype._setRoutes = function (message) {
     this._connector.setRoutes(message)
     this._requester.setRoutes(message)
     this._registrar.setRoutes(message)
-    this._ready.unlatch(null, this._requester)
     this._registrar.synchronize()
+    this._ready.unlatch(null, this._requester)
 }
 
 module.exports = cadence(function (async, destructible, options) {

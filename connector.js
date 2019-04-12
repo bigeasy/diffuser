@@ -99,6 +99,8 @@ function Connector (destructible, island, index, monkey) {
     // Close all windows when it's time to go.
     destructible.destruct.wait(this, function () { this._diffLocations({}) })
 
+    this._self = { written: 0xffffffff, read: 0xffffffff }
+
     if (monkey) {
         setInterval(function () {
             if (this._router && this._router.isLeader && this._router.from.index == 0) {
@@ -183,6 +185,8 @@ Connector.prototype.push = function (envelope) {
     // Shortcircuit send to self, drop the message if the destination has been
     // removed from the routing table.
     if (to.promise == this._router.from.promise && to.index == this._router.from.index) {
+        envelope.series = this._self.written
+        this._self.written = increment(this._self.written)
         this.inbox.push(envelope)
     } else if (this._router.properties[to.promise] != null) {
         var connection = this._getConnection(to)

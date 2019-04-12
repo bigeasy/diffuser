@@ -2,7 +2,7 @@ require('proof')(1, prove)
 
 function prove (okay, callback) {
     var Destructible = require('destructible')
-    var destructible = new Destructible(15000, 't/olio.t')
+    var destructible = new Destructible(3000, 't/olio.t')
 
     destructible.completed.wait(callback)
 
