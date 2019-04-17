@@ -30,19 +30,22 @@ function prove (okay, callback) {
                 hashed: { hash: 1, stringified: '1', key: 1 },
                 from: '1/0',
                 cookie: 0,
-                body: 0
+                body: 0,
+                context: null
             })
             actor.act(connector, {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
-                body: 1
+                body: 1,
+                context: null
             })
             actor.act(connector, {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
-                body: 2
+                body: 2,
+                context: null
             })
             setTimeout(async(), 50)
         }, function () {
@@ -56,7 +59,8 @@ function prove (okay, callback) {
                 from: '1/0',
                 to: '1/0',
                 status: 'received',
-                values: [ 'a' ]
+                values: [ 'a' ],
+                context: null
             }, {
                 promise: '1/0',
                 module: 'diffuser',
@@ -67,7 +71,8 @@ function prove (okay, callback) {
                 from: '1/0',
                 to: '1/0',
                 status: 'received',
-                values: [ 'b' ]
+                values: [ 'b' ],
+                context: null
             }, {
                 promise: '1/0',
                 module: 'diffuser',
@@ -78,7 +83,8 @@ function prove (okay, callback) {
                 from: '1/0',
                 to: '1/0',
                 status: 'error',
-                values: [ 'c' ]
+                values: [ 'c' ],
+                context: null
             }], 'actor')
         }, function () {
             destructible.durable('actor', Actor, true, async())
@@ -89,7 +95,8 @@ function prove (okay, callback) {
                 hashed: {},
                 from: '1/0',
                 cookie: 1,
-                body: 2
+                body: 2,
+                context: null
             })
             setTimeout(async(), 50)
         }, function () {
@@ -103,7 +110,8 @@ function prove (okay, callback) {
                 from: '1/0',
                 to: '1/0',
                 status: 'received',
-                values: [ null ]
+                values: [ null ],
+                context: null
             }], 'noop')
         })
     })(destructible.durable('test'))

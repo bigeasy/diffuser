@@ -260,7 +260,8 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         series: 7,
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     })
     okay(connector.splice(0), [{
         promise: '2/0',
@@ -271,7 +272,8 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     }], 'route')
     dispatcher.receive({
         promise: '2/0',
@@ -282,7 +284,8 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         series: 8,
-        cookie: '1'
+        cookie: '1',
+        context: null
     })
     okay(connector.splice(0), [{
         promise: '2/0',
@@ -295,7 +298,8 @@ function prove (okay) {
         // TODO Why is status sometimes in body sometimes not?
         status: 'missing',
         values: null,
-        cookie: '1'
+        cookie: '1',
+        context: null
     }], 'missing')
     dispatcher.receive({
         promise: '2/0',
@@ -307,7 +311,8 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         series: 9,
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     })
     okay(connector.splice(0), [{
         promise: '2/0',
@@ -318,7 +323,8 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     }], 'route')
     dispatcher.receive({
         promise: '2/0',
@@ -330,7 +336,8 @@ function prove (okay) {
         from: { promise: '1/0', index: 0 },
         series: 10,
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     })
     okay(connector.splice(0), [{
         promise: '2/0',
@@ -342,7 +349,8 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         status: 'missing',
         values: null,
-        cookie: '1'
+        cookie: '1',
+        context: null
     }], 'receive missing')
     dispatcher.receive({
         promise: '2/0',
@@ -354,7 +362,8 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         series: 11,
         cookie: '1',
-        body: {}
+        body: {},
+        context: null
     })
     okay(actions.splice(0), [{
         promise: '2/0',
@@ -366,8 +375,9 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         series: 11,
         cookie: '1',
-        body: {}
-    }], 'receive missing')
+        body: {},
+        context: null
+    }], 'receive act')
     dispatcher.receive({
         promise: '2/0',
         module: 'diffuser',
