@@ -6,6 +6,8 @@ var Procession = require('procession')
 var assert = require('assert')
 var logger = require('prolific.logger').createLogger('diffuser')
 
+var coalesce = require('extant')
+
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 
 function Dispatcher (options) {
@@ -17,6 +19,7 @@ function Dispatcher (options) {
     this._receiver = options.receiver
     this._countdown = new Countdown
     this._cliffhanger = options.cliffhanger
+    this._requests = options.requests
     assert(this._cliffhanger)
     this._registrations = Array.apply(null, new Array(options.buckets)).map(Object)
     this._registrar = options.registrar
@@ -193,7 +196,8 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     to: envelope.from,
                     status: 'missing',
                     values: null,
-                    cookie: envelope.cookie
+                    cookie: envelope.cookie,
+                    context: envelope.context
                 })
             } else {
                 this._connector.push({
@@ -205,7 +209,8 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     from: envelope.from,
                     to: address,
                     cookie: envelope.cookie,
-                    body: envelope.body
+                    body: envelope.body,
+                    context: envelope.context
                 })
             }
             break
@@ -224,13 +229,53 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     to: envelope.from,
                     status: 'missing',
                     values: null,
-                    cookie: envelope.cookie
+                    cookie: envelope.cookie,
+                    context: envelope.context
                 })
             }
             break
         case 'source/respond':
             action = 'respond'
-            this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
+            if (envelope.version == 2) {
+                var cartridge = this._requests.hold(envelope.cookie, null)
+                if (cartridge.value == null) {
+                    logger.trace('request.timedout', {
+                        key: envelope.key,
+                        context: envelope.context
+                    })
+                    cartridge.release()
+                } else {
+                    Interrupt.assert(cartridge.value.responses[envelope.index] == null, 'response.duplicate', {
+                        $envelope: envelope
+                    })
+                    var now = Date.now()
+                    cartridge.value.responses[envelope.index] = {
+                        status: envelope.status,
+                        values: coalesce(envelope.values, null)
+                    }
+                    logger.trace('response.complete', {
+                        duration: now - cartridge.value.when,
+                        status: envelope.status,
+                        context: cartridge.value.context
+                    })
+                    if (++cartridge.value.received == cartridge.value.responses.length) {
+                        var successful = cartridge.value.responses.filter(function (response) {
+                            return response.status != 'received'
+                        }).length == 0
+                        logger.trace('request.complete', {
+                            duration: now - cartridge.value.when,
+                            successful: successful,
+                            context: cartridge.value.context
+                        })
+                        cartridge.value.callback.call(null, null, successful, cartridge.value.responses)
+                        cartridge.remove()
+                    } else {
+                        cartridge.release()
+                    }
+                }
+            } else {
+                this._cliffhanger.resolve(envelope.cookie, [ null, envelope ])
+            }
             break
         default:
             action = 'drop'

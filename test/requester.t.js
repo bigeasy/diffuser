@@ -1,15 +1,18 @@
-require('proof')(9, require('cadence')(prove))
+require('proof')(12, require('cadence')(prove))
 
 function prove (async, okay) {
     var Requester = require('../requester')
+    var Cache = require('magazine')
     var Cliffhanger = require('cliffhanger')
     var cliffhanger = new Cliffhanger
+    var requests = new Cache().createMagazine()
     var connector = []
     function Hash (key) {
         return { hash: key, stringified: String(key), key: key }
     }
     var requester = new Requester({
         cliffhanger: cliffhanger,
+        requests: requests,
         Hash: Hash,
         connector: connector,
         index: 1,
@@ -86,6 +89,7 @@ function prove (async, okay) {
     }, function (routed) {
         okay(routed, { status: 'received', values: [ 0 ] }, 'routed router')
         requester.register(1, async())
+        connector.shift()
         async(function () {
             setTimeout(async(), 101)
         }, function () {
@@ -93,5 +97,53 @@ function prove (async, okay) {
         })
     }, function (registered) {
         okay(!registered, 'timedout')
+        requester.route2('router', { key: 1, body: 'x' }, 'message', async())
+        okay(connector.shift(), {
+            promise: '2/0',
+            module: 'diffuser',
+            destination: 'router',
+            index: 0,
+            version: 2,
+            method: 'receive',
+            to: { promise: '2/0', index: 1 },
+            from: { promise: '1/0', index: 1 },
+            hashed: { hash: 1, stringified: '1', key: 1 },
+            cookie: '1',
+            body: 'x',
+            context: 'message'
+        }, 'route2 object with context and callback')
+        var cartridge = requests.hold('1', null)
+        cartridge.value.callback.call()
+        cartridge.remove()
+    }, function () {
+        requester.route2('receiver', [{ key: 1, body: 'x' }], async())
+        okay(connector.shift(), {
+            promise: '2/0',
+            module: 'diffuser',
+            destination: 'router',
+            index: 0,
+            version: 2,
+            method: 'route',
+            to: { promise: '2/0', index: 1 },
+            from: { promise: '1/0', index: 1 },
+            hashed: { hash: 1, stringified: '1', key: 1 },
+            cookie: '2',
+            body: 'x',
+            context: null
+        }, 'route2 array no context')
+        async(function () {
+            setTimeout(async(), 115)
+        }, function () {
+            requester.expire()
+            return []
+        })
+    }, function (successful, responses) {
+        okay({
+            successful: successful,
+            responses: responses
+        }, {
+            successful: false,
+            responses: [{ status: 'timeout', values: null }]
+        }, 'expired')
     })
 }

@@ -38,7 +38,8 @@ Actor.prototype._act = cadence(function (async, envelope) {
                 to: envelope.from,
                 status: 'received',
                 cookie: envelope.cookie,
-                values: values
+                values: values,
+                context: envelope.context
             })
         })
     }, function (error) {
@@ -53,7 +54,8 @@ Actor.prototype._act = cadence(function (async, envelope) {
             to: envelope.from,
             status: 'error',
             cookie: envelope.cookie,
-            values: [ error.message ]
+            values: [ error.message ],
+            context: envelope.context
         })
     }])
 })

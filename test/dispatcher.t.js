@@ -1,6 +1,8 @@
-require('proof')(12, prove)
+require('proof')(14, prove)
 
 function prove (okay) {
+    var Cache = require('magazine')
+    var requests = new Cache().createMagazine()
     var Dispatcher = require('../dispatcher')
     var Cliffhanger = require('cliffhanger')
     var cliffhanger = new Cliffhanger
@@ -19,6 +21,7 @@ function prove (okay) {
         },
         connector: connector,
         cliffhanger: cliffhanger,
+        requests: requests,
         registrar: {
             contains: function (hashed) { return hashed.hash == 1 }
         }
@@ -389,5 +392,78 @@ function prove (okay) {
             }, 'response')
         }),
         body: {}
+    })
+    requests.hold('1', {
+        when: Date.now(),
+        context: 'message',
+        responses: [ null, null ],
+        received: 0,
+        callback: function (error, successful, responses) {
+            okay({
+                successful: successful,
+                responses: responses
+            }, {
+                successful: true,
+                responses: [{
+                    status: 'received',
+                    values: [ 1 ]
+                }, {
+                    status: 'received',
+                    values: [ 2 ]
+                }]
+            }, 'reduced')
+        }
+    }).release()
+    dispatcher.receive({
+        promise: '2/0',
+        module: 'diffuser',
+        destination: 'source',
+        method: 'respond',
+        version: 2,
+        cookie: '0',
+        to: { promise: '1/0', index: 0 },
+        from: { promise: '1/0', index: 0 },
+        hashed: { hash: 1, stringified: '1' },
+        series: 13,
+        body: {}
+    })
+    dispatcher.receive({
+        promise: '2/0',
+        module: 'diffuser',
+        destination: 'source',
+        method: 'respond',
+        index: 0,
+        version: 2,
+        cookie: '1',
+        status: 'received',
+        to: { promise: '1/0', index: 0 },
+        from: { promise: '1/0', index: 0 },
+        hashed: { hash: 1, stringified: '1' },
+        series: 14,
+        values: [ 1 ]
+    })
+    var cartridge = requests.hold('1', null)
+    okay({
+        received: cartridge.value.received,
+        responses: cartridge.value.responses
+    }, {
+        received: 1,
+        responses:  [{ status: 'received', values: [ 1 ] }, null]
+    }, 'first response')
+    cartridge.release()
+    dispatcher.receive({
+        promise: '2/0',
+        module: 'diffuser',
+        destination: 'source',
+        method: 'respond',
+        index: 1,
+        version: 2,
+        cookie: '1',
+        status: 'received',
+        to: { promise: '1/0', index: 0 },
+        from: { promise: '1/0', index: 0 },
+        hashed: { hash: 1, stringified: '1' },
+        series: 15,
+        values: [ 2 ]
     })
 }
