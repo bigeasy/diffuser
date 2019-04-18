@@ -1,6 +1,21 @@
 Run Diffuser with a dummy application in Minikube. The application will route
 messages through Diffuser.
 
+Install Kubernetes Helm.
+
+After you run `helm init` you are going to have to wait a bit for the Tiller to
+start. It will be unreachable and you'll get an error, so wait a minute.
+
+```
+ $ brew install kubernetes-helm
+ $ minikube start
+ $ helm init
+ $ helm install --values minikube/helm/influxdb.values.yaml --name influxdb --namespace tick stable/influxdb
+ $ helm install --set influxURL=http://influxdb.tick:8086 --name kapacitor --namespace tick stable/kapacitor
+ $ helm install --name telegraf --namespace tick stable/telegraf
+ $ helm install --name chronograf --namespace tick stable/chronograf
+```
+
 
 ## Performance Monitoring with Telegraf, InfluxDB, Chronograf, Kapacitor
 
