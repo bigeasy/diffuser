@@ -36,4 +36,4 @@ data:
       # see https://github.com/influxdata/telegraf/issues/3110
       docker_label_exclude = ["annotation*"]
     [[inputs.kubernetes]]
-      url = "http://192.168.99.104:10255"
+      url = "http://$HOST_IP:10255"
