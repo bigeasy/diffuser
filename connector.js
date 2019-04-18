@@ -40,8 +40,6 @@ var restrictor = require('restrictor')
 // Exceptions you can catch by type.
 var Interrupt = require('interrupt').createInterrupter('diffuser')
 
-var stackify = require('./stackify')
-
 function increment (value) {
     if (value == 0xffffffff) {
         return 0
@@ -296,7 +294,7 @@ Connector.prototype._conduit = cadence(function (async, destructible, connection
             socket.destroy()
             clearInterval(inspector)
         })
-        socket.on('error', stackify(logger, 'socket.server', identifier))
+        socket.on('error', logger.stackTrace('socket.server', identifier))
 
         writer.outbox.push({ module: 'diffuser', method: 'connect' })
 
@@ -383,7 +381,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
                 'x-diffuser-to-index': connection.address.index
             })
         })
-        request.on('error', stackify(logger, 'socket.request', identifier))
+        request.on('error', logger.stackTrace('socket.request', identifier))
         abort = destructible.destruct.wait(request, 'abort')
         delta(async()).ee(request).on('upgrade')
         request.end()
@@ -422,7 +420,7 @@ Connector.prototype._connection = cadence(function (async, destructible, connect
             socket.destroy()
             clearInterval(inspector)
         })
-        socket.on('error', stackify(logger, 'socket.client', identifier))
+        socket.on('error', logger.stackTrace('socket.client', identifier))
 
         async(function () {
             reader.inbox.dequeue(async())
