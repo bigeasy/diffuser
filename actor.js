@@ -1,3 +1,5 @@
+var coalesce = require('extant')
+
 var Turnstile = require('turnstile')
 Turnstile.Queue = require('turnstile/queue')
 
@@ -34,6 +36,8 @@ Actor.prototype._act = cadence(function (async, envelope) {
                 destination: 'source',
                 method: 'respond',
                 hashed: envelope.hashed,
+                version: coalesce(envelope.version),
+                index: coalesce(envelope.index),
                 from: envelope.from,
                 to: envelope.from,
                 status: 'received',
@@ -50,6 +54,8 @@ Actor.prototype._act = cadence(function (async, envelope) {
             destination: 'source',
             method: 'respond',
             hashed: envelope.hashed,
+            version: coalesce(envelope.version),
+            index: coalesce(envelope.index),
             from: envelope.from,
             to: envelope.from,
             status: 'error',

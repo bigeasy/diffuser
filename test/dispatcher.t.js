@@ -40,6 +40,7 @@ function prove (okay) {
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 0xffffffff,
         body: null
     })
@@ -50,6 +51,7 @@ function prove (okay) {
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         series: 0xffffffff,
         body: null
     })
@@ -60,6 +62,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
         series: 0,
         body: null
@@ -78,6 +81,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
         series: 1,
         body: null
@@ -89,6 +93,7 @@ function prove (okay) {
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 0,
         body: { hash: 1, stringified: '1' }
     })
@@ -99,6 +104,7 @@ function prove (okay) {
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 1,
         body: { hash: 5, stringified: '5' }
     })
@@ -109,6 +115,7 @@ function prove (okay) {
         method: 'synchronize',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 2,
         body: null
     })
@@ -119,6 +126,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
         series: 0,
         body: null
@@ -129,6 +137,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         hashed: { hash: 2, stringified: '2' },
         series: 1,
         body: null
@@ -141,6 +150,7 @@ function prove (okay) {
         hashed: { hash: 5, stringified: '5' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 3,
         cookie: '1'
     })
@@ -151,6 +161,7 @@ function prove (okay) {
         method: 'route',
         to: { promise: '2/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 5, stringified: '5' },
         series: 3,
         cookie: '1'
@@ -163,6 +174,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 4,
         cookie: '1',
         body: null
@@ -187,6 +199,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '2/0', index: 0 },
+        via: { promise: '2/0', index: 0 },
         series: 2,
         cookie: '1',
         body: null
@@ -211,6 +224,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 5,
         cookie: '1',
         body: null
@@ -235,6 +249,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 6,
         cookie: '1',
         body: null
@@ -258,6 +273,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 7,
         cookie: '1',
         body: {},
@@ -268,6 +284,8 @@ function prove (okay) {
         module: 'diffuser',
         destination: 'receiver',
         method: 'receive',
+        index: null,
+        version: null,
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
@@ -283,6 +301,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 8,
         cookie: '1',
         context: null
@@ -295,6 +314,8 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 0, stringified: '0' },
+        index: null,
+        version: null,
         // TODO Why is status sometimes in body sometimes not?
         status: 'missing',
         values: null,
@@ -309,6 +330,7 @@ function prove (okay) {
         hashed: { hash: 1, stringified: '1' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 9,
         cookie: '1',
         body: {},
@@ -319,6 +341,8 @@ function prove (okay) {
         module: 'diffuser',
         destination: 'receiver',
         method: 'receive',
+        index: null,
+        version: null,
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
@@ -334,6 +358,7 @@ function prove (okay) {
         hashed: { hash: 0, stringified: '0' },
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         series: 10,
         cookie: '1',
         body: {},
@@ -347,6 +372,8 @@ function prove (okay) {
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
         hashed: { hash: 0, stringified: '0' },
+        index: null,
+        version: null,
         status: 'missing',
         values: null,
         cookie: '1',
@@ -359,6 +386,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 11,
         cookie: '1',
@@ -372,6 +400,7 @@ function prove (okay) {
         method: 'receive',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 11,
         cookie: '1',
@@ -385,6 +414,7 @@ function prove (okay) {
         method: 'respond',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 12,
         cookie: cliffhanger.invoke(function (error, result) {
@@ -395,6 +425,7 @@ function prove (okay) {
                 method: 'respond',
                 to: { promise: '1/0', index: 0 },
                 from: { promise: '1/0', index: 0 },
+                via: { promise: '1/0', index: 0 },
                 hashed: { hash: 1, stringified: '1' },
                 series: 12,
                 cookie: '1',
@@ -433,6 +464,7 @@ function prove (okay) {
         cookie: '0',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 13,
         body: {}
@@ -448,6 +480,7 @@ function prove (okay) {
         status: 'received',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 14,
         values: [ 1 ]
@@ -472,6 +505,7 @@ function prove (okay) {
         status: 'received',
         to: { promise: '1/0', index: 0 },
         from: { promise: '1/0', index: 0 },
+        via: { promise: '1/0', index: 0 },
         hashed: { hash: 1, stringified: '1' },
         series: 15,
         values: [ 2 ]

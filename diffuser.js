@@ -1,4 +1,5 @@
 var Cliffhanger = require('cliffhanger')
+var Cache = require('magazine')
 var Signal = require('signal')
 
 var Interrupt = require('interrupt').createInterrupter('diffuser')
@@ -15,6 +16,7 @@ var coalesce = require('extant')
 
 function Diffuser (destructible, olio, sibling, connector, receiver, options, callback) {
     var cliffhanger = new Cliffhanger
+    var requests = new Cache().createMagazine()
     this._registrar = new Registrar({
         index: options.olio.index,
         cliffhanger: cliffhanger,
@@ -24,6 +26,7 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     this._dispatcher = new Dispatcher({
         index: options.olio.index,
         cliffhanger: cliffhanger,
+        requests: requests,
         connector: connector,
         registrar: this._registrar,
         receiver: receiver
@@ -31,6 +34,7 @@ function Diffuser (destructible, olio, sibling, connector, receiver, options, ca
     this._requester = new Requester({
         index: options.olio.index,
         cliffhanger: cliffhanger,
+        requests: requests,
         timeout: coalesce(options.timeout, 5000),
         Hash: Hash,
         connector: connector,

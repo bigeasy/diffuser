@@ -103,6 +103,7 @@ Requester.prototype.route2 = function (destination, messages, context, callback)
         cookie: cookie,
         callback: callback,
         context: context,
+        received: 0,
         responses: Array.apply(null, Array(messages.length)).map(function () { return null })
     }).release()
     messages.forEach(function (message, index) {

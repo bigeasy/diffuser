@@ -40,21 +40,23 @@ Dispatcher.prototype.setRoutes = function (routes) {
 Dispatcher.prototype._setRegistration = function (hashed, from) {
     this._registrations[hashed.hash % this._registrations.length][hashed.stringified] = from
 }
+
 Dispatcher.prototype.receive = function (envelope) {
     if (envelope != null) {
-        var series = this._series[envelope.from.promise]
+        var series = this._series[envelope.via.promise]
         if (series == null) {
-            series = this._series[envelope.from.promise] = []
+            series = this._series[envelope.via.promise] = []
         }
-        var counters = series[envelope.from.index]
+        var counters = series[envelope.via.index]
         if (counters == null) {
-            counters = series[envelope.from.index] = {
+            counters = series[envelope.via.index] = {
                 received: 0xffffffff,
                 dispatched: 0xffffffff
             }
         }
         Interrupt.assert(envelope.series == counters.received, 'bad.receive.series', {
             envelope: envelope,
+            series: this._series,
             counters: counters
         })
         if (counters.received == 0xffffffff) {
@@ -92,7 +94,7 @@ Dispatcher.prototype._dispatch = function (envelope) {
     if (envelope == null) {
         return
     }
-    var counters = this._series[envelope.from.promise][envelope.from.index]
+    var counters = this._series[envelope.via.promise][envelope.via.index]
     var to
     var action = null
     assert(envelope.module == 'diffuser')
@@ -191,6 +193,8 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     module: 'diffuser',
                     destination: 'source',
                     method: 'respond',
+                    version: coalesce(envelope.version),
+                    index: coalesce(envelope.index),
                     hashed: envelope.hashed,
                     from: envelope.from,
                     to: envelope.from,
@@ -206,6 +210,8 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     destination: 'receiver',
                     method: 'receive',
                     hashed: envelope.hashed,
+                    version: coalesce(envelope.version),
+                    index: coalesce(envelope.index),
                     from: envelope.from,
                     to: address,
                     cookie: envelope.cookie,
@@ -227,6 +233,8 @@ Dispatcher.prototype._dispatch = function (envelope) {
                     hashed: envelope.hashed,
                     from: envelope.from,
                     to: envelope.from,
+                    version: coalesce(envelope.version),
+                    index: coalesce(envelope.index),
                     status: 'missing',
                     values: null,
                     cookie: envelope.cookie,

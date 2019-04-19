@@ -178,6 +178,7 @@ Connector.prototype._getConnection = function (address) {
 
 //
 Connector.prototype.push = function (envelope) {
+    envelope.via = this._router.from
     var to = envelope.to
     // Shortcircuit send to self, drop the message if the destination has been
     // removed from the routing table.

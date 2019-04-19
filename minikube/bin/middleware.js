@@ -20,16 +20,23 @@ function Middleware (diffuser, identifier) {
 Middleware.prototype.route = cadence(function (async, request) {
     var json = request.body
     async(function () {
-        this._diffuser.route('receiver', Keyify.stringify(json.from), {
+        this._diffuser.route2('receiver', {
+            key: Keyify.stringify(json.from),
+            body: {
+                method: 'route',
+                from: this._identifier,
+                cookie: json.cookie
+            }
+        }, {
             method: 'route',
             from: this._identifier,
-            cookie: json.cookie
+            to: json.from
         }, async())
-    }, function (response) {
-        if (response.status != 'received') {
-            console.log('routing failed', response)
+    }, function (successful, responses) {
+        if (!successful) {
+            console.log('routing failed', responses)
         }
-        return response
+        return successful
     })
 })
 
