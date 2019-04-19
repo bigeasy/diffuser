@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "chronografVersion": "1.7.7",
+    "sources": {
+      "1": {
+        "name": "Chronograf",
+        "link": "/chronograf/v1/sources/1"
+      }
+    }
+  },
+  "dashboard": {
+    "id": 6,
+    "cells": [
+      {
+        "i": "7392525d-e3bd-44cf-b82e-8252c055a50c",
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4,
+        "name": "Route",
+        "queries": [
+          {
+            "query": "SELECT mean(\"duration\") AS \"mean_duration\" FROM \"diffuser\".\"autogen\".\"route\" WHERE time > now() - 15m GROUP BY time(10s), \"status\" FILL(null)",
+            "queryConfig": {
+              "database": "diffuser",
+              "measurement": "route",
+              "retentionPolicy": "autogen",
+              "fields": [
+                {
+                  "value": "mean",
+                  "type": "func",
+                  "alias": "mean_duration",
+                  "args": [
+                    {
+                      "value": "duration",
+                      "type": "field",
+                      "alias": ""
+                    }
+                  ]
+                }
+              ],
+              "tags": {},
+              "groupBy": {
+                "time": "10s",
+                "tags": [
+                  "status"
+                ]
+              },
+              "areTagsAccepted": false,
+              "fill": "null",
+              "rawText": null,
+              "range": {
+                "upper": "",
+                "lower": "now() - 15m"
+              },
+              "shifts": null
+            },
+            "source": "/chronograf/v1/sources/1",
+            "type": "influxql"
+          }
+        ],
+        "axes": {
+          "x": {
+            "bounds": [
+              "",
+              ""
+            ],
+            "label": "",
+            "prefix": "",
+            "suffix": "",
+            "base": "10",
+            "scale": "linear"
+          },
+          "y": {
+            "bounds": [
+              "",
+              ""
+            ],
+            "label": "",
+            "prefix": "",
+            "suffix": "",
+            "base": "10",
+            "scale": "linear"
+          },
+          "y2": {
+            "bounds": [
+              "",
+              ""
+            ],
+            "label": "",
+            "prefix": "",
+            "suffix": "",
+            "base": "10",
+            "scale": "linear"
+          }
+        },
+        "type": "line",
+        "colors": [
+          {
+            "id": "ab79c687-2d08-41c4-af52-84ea6785e180",
+            "type": "scale",
+            "hex": "#31C0F6",
+            "name": "Nineteen Eighty Four",
+            "value": "0"
+          },
+          {
+            "id": "bcca1563-3fa1-4b8a-a2c2-0006ce54d881",
+            "type": "scale",
+            "hex": "#A500A5",
+            "name": "Nineteen Eighty Four",
+            "value": "0"
+          },
+          {
+            "id": "becc753a-e833-4471-a0af-b83db1fbac58",
+            "type": "scale",
+            "hex": "#FF7E27",
+            "name": "Nineteen Eighty Four",
+            "value": "0"
+          }
+        ],
+        "legend": {},
+        "tableOptions": {
+          "verticalTimeAxis": true,
+          "sortBy": {
+            "internalName": "time",
+            "displayName": "",
+            "visible": true
+          },
+          "wrapping": "truncate",
+          "fixFirstColumn": true
+        },
+        "fieldOptions": [
+          {
+            "internalName": "time",
+            "displayName": "",
+            "visible": true
+          }
+        ],
+        "timeFormat": "MM/DD/YYYY HH:mm:ss",
+        "decimalPlaces": {
+          "isEnforced": true,
+          "digits": 2
+        },
+        "note": "",
+        "noteVisibility": "default",
+        "links": {
+          "self": "/chronograf/v1/dashboards/6/cells/7392525d-e3bd-44cf-b82e-8252c055a50c"
+        }
+      }
+    ],
+    "templates": [],
+    "name": "Diffuser",
+    "organization": "default",
+    "links": {
+      "self": "/chronograf/v1/dashboards/6",
+      "cells": "/chronograf/v1/dashboards/6/cells",
+      "templates": "/chronograf/v1/dashboards/6/templates"
+    }
+  }
+}
