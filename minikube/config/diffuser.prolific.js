@@ -28,15 +28,41 @@ exports.process = function () {
                 if (entry.qualifier == 'conduit.window' || entry.qualified == 'diffuser#monkey') {
                     funnel(entry)
                 } else if (
-                    entry.qualified == 'diffuser#route' &&
-                    entry.level == 'trace'
+                    entry.qualifier == 'diffuser' && entry.metric
                 ) {
-                    http.send(influxdb({
-                        measurement: 'route',
-                        tags: { status: entry.status },
-                        fields: { duration: entry.duration },
-                        timestamp: entry.when
-                    }))
+                    switch (entry.label) {
+                    case 'response.complete':
+                        http.send(influxdb({
+                            measurement: 'response',
+                            tags: {
+                                status: entry.status,
+                                from: entry.from,
+                                to: entry.to
+                            },
+                            fields: { duration: entry.duration },
+                            timestamp: entry.when
+                        }))
+                        break
+                    case 'request.complete':
+                        http.send(influxdb({
+                            measurement: 'request',
+                            tags: {
+                                successful: entry.successful,
+                                from: entry.from
+                            },
+                            fields: { duration: entry.duration },
+                            timestamp: entry.when
+                        }))
+                        break
+                    case 'route':
+                        http.send(influxdb({
+                            measurement: 'route',
+                            tags: { status: entry.status },
+                            fields: { duration: entry.duration },
+                            timestamp: entry.when
+                        }))
+                        break
+                    }
                 } else if (
                     entry.qualified != 'olio#memory' &&
                     entry.qualified != 'prolific#memory' &&

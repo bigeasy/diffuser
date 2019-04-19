@@ -262,8 +262,12 @@ Dispatcher.prototype._dispatch = function (envelope) {
                         values: coalesce(envelope.values, null)
                     }
                     logger.trace('response.complete', {
+                        metric: true,
+                        component: 'dispatcher',
                         duration: now - cartridge.value.when,
                         status: envelope.status,
+                        from: envelope.from.promise + '[' + envelope.from.index + ']',
+                        to: envelope.from.promise + '[' + envelope.to.index + ']',
                         context: cartridge.value.context
                     })
                     if (++cartridge.value.received == cartridge.value.responses.length) {
@@ -271,8 +275,11 @@ Dispatcher.prototype._dispatch = function (envelope) {
                             return response.status != 'received'
                         }).length == 0
                         logger.trace('request.complete', {
-                            duration: now - cartridge.value.when,
+                            metric: true,
+                            component: 'dispatcher',
                             successful: successful,
+                            duration: now - cartridge.value.when,
+                            from: envelope.from.promise + '[' + envelope.from.index + ']',
                             context: cartridge.value.context
                         })
                         cartridge.value.callback.call(null, null, successful, cartridge.value.responses)
