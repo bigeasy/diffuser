@@ -31,7 +31,6 @@ var Router = require('./lookup')
 var Addresser = require('./addresser')
 
 var Turnstile = require('turnstile')
-Turnstile.Queue = require('turnstile/queue')
 
 var Demur = require('demur')
 
@@ -88,8 +87,8 @@ function Connector (destructible, island, index, monkey) {
     // Common inbox from all windows.
     this.inbox = new Procession
 
-    // Work queue for establishing incoming connections. (We only spend a moment
-    // in this queue.)
+    // Work queue for establishing incoming socket connections governed by
+    // `restrictor`. (We only spend a moment in this queue.)
     this.turnstile = new Turnstile
     this.turnstile.listen(destructible.durable('turnstile'))
     destructible.destruct.wait(this.turnstile, 'destroy')
