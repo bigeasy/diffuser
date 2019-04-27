@@ -33,13 +33,16 @@ console.log(JSON.stringify({
                     image: 'docker.elastic.co/kibana/kibana:7.0.0',
                     imagePullPolicy: 'Always',
                     resources: {
-                        limits: { cpu: '500m' },
-                        requests: { cpu: '100m' }
+                        limits: { cpu: '500m', memory: '512Mi' },
+                        requests: { cpu: '100m', memory: '512Mi' }
                     },
                     ports: [{
                         name: 'ui', containerPort: 5601
                     }],
                     env: [{
+                        name: "NODE_OPTIONS",
+                        value: "--max-old-space-size=256"
+                    }, {
                         name: 'ELASTICSEARCH_URL',
                         value: 'http://elasticsearch.kibana:9200'
                     }, {

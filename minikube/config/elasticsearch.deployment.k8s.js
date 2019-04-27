@@ -34,12 +34,12 @@ console.log(JSON.stringify({
                     imagePullPolicy: 'Always',
                     resources: {
                         limits: {
-                            cpu: '1000m',
-                            memory: '2Gi'
+                            cpu: '500m',
+                            memory: '500Mi'
                         },
                         requests: {
-                            cpu: '1000m',
-                            memory: '2Gi'
+                            cpu: '500m',
+                            memory: '500Mi'
                         }
                     },
                     ports: [{
@@ -53,15 +53,15 @@ console.log(JSON.stringify({
                     env: [{
                         name: 'discovery.type',
                         value: 'single-node'
+                    }, {
+                        name: 'ES_JAVA_OPTS',
+                        value: '-Xms256m -Xmx256m'
                     /*
                         name: 'NAMESPACE',
                         valueFrom: { fieldRef: { fieldPath: 'metadata.namespace' } }
                     }, {
                         name: 'MINIMUM_MASTER_NODES',
                         value: '1'
-                    }, {
-                        name: 'ES_JAVA_OPTS',
-                        value: '-Xms1024m -Xmx1024m'
                         */
                     }]
                 }],/*,
