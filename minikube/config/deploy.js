@@ -28,9 +28,6 @@ var files = fs.readdirSync(__dirname).filter(function (file) {
     return order.indexOf(left.json.kind) - order.indexOf(right.json.kind)
 }).forEach(function (file) {
     var args = [ 'apply', '--record' ]
-    if (file.json.kind != 'Namespace') {
-        args.push('--namespace', 'diffuser')
-    }
     args.push('--filename', path.join(__dirname, file.name))
     children.spawnSync('kubectl', args, { stdio: [ 'inherit', 'inherit', 'inherit' ] })
 })
