@@ -37,7 +37,7 @@ const files = fs.readdirSync(__dirname).filter(function (file) {
     return /\.(?:json|ya?ml)$/.test(file)
 }).map(function (file) {
     const source = fs.readFileSync(path.join(__dirname, file), 'utf8')
-    if (/\.yml$/.test(file)) {
+    if (/\.ya?ml$/.test(file)) {
         json = yaml.safeLoad(source)
     } else {
         json = JSON.parse(source)
