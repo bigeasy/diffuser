@@ -26,7 +26,7 @@ const yaml = require('js-yaml');
 const children = require('child_process')
 const assert = require('assert')
 
-const command = process.argv.shift()
+const command = process.argv.splice(2,1).shift()
 assert(command, 'command required')
 const order = process.argv.length > 2 ? process.argv.slice(2) : [
     'Namespace',
