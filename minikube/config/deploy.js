@@ -25,7 +25,7 @@ const path = require('path')
 const yaml = require('js-yaml');
 const children = require('child_process')
 
-const order = [
+const order = process.argv.length > 2 ? process.argv.slice(2) : [
     'Namespace',
     'ConfigMap',
     'DaemonSet',
@@ -33,23 +33,24 @@ const order = [
     'Service'
 ]
 
-const files = fs.readdirSync(__dirname).filter(function (file) {
-    return /\.(?:json|ya?ml)$/.test(file)
-}).map(function (file) {
-    const source = fs.readFileSync(path.join(__dirname, file), 'utf8')
-    if (/\.ya?ml$/.test(file)) {
-        json = yaml.safeLoad(source)
-    } else {
-        json = JSON.parse(source)
-    }
-    return {
-        name: file,
-        json: json
-    }
-}).sort(function (left, right) {
-    return order.indexOf(left.json.kind) - order.indexOf(right.json.kind)
-}).forEach(function (file) {
-    const args = [ 'apply', '--record' ]
-    args.push('--filename', path.join(__dirname, file.name))
-    children.spawnSync('kubectl', args, { stdio: [ 'inherit', 'inherit', 'inherit' ] })
-})
+fs.readdirSync(__dirname)
+    .filter(file => /\.(?:json|ya?ml)$/.test(file))
+    .map(file => {
+        const source = fs.readFileSync(path.join(__dirname, file), 'utf8')
+        if (/\.ya?ml$/.test(file)) {
+            json = yaml.safeLoad(source)
+        } else {
+            json = JSON.parse(source)
+        }
+        return {
+            name: file,
+            json: json
+        }
+    })
+    .filter(file => file.json.kind != null && ~order.indexOf(file.json.kind)
+    .sort((left, right) => order.indexOf(left.json.kind) - order.indexOf(right.json.kind))
+    .forEach(file => {
+        const args = [ 'apply', '--record' ]
+        args.push('--filename', path.join(__dirname, file.name))
+        children.spawnSync('kubectl', args, { stdio: [ 'inherit', 'inherit', 'inherit' ] })
+    })
