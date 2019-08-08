@@ -26,7 +26,7 @@ const yaml = require('js-yaml');
 const children = require('child_process')
 const assert = require('assert')
 
-const command = process.argv.splice(2,1).shift()
+const command = process.argv.splice(2, 1).shift()
 assert(command, 'command required')
 const order = process.argv.length > 2 ? process.argv.slice(2) : [
     'Namespace',
@@ -36,13 +36,11 @@ const order = process.argv.length > 2 ? process.argv.slice(2) : [
     'Service'
 ]
 
-order.reverse()
-
 function sort (left, right) {
     order.indexOf(left.json.kind) - order.indexOf(right.json.kind)
 }
 
-fs.readdirSync(__dirname)
+const files = fs.readdirSync(__dirname)
     .filter(file => /\.(?:json|ya?ml)$/.test(file))
     .map(file => {
         const source = fs.readFileSync(path.join(__dirname, file), 'utf8')
@@ -51,7 +49,7 @@ fs.readdirSync(__dirname)
             yaml.safeLoadAll(source, yaml => yamls.push({ json: yaml }))
             return {
                 name: file,
-                json: yamls.filter(file => file.json && file.json.kind).sort(sort).shift().json
+                json: yamls.filter(file => file.json && ~order.indexOf(file.json.kind)).sort(sort).shift().json
             }
         }
         return {
@@ -61,8 +59,15 @@ fs.readdirSync(__dirname)
     })
     .filter(file => file.json.kind != null && ~order.indexOf(file.json.kind))
     .sort(sort)
-    .forEach(file => {
-        const args = [ command, '--record' ]
-        args.push('--filename', path.join(__dirname, file.name))
-        children.spawnSync('kubectl', args, { stdio: [ 'inherit', 'inherit', 'inherit' ] })
-    })
+
+if (command == 'delete') {
+    files.reverse()
+}
+files.forEach(file => {
+    const args = [ command ]
+    if (args[0] == 'apply') {
+        args.push('--record')
+    }
+    args.push('--filename', path.join(__dirname, file.name))
+    children.spawnSync('kubectl', args, { stdio: [ 'inherit', 'inherit', 'inherit' ] })
+})
