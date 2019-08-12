@@ -49,7 +49,7 @@ const files = fs.readdirSync(__dirname)
             yaml.safeLoadAll(source, yaml => yamls.push({ json: yaml }))
             return {
                 name: file,
-                json: yamls.filter(file => file.json && ~order.indexOf(file.json.kind)).sort(sort).shift().json
+                json: (yamls.filter(file => file.json && ~order.indexOf(file.json.kind)).sort(sort).shift() || { json: {} }).json
             }
         }
         return {
