@@ -4,7 +4,7 @@ function prove (okay) {
     var Table = require('../table.redux')
     var table = new Table(3, 2)
 
-    var shifter = table.events.shifter()
+    var shifter = table.events.shifter().sync
 
     table.bootstrap()
 
