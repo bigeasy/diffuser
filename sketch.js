@@ -1,0 +1,242 @@
+const Turnstile = require('turnstile')
+Turnstile.Queue = require('turnstile/queue')
+
+const Reactor = require('reactor')
+
+class Server {
+    constructor (destructible, { ua, bind }) {
+        this._connections = new Map
+        this._lookup = new Map
+        this._turnstile = new Turnstile(destructible.durable('turnstile'))
+        this._queue = new Turnstile.Queue(this._turnstile, this._enqueue.bind(this))
+        this.reactor = new Reactor([{
+            path: '/',
+            method: 'get',
+            f: this.index.bind(this)
+        }, {
+            path: '/receive',
+            method: 'post',
+            f: this.receive.bind(this)
+        }])
+    }
+
+    async index () {
+        return 'Diffuser API\n'
+    }
+
+    async initialize () {
+    }
+
+    async bootstrap () {
+    }
+
+    async arrive ({ government, arrival: { promise } }) {
+        return
+        this._table.arrive(promise)
+        const lookups = {}
+        for (const [ key, value ] of this._lookup) {
+        }
+        this._compassion.enqueue({
+            lookups: this._loo
+        })
+    }
+
+    async acclimated () {
+    }
+
+    async map (entry) {
+        const { request: { module, method } } = body
+        switch (`${model}/${method}`) {
+        case 'diffuser/arrive': {
+                const { self: { arrived }, request: { id, hashed, connectedTo } } = body
+
+                return true
+            }
+            break
+        case 'diffuser/connect': {
+                const { self: { arrived }, request: { id, hashed, connectedTo } } = body
+                if (this._table.has(arrived, hashed)) {
+                    this._lookup.set(id, { hashed, connectedTo })
+                }
+                return true
+            }
+            break
+        case 'diffuser/depart': {
+                assert(this._departed != null)
+                const { self: { arrived }, request: { departure, diffuserId, connetions } } = body
+                if (this._deparated == departure) {
+                    for (const id in connections) {
+                        const hashed = hash(id)
+                        if (this._table.has(arrived, hashed)) {
+                            this._lookup[0].set(id, connections[id])
+                        }
+                    }
+                }
+            }
+            break
+        }
+        return null
+    }
+
+    async reduce (entry) {
+        const { request: { module, method } } = entry
+        switch (`${model}/${method}`) {
+        case 'diffuser/connect': {
+                const { cookie } = body
+                const future = this._futures.get(cookie)
+                if (future != null) {
+                    future.resolve(true)
+                    this._futures.delete(cookie)
+                }
+            }
+            break
+        case 'diffuser/depart': {
+                const { government, request: { departure } } = body
+                if (this._departure == departure) {
+                    this._departures.add(diffuserId)
+                    if (
+                        this._departures.size == government.majority.length +
+                                                 government.minority.length +
+                                                 government.constituents.length
+                    ) {
+                        this._departure = null
+                        this._departures.clear()
+                    }
+                }
+            }
+            break
+        }
+    }
+
+    async depart ({ departure: { promise } }) {
+        this._cubbyholes.remove(promise)
+        this._table.depart(promise)
+        this._departure = promise
+        this._departures.clear()
+        const connetions = []
+        for (const [ key, value ] of this._connections) {
+            connections[key] = value
+        }
+        this._compassion.enqueue({
+            module: 'diffuser',
+            method: 'depart',
+            diffuserId: self.arrival,
+            connections: connections
+        })
+    }
+
+    // We want to alleviate a race condition where we have a client
+    // disconnecting and reconnecting to the same endpoint quickly and the
+    // connect and disconnect messages are being handled by parallel HTTP
+    // request handlers and the connect and disconnect are racing to get to the
+    // lookup participant.
+    async _enqueue ({ value: { future, id, method }, canceled }) {
+        if (canceled) {
+            future.resolve(false)
+        }
+        const hashed = hash(id)
+        switch (method) {
+        case 'connect': {
+                const cookie = this._compassion.enqueue({
+                    module: 'diffuser',
+                    method: 'connect',
+                    id: id,
+                    hashed: hashed,
+                    connectedTo: this._id
+                })
+                await this._futures.set(cookie, new Future).get(cookie).promise
+                this._connections.add(id)
+                future.resolve(true)
+            }
+            break
+        case 'disconnect': {
+                const cookie = this._compassion.enqueue({
+                    module: 'diffuser',
+                    method: 'disconnect',
+                    id: id,
+                    hashed: hashed,
+                    connectedTo: this._id
+                })
+                await this._futures.set(cookie, new Future).get(cookie).promise
+                this._connections.delete(id)
+                future.resolve(true)
+            }
+            break
+        }
+    }
+
+    async receive ({ body: { id, body } }) {
+        if (! this._connections.has(id)) {
+            const future = new Future
+            this._queue.push({ future, id, body, method: 'connect' })
+            if (! await future.promise) {
+                return 503
+            }
+        }
+        return await this._ua.server({ id, hashed, body })
+    }
+
+    async send ({ body: { id, body } }) {
+        const hashed = hash(id)
+        const storedAt = this._table.get(hashed)
+        return await this._ua.lookup(storedAt, { id, body })
+    }
+
+    // Okay, now I'm remembering that things need to queue up somewhere and the
+    // best place for them to queue up in the ingress, not egress and certainly
+    // not right in the middle where we are fanning out, so this is simple.
+
+    // Also the 404 shouldn't do anything. We should run the removal through
+    // paxos. If we are afraid of blocking because we have one foot in a dead
+    // participant, why worry? The dead participant ought to be causing all
+    // sorts of trouble for the actual swath of participants, let's loop through
+    // the lot until we get a 200 and continue to force the 404 so the candidate
+    // can clean up.
+    async lookup ({ body: { id, body } }) {
+        const connectedTo = this._lookup.get(id)
+        if (connectedTo == null) {
+            return 404
+        }
+        const responses = []
+        for (const [ key, value ] of this._lookup.get(id)) {
+            responses.push(await this._ua.forward(connectedTo, { id, body }))
+        }
+        // Definitive yes.
+        if (~responses.indexOf(200)) {
+            return 200
+        }
+        // Suspicious no.
+        if (~responses.indexOf(503)) {
+            return 503
+        }
+        // Definitive no.
+        return 404
+    }
+
+    async publish () {
+        if (! this._connections.has(id)) {
+            return 404
+        }
+        const response = await this._ua.tcp({ id, body })
+        switch (response) {
+        case 200: {
+                return 200
+            }
+        case 503: {
+                // Maybe just crash, but really wouldn't Kubernetes restart?
+                return 503
+            }
+        case 404: {
+                const future = new Future
+                this._queue.push({ future, id, body, method: 'connect' })
+                if (! await future.promise) {
+                    return 503
+                }
+                return 404
+            }
+        }
+        return 503
+    }
+}
+
+module.exports = Server

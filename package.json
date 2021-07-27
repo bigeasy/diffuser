@@ -20,42 +20,19 @@
     },
     "dependencies":
     {
-                            "cadence":                      "3.0.x",
-                            "conduit":                      "4.0.x",
-                            "cubbyhole":                    "1.6.x",
-                            "delta":                        "3.0.x",
-                            "demur":                        "1.0.x",
-                            "departure":                    "1.0.x",
-                            "destructible":                 "2.0.x",
-                            "downgrader":                   "1.0.x",
-                            "extant":                       "1.0.x",
-                            "hash.fnv":                     "1.0.x",
-                            "keyify":                       "1.0.x",
-                            "olio":                         "4.0.x",
-                            "operation":                    "5.0.x",
-                            "procession":                   "4.0.x",
-                            "prolific.logger":              "10.0.x",
-                            "restrictor":                   "3.0.x",
-                            "server-destroy":               "1.0.x",
-                            "turnstile":                    "5.0.x",
-                            "vivifyer":                     "1.0.x"
+                            "avenue":                       "0.6.15",
+                            "compassion":                   "2.0.0-alpha.9",
+                            "destructible":                 "7.0.0-alpha.67",
+                            "reactor":                      "17.0.0-alpha.11",
+                            "turnstile":                    "6.0.0-alpha.78"
     },
     "devDependencies":
     {
-                            "connect":                      "3.6.6",
-                            "prolific":                     "24.0.x",
-                            "prolific.syslog":              "9.0.x",
-                            "compassion.colleague":         "4.0.x",
-                            "compassion.counterfeiter":     "1.0.x",
-                            "mingle":                       "4.0.x",
-                            "mingle.static":                "1.0.x",
-                            "proof":                        "7.0.x",
-                            "reactor":                      "13.0.x",
-                            "vizsla":                       "13.0.x"
+                            "proof":                        "^9.0.3"
     },
     "main":                 "diffuser",
     "scripts":
     {
-                            "test": "proof test test/*.t.js"
+                            "test": "proof test/*.t.js"
     }
 }
