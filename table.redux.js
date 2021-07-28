@@ -7,23 +7,27 @@ const Monotonic = require('paxos/monotonic')
 
 const Vivifyer = require('vivifyer')
 
+// TODO We can have an arrivals queue. Not difficult. Arrival does not return a
+// new version. A separate function determines if there is a next version.
+
 class Table {
     constructor (multipler) {
         this.events = new Queue
         this.table = null
-        this._active = false
+        this._initialized = false
+        this.arrivals = []
         this.multipler = multipler
-        this.arriving = []
+        this.departures = 0
         this.versions = new RBTree((left, right) => Monotonic.compare(left.version, right.version))
         this.versions.insert({ version: '0/0', pending: true })
     }
 
     get active () {
-        return this._active
+        return this.departures == 0 && this._initialized
     }
 
     get version () {
-        return this._active ? this.versions.min().version : '0/0'
+        return this._initialized ? this.versions.min().version : '0/0'
     }
 
     get tables () {
@@ -157,17 +161,13 @@ class Table {
 
     arrive (self, promise) {
         this.promise = self
-        this.arriving.push(promise)
-        if (this.versions.size == 1) {
-            return this._rebalance(self, promise)
-        }
-        return null
+        return this._rebalance(self, promise)
     }
 
     _rebalance (self, promise) {
         const previous = this.versions.min().version
         if (promise == '1/0') {
-            const addresses = [ this.arriving.shift() ]
+            const addresses = [ promise ]
             assert(addresses[0] == self)
             this.versions.insert({
                 version: promise,
@@ -181,7 +181,7 @@ class Table {
             return promise
         }
         const max = this.versions.max()
-        const addresses = max.addresses.concat(this.arriving.shift())
+        const addresses = max.addresses.concat(promise)
         // Ensure we have plenty of buckets. See discussion of doubling above.
         const buckets = max.buckets.slice()
         const minimum = addresses.length * this.multipler
@@ -218,75 +218,41 @@ class Table {
                 break
             }
             this.versions.remove(min)
+            if (min.type == 'departure') {
+                this.departures--
+            }
         }
-        this._active = true
+        this._initialized = true
     }
 
-    depart (self, promise) {
-        var departed = this.table.departed.concat(promise)
-        ADDRESSES: for (var i = 0; i < this.table.addresses.length; i++) {
-            for (var j = 0; j < this.table.redundancy; j++) {
-                if (!~departed.indexOf(this.table.addresses[j])) {
-                    continue ADDRESSES
-                }
-                break ADDRESSES
-            }
-        }
-        if (i < this.table.addresses.length) {
-            this.events.push({
-                module: 'diffuser',
-                method: 'collapsed'
-            })
-        } else if (~this.table.addresses.indexOf(promise)) {
-            if (this.arriving.length == 0) {
-                this._rebalance(self)
-            } else {
-                var version = this.version = Monotonic.increment(this.version, 0)
-                var addresses = this.addresses.slice()
-                addresses[addresses.indexOf(promise)] = this.arriving.pop()
-                this.table = {
-                    version: this.table.version,
-                    buckets: this.table.buckets,
-                    addresses: this.table.addresses,
-                    redundancy: this.table.redundancy,
-                    departed: this.table.departed,
-                    pending: {
-                        version: version,
-                        redundancy: this.redundancy,
-                        buckets: this.buckets.slice(),
-                        addresses: addresses,
-                        departed: []
-                    }
-                }
-                this.events.push({
-                    module: 'diffuser',
-                    method: 'depart',
-                    table: {
-                        version: this.table.version,
-                        buckets: this.table.buckets,
-                        addresses: this.table.addresses,
-                        departed: departed,
-                        redundancy: this.table.redundancy,
-                        pending: null
-                    }
-                })
-            }
-        } else if (~this.table.pending.addresses.indexOf(promise)) {
-            // The departed participant was in the process of balancing into a new
-            // table, so we just cancel that table.
-            this.events.push({
-                module: 'diffuser',
-                method: 'depart',
-                table: this.table = {
-                    version: this.table.version,
-                    buckets: this.table.buckets,
-                    addresses: this.table.addresses,
-                    departed: this.table.departed,
-                    redundancy: this.table.redundancy,
-                    pending: null
-                }
-            })
-        }
+    // TODO How would we leave nicely? We would take a `SIGTERM` and use it to
+    // tell our connector to hangup everything and shutdown. We would then run a
+    // leave round where we would create a new table that excludes us from
+    // lookup but run it through an arrival migration. Then when we depart we
+    // wouldn't do the harsh depart if none of tables contained our address.
+
+    // TODO If we are processing a new version the last version in the list of
+    // verisons is the departing version, we could no-op somehow. When it comes
+    // time to complete we could not simply not remove the previous version if
+    // there is no next version.
+
+    depart (version, departure) {
+        // Otherwise we are going to stop processing requests.
+        this.departures++
+        const max = this.versions.max()
+        const addresses = max.addresses.filter(address => address != departure)
+        const buckets = max.buckets.map(address => address == departure ? addresses[0] : address)
+        this._balance(buckets, addresses)
+        this.versions.insert({
+            version: version,
+            previous: max.version,
+            type: 'departure',
+            where: new Map(),
+            addresses: addresses,
+            buckets: buckets,
+            departed: []
+        })
+        return version
     }
 }
 

@@ -1,4 +1,4 @@
-require('proof')(11, prove)
+require('proof')(12, prove)
 
 function prove (okay) {
     const hash = require('../hash')
@@ -63,8 +63,42 @@ function prove (okay) {
 
         inspections[0][0].where = {}
         okay(inspections[1], inspections[0], 'join matches')
+
+
+        tables[0].set(hash('x'), 'x', '1/0')
+        tables[0].set(hash('y'), 'y', '1/0')
+        tables[0].set(hash('z'), 'z', '1/0')
+
+        okay(tables[0].tables, [
+          {
+            version: '1/0',
+            previous: '0/0',
+            type: 'arrival',
+            where: { x: [ '1/0' ], y: [ '1/0' ], z: [ '1/0' ] },
+            addresses: [ '1/0' ],
+            buckets: [ '1/0' ],
+            departed: []
+          },
+          {
+            version: '2/0',
+            previous: '1/0',
+            type: 'arrival',
+            where: { x: [ '1/0' ], y: [ '1/0' ] },
+            addresses: [ '1/0', '2/0' ],
+            buckets: [ '2/0', '2/0', '1/0', '1/0' ],
+            departed: []
+          }
+        ], 'spread over multiple versions')
+
         tables[0].complete('2/0')
         tables[1].complete('2/0')
+    }
+
+    {
+        tables[0].arrive('1/0', '3/0')
+        tables[0].complete('3/0')
+
+        tables[0].depart('4/0', '3/0')
     }
 
     return

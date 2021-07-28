@@ -5,5 +5,5 @@ module.exports = function (key) {
     var stringified = Keyify.stringify(key)
     var buffer = Buffer.from(stringified)
     var hash = fnv(0, buffer, 0, buffer.length)
-    return { hash: hash, stringified: stringified, key: key }
+    return hash // { hash: hash, stringified: stringified, key: key }
 }
