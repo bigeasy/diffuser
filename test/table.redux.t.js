@@ -1,14 +1,63 @@
-require('proof')(7, prove)
+require('proof')(10, prove)
 
 function prove (okay) {
+    const hash = require('../hash')
+
     var Table = require('../table.redux')
-    var table = new Table(3, 2)
+    const tables = [ new Table(2) ]
 
-    var shifter = table.events.shifter().sync
+    var shifter = tables[0].events.shifter().sync
 
-    table.bootstrap()
+    // Bootstrap will simply be an arrival occuring before a snapshot is set. We
+    // can assert that the arrival is `"1/0"`.
+    {
+        okay(! tables[0].active, 'active created')
+        okay(tables[0].version, 0n, 'version created')
 
-    table.arrive('1/0', '1/0')
+        const version = tables[0].arrive('1/0', '1/0')
+
+        okay(version, 1n, 'first version')
+
+        okay(! tables[0].active, 'active not completed')
+        okay(tables[0].version, 0n, 'version not completed')
+
+        tables[0].complete(1n)
+
+        okay(tables[0].lookup(hash('x')), '1/0', 'bootstrap lookup')
+
+        okay(tables[0].version, 1n, 'version')
+
+        okay(tables[0].where(tables[0].version, 'x'), [], 'find missing')
+
+        tables[0].set(hash('x'), 'x', '1/0')
+
+        okay(tables[0].where(tables[0].version, 'x'), [ '1/0' ], 'find missing')
+    }
+
+    {
+        tables[0].arrive('1/0', '2/0')
+        okay(tables[0].tables, [{
+            version: '1',
+            type: 'arrival',
+            where: { x: [ '1/0' ] },
+            addresses: [ '1/0' ],
+            buckets: [ '1/0' ],
+            departed: []
+        }, {
+            version: '2',
+            type: 'arrival',
+            where: {},
+            addresses: [ '1/0', '2/0' ],
+            buckets: [ '2/0', '2/0', '1/0', '1/0' ],
+            departed: []
+        }], 'pending table')
+        tables.push(new Table(2))
+        tables[0].snapshot(1n)
+    }
+
+    return
+
+    table.has('1/0', 100)
 
     okay(shifter.shift(), {
         module: 'diffuser',

@@ -5,27 +5,81 @@ const assert = require('assert')
 const RBTree = require('bintrees').RBTree
 const Monotonic = require('paxos/monotonic')
 
+const whittle = require('whittle')
+const ascension = require('ascension')
+
+const Vivifyer = require('vivifyer')
+
 class Table {
-    constructor (redundancy, multipler) {
+    constructor (multipler) {
         this.events = new Queue
         this.table = null
-        this.redundancy = redundancy
         this.multipler = multipler
-        this.version = '0'
+        this._version = 1n
         this.arriving = []
+        this.versions = new RBTree((left, right) => {
+            return (left.version > right.version) - (left.version < right.version)
+        })
+        this.versions.insert({ version: 0n, pending: true })
     }
 
-    bootstrap () {
-        this.table = {
-            version: '0',
-            redundancy: 0,
-            addresses: [],
-            buckets: []
-        }
+    get active () {
+        return this.versions.min().version != 0n
+    }
+
+    get version () {
+        return this.versions.min().version
+    }
+
+    get tables () {
+        const tables = []
+        this.versions.each(version => {
+            const where = {}
+            for (const [ key, value ] of version.where) {
+                where[key] = [ ...value ]
+            }
+            tables.push({
+                version: String(version.version),
+                type: version.type,
+                where: where,
+                addresses: version.addresses.slice(),
+                buckets: version.buckets.slice(),
+                departed: version.departed.slice()
+            })
+        })
+        return tables
+    }
+
+    has (version, promise, hashed) {
+        const table = this.versions.get(version).table
+        return table.buckets[hashed & (table.buckets.length - 1)] == promise
+    }
+
+    set (hashed, id, connectedTo) {
+        this.versions.each(({ buckets, where }) => {
+            if (buckets[hashed & (buckets.length - 1)] == this.promise) {
+                let set = where.get(id)
+                if (set == null) {
+                    set = new Set
+                    where.set(id, set)
+                }
+                set.add(connectedTo)
+            }
+        })
+    }
+
+    lookup (hashed) {
+        const { buckets } = this.versions.min()
+        return buckets[hashed & (buckets.length - 1)]
+    }
+
+    where (version, id) {
+        const { where } = this.versions.find({ version })
+        return [ ...(where.get(id) || []) ]
     }
 
     _balance (buckets, addresses) {
-        var counters = {}
+        const counters = {}
         addresses.forEach(function (address) {
             counters[address] = 0
         })
@@ -34,21 +88,21 @@ class Table {
             counters[promise]++
         })
 
-        var loaded = new RBTree(function (left, right) {
-            var compare = left.count - right.count
+        const loaded = new RBTree(function (left, right) {
+            const compare = left.count - right.count
             if (compare != 0) {
                 return compare
             }
             return Monotonic.compare(left.promise, right.promise)
         })
 
-        for (var promise in counters) {
+        for (const promise in counters) {
             loaded.insert({ promise: promise, count: counters[promise] })
         }
 
-        var balance = buckets.length % addresses.length == 0 ? 0 : 1
+        const balance = buckets.length % addresses.length == 0 ? 0 : 1
 
-        var min, max
+        let min, max
         while (Math.abs(loaded.min().count - loaded.max().count) > balance) {
             max = loaded.max()
             min = loaded.min()
@@ -60,6 +114,9 @@ class Table {
             loaded.insert(max)
             loaded.insert(min)
         }
+    }
+
+    snapshot (version) {
     }
 
     // NOTE Going to further hash the results by the instance worker processes, but
@@ -87,57 +144,47 @@ class Table {
     //
 
     arrive (self, promise) {
+        this.promise = self
         this.arriving.push(promise)
-        if (this.table.pending == null) {
-            this._rebalance(self)
+        if (this.versions.size == 1) {
+            return this._rebalance(self, promise)
         }
+        return null
     }
 
-    _rebalance (self) {
-        var addresses = this.table.addresses.concat(this.arriving.shift())
-        var version = this.version = Monotonic.increment(this.version, 0)
-        if (addresses.length == 1) {
-            assert(addresses[0] == self, 'bad.bootstrap.promise')
-            this.events.push({
-                module: 'diffuser',
-                method: 'bootstrap',
-                table: this.table = {
-                    version: version,
-                    redundancy: 1,
-                    addresses: addresses,
-                    buckets: [ addresses[0] ],
-                    departed: []
-                }
+    _rebalance (self, promise) {
+        const version = this._version++
+        if (promise == '1/0') {
+            const addresses = [ this.arriving.shift() ]
+            assert(addresses[0] == self)
+            this.versions.insert({
+                version: version,
+                type: 'arrival',
+                where: new Map(),
+                addresses: addresses,
+                buckets: [ addresses[0] ],
+                departed: []
             })
-        } else {
-            var redundancy = Math.min(addresses.length, this.redundancy)
-            // Ensure we have plenty of buckets. See discussion of doubling above.
-            var buckets = this.table.buckets.slice()
-            var minimum = addresses.length * this.multipler
-            while (buckets.length < minimum) {
-                buckets.push.apply(buckets, buckets)
-            }
-            this._balance(buckets, addresses)
-            this.table = {
-                version: this.table.version,
-                buckets: this.table.buckets,
-                addresses: this.table.addresses,
-                redundancy: this.table.redundancy,
-                departed: this.table.departed,
-                pending: {
-                    version: version,
-                    redundancy: redundancy,
-                    buckets: buckets,
-                    addresses: addresses,
-                    departed: []
-                }
-            }
-            this.events.push(JSON.parse(JSON.stringify({
-                module: 'diffuser',
-                method: 'receive',
-                version: this.table.pending.version
-            })))
+            return version
         }
+        const max = this.versions.max()
+        const addresses = max.addresses.concat(this.arriving.shift())
+        // Ensure we have plenty of buckets. See discussion of doubling above.
+        const buckets = max.buckets.slice()
+        const minimum = addresses.length * this.multipler
+        while (buckets.length < minimum) {
+            buckets.push.apply(buckets, buckets)
+        }
+        this._balance(buckets, addresses)
+        this.versions.insert({
+            version: version,
+            type: 'arrival',
+            where: new Map(),
+            addresses: addresses,
+            buckets: buckets,
+            departed: []
+        })
+        return version
     }
 
     received (version) {
@@ -151,13 +198,13 @@ class Table {
     }
 
     complete (version) {
-        assert(version == this.table.pending.version, 'complete.wrong.version')
-        if (this.table.departed.length == 0) {
-            this.events.push(JSON.parse(JSON.stringify({
-                module: 'diffuser',
-                method: 'complete',
-                table: this.table = this.table.pending
-            })))
+        version = BigInt(version)
+        for (;;) {
+            const min = this.versions.min()
+            if (min.version >= version) {
+                break
+            }
+            this.versions.remove(min)
         }
     }
 
