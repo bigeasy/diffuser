@@ -59,10 +59,10 @@ class Server {
 
     async map (entry) {
         // TODO Rename to `request` to be consistent with `reduce`.
-        const { body: { module, method } } = entry
+        const { request: { module, method } } = entry
         switch (`${module}/${method}`) {
         case 'diffuser/arrive': {
-                const { self: { arrived }, body: { diffuserId, connections } } = entry
+                const { self: { arrived }, request: { diffuserId, connections } } = entry
                 for (const id of connections) {
                     this._table.set(hash(id), id, diffuserId)
                 }
