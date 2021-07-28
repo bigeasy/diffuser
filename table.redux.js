@@ -11,6 +11,7 @@ class Table {
     constructor (multipler) {
         this.events = new Queue
         this.table = null
+        this._active = false
         this.multipler = multipler
         this.arriving = []
         this.versions = new RBTree((left, right) => Monotonic.compare(left.version, right.version))
@@ -18,11 +19,11 @@ class Table {
     }
 
     get active () {
-        return this.versions.min().version != '0/0'
+        return this._active
     }
 
     get version () {
-        return this.versions.min().version
+        return this._active ? this.versions.min().version : '0/0'
     }
 
     get tables () {
@@ -33,7 +34,8 @@ class Table {
                 where[key] = [ ...value ]
             }
             tables.push({
-                version: String(version.version),
+                version: version.version,
+                previous: version.previous,
                 type: version.type,
                 where: where,
                 addresses: version.addresses.slice(),
@@ -111,6 +113,22 @@ class Table {
     }
 
     snapshot (version) {
+        const { previous } = this.versions.find({ version })
+        const { type, buckets, addresses } = this.versions.find({ version: previous })
+        return { version: previous, type, buckets, addresses }
+    }
+
+    join ({ version, type, buckets, addresses }) {
+        this.versions.insert({
+            version: version,
+            previous: '0/0',
+            type: type,
+            where: new Map(),
+            addresses: addresses,
+            buckets: buckets,
+            departed: []
+        })
+        this.versions.remove(this.versions.min())
     }
 
     // NOTE Going to further hash the results by the instance worker processes, but
@@ -147,11 +165,13 @@ class Table {
     }
 
     _rebalance (self, promise) {
+        const previous = this.versions.min().version
         if (promise == '1/0') {
             const addresses = [ this.arriving.shift() ]
             assert(addresses[0] == self)
             this.versions.insert({
                 version: promise,
+                previous: previous,
                 type: 'arrival',
                 where: new Map(),
                 addresses: addresses,
@@ -171,6 +191,7 @@ class Table {
         this._balance(buckets, addresses)
         this.versions.insert({
             version: promise,
+            previous: previous,
             type: 'arrival',
             where: new Map(),
             addresses: addresses,
@@ -198,6 +219,7 @@ class Table {
             }
             this.versions.remove(min)
         }
+        this._active = true
     }
 
     depart (self, promise) {

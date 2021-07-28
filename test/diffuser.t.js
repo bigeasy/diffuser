@@ -29,10 +29,9 @@ require('proof')(1, async okay => {
             diffuser: diffuser,
             address: address
         })
-        console.log(diffusers)
         census.push(diffusers.map(({ address: { port } }) => `http://127.0.0.1:${port}`))
     }
-    okay(Diffuser, 'exists')
+    okay(Diffuser, 'require')
     await createDiffuser()
     await new Promise(resolve => setTimeout(resolve, 1000))
     await destructible.destroy().promise

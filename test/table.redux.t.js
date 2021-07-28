@@ -1,4 +1,4 @@
-require('proof')(10, prove)
+require('proof')(11, prove)
 
 function prove (okay) {
     const hash = require('../hash')
@@ -38,6 +38,7 @@ function prove (okay) {
         tables[0].arrive('1/0', '2/0')
         okay(tables[0].tables, [{
             version: '1/0',
+            previous: '0/0',
             type: 'arrival',
             where: { x: [ '1/0' ] },
             addresses: [ '1/0' ],
@@ -45,14 +46,25 @@ function prove (okay) {
             departed: []
         }, {
             version: '2/0',
+            previous: '1/0',
             type: 'arrival',
             where: {},
             addresses: [ '1/0', '2/0' ],
             buckets: [ '2/0', '2/0', '1/0', '1/0' ],
             departed: []
         }], 'pending table')
+
+        // Test a snapshot and join.
         tables.push(new Table(2))
-        tables[0].snapshot(1n)
+        tables[1].join(tables[0].snapshot('2/0'))
+        tables[1].arrive('2/0', '2/0')
+
+        const inspections = [ tables[0].tables, tables[1].tables ]
+
+        inspections[0][0].where = {}
+        okay(inspections[1], inspections[0], 'join matches')
+        tables[0].complete('2/0')
+        tables[1].complete('2/0')
     }
 
     return

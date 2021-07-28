@@ -3,12 +3,21 @@ Turnstile.Queue = require('turnstile/queue')
 
 const Reactor = require('reactor')
 
+const Table = require('./table.redux')
+
+const Cubbyhole = require('cubbyhole')
+
 class Server {
-    constructor (destructible, { ua, bind }) {
-        this._connections = new Map
+    constructor (destructible, { ua, multipler = 2 }) {
+        this._table = new Table(multipler)
+        this._connections = new Set
         this._lookup = new Map
+        this._snapshots = new Cubbyhole
         this._turnstile = new Turnstile(destructible.durable('turnstile'))
         this._queue = new Turnstile.Queue(this._turnstile, this._enqueue.bind(this))
+        this._countdowns = new Map()
+        this._ua = ua
+        this._cubbyhole = new Cubbyhole
         this.reactor = new Reactor([{
             path: '/',
             method: 'get',
@@ -24,32 +33,39 @@ class Server {
         return 'Diffuser API\n'
     }
 
-    async initialize () {
+    async initialize (compassion) {
+        this._compassion = compassion
     }
 
     async bootstrap () {
     }
 
-    async arrive ({ government, arrival: { promise } }) {
-        return
-        this._table.arrive(promise)
-        const lookups = {}
-        for (const [ key, value ] of this._lookup) {
-        }
+    async arrive ({ self: { arrived }, government, arrival: { promise } }) {
+        this._countdowns.set(promise, new Set)
+        this._table.arrive(arrived, promise)
+        this._cubbyhole.resolve(promise, this._table.snapshot(promise))
         this._compassion.enqueue({
-            lookups: this._loo
+            module: 'diffuser',
+            method: 'arrive',
+            version: promise,
+            diffuserId: arrived,
+            connections: [ ...this._connections ]
         })
     }
 
-    async acclimated () {
+    async acclimated ({ promise }) {
+        this._cubbyhole.remove(promise)
     }
 
     async map (entry) {
-        const { request: { module, method } } = body
-        switch (`${model}/${method}`) {
+        // TODO Rename to `request` to be consistent with `reduce`.
+        const { body: { module, method } } = entry
+        switch (`${module}/${method}`) {
         case 'diffuser/arrive': {
-                const { self: { arrived }, request: { id, hashed, connectedTo } } = body
-
+                const { self: { arrived }, body: { diffuserId, connections } } = entry
+                for (const id of connections) {
+                    this._table.set(hash(id), id, diffuserId)
+                }
                 return true
             }
             break
@@ -80,7 +96,21 @@ class Server {
 
     async reduce (entry) {
         const { request: { module, method } } = entry
-        switch (`${model}/${method}`) {
+        switch (`${module}/${method}`) {
+        case 'diffuser/arrive': {
+                const { government, from: { arrived }, request: { version } } = entry
+                const countdown = this._countdowns.get(version)
+                countdown.add(arrived)
+                if (
+                    countdown.size == government.majority.length +
+                                      government.minority.length +
+                                      government.constituents.length
+                ) {
+                    this._countdowns.delete(version)
+                    this._table.complete(version)
+                }
+            }
+            break
         case 'diffuser/connect': {
                 const { cookie } = body
                 const future = this._futures.get(cookie)
@@ -109,7 +139,10 @@ class Server {
     }
 
     async depart ({ departure: { promise } }) {
-        this._cubbyholes.remove(promise)
+        for (const set of this._countdowns.values()) {
+            set.delete(promise)
+        }
+        this._cubbyhole.remove(promise)
         this._table.depart(promise)
         this._departure = promise
         this._departures.clear()
