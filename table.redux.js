@@ -5,9 +5,6 @@ const assert = require('assert')
 const RBTree = require('bintrees').RBTree
 const Monotonic = require('paxos/monotonic')
 
-const whittle = require('whittle')
-const ascension = require('ascension')
-
 const Vivifyer = require('vivifyer')
 
 class Table {
@@ -15,16 +12,13 @@ class Table {
         this.events = new Queue
         this.table = null
         this.multipler = multipler
-        this._version = 1n
         this.arriving = []
-        this.versions = new RBTree((left, right) => {
-            return (left.version > right.version) - (left.version < right.version)
-        })
-        this.versions.insert({ version: 0n, pending: true })
+        this.versions = new RBTree((left, right) => Monotonic.compare(left.version, right.version))
+        this.versions.insert({ version: '0/0', pending: true })
     }
 
     get active () {
-        return this.versions.min().version != 0n
+        return this.versions.min().version != '0/0'
     }
 
     get version () {
@@ -153,19 +147,18 @@ class Table {
     }
 
     _rebalance (self, promise) {
-        const version = this._version++
         if (promise == '1/0') {
             const addresses = [ this.arriving.shift() ]
             assert(addresses[0] == self)
             this.versions.insert({
-                version: version,
+                version: promise,
                 type: 'arrival',
                 where: new Map(),
                 addresses: addresses,
                 buckets: [ addresses[0] ],
                 departed: []
             })
-            return version
+            return promise
         }
         const max = this.versions.max()
         const addresses = max.addresses.concat(this.arriving.shift())
@@ -177,14 +170,14 @@ class Table {
         }
         this._balance(buckets, addresses)
         this.versions.insert({
-            version: version,
+            version: promise,
             type: 'arrival',
             where: new Map(),
             addresses: addresses,
             buckets: buckets,
             departed: []
         })
-        return version
+        return promise
     }
 
     received (version) {
@@ -198,10 +191,9 @@ class Table {
     }
 
     complete (version) {
-        version = BigInt(version)
         for (;;) {
             const min = this.versions.min()
-            if (min.version >= version) {
+            if (Monotonic.compare(min.version, version) >= 0) {
                 break
             }
             this.versions.remove(min)
