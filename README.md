@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/bigeasy/diffuser/branch/master/graph/badge.svg)](https://codecov.io/gh/bigeasy/diffuser)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Persistent TCP to microservice router.
+Scalable persistent TCP to microservice router.
 
 | What          | Where                                         |
 | --- | --- |

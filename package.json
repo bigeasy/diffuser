@@ -3,7 +3,7 @@
     "version":              "2.0.13",
     "description":
 
-      "Persistent TCP to microservice router.",
+      "Scalable persistent TCP to microservice router.",
 
     "keywords":
     [
