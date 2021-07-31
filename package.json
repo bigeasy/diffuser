@@ -22,6 +22,7 @@
     {
                             "ascension":                    "3.0.0-alpha.4",
                             "avenue":                       "0.6.15",
+                            "axios":                        "0.21.1",
                             "compassion":                   "2.0.0-alpha.10",
                             "cubbyhole":                    "4.0.6",
                             "destructible":                 "7.0.0-alpha.67",

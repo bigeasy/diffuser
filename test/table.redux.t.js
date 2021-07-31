@@ -1,12 +1,10 @@
-require('proof')(12, prove)
+require('proof')(13, prove)
 
 function prove (okay) {
     const hash = require('../hash')
 
     var Table = require('../table.redux')
     const tables = [ new Table(2) ]
-
-    var shifter = tables[0].events.shifter().sync
 
     // Bootstrap will simply be an arrival occuring before a snapshot is set. We
     // can assert that the arrival is `"1/0"`.
@@ -27,11 +25,13 @@ function prove (okay) {
 
         okay(tables[0].version, '1/0', 'version')
 
-        okay(tables[0].where(tables[0].version, 'x'), [], 'find missing')
+        okay(tables[0].get(tables[0].version, 'x'), [], 'find missing')
+
+        okay(tables[0].get('0/0', 'x'), null, 'version missing')
 
         tables[0].set(hash('x'), 'x', '1/0')
 
-        okay(tables[0].where(tables[0].version, 'x'), [ '1/0' ], 'find missing')
+        okay(tables[0].get(tables[0].version, 'x'), [ '1/0' ], 'find missing')
     }
 
     {

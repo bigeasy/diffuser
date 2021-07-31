@@ -1,18 +1,13 @@
-const { Queue } = require('avenue')
-
 const assert = require('assert')
 
 const RBTree = require('bintrees').RBTree
 const Monotonic = require('paxos/monotonic')
-
-const Vivifyer = require('vivifyer')
 
 // TODO We can have an arrivals queue. Not difficult. Arrival does not return a
 // new version. A separate function determines if there is a next version.
 
 class Table {
     constructor (multipler) {
-        this.events = new Queue
         this.table = null
         this._initialized = false
         this.arrivals = []
@@ -50,11 +45,6 @@ class Table {
         return tables
     }
 
-    has (version, promise, hashed) {
-        const table = this.versions.get(version).table
-        return table.buckets[hashed & (table.buckets.length - 1)] == promise
-    }
-
     set (hashed, id, connectedTo) {
         this.versions.each(({ buckets, where }) => {
             if (buckets[hashed & (buckets.length - 1)] == this.promise) {
@@ -73,9 +63,12 @@ class Table {
         return buckets[hashed & (buckets.length - 1)]
     }
 
-    where (version, id) {
-        const { where } = this.versions.find({ version })
-        return [ ...(where.get(id) || []) ]
+    get (version, id) {
+        const entry = this.versions.find({ version })
+        if (entry == null) {
+            return null
+        }
+        return [ ...(entry.where.get(id) || []) ]
     }
 
     _balance (buckets, addresses) {
@@ -199,16 +192,6 @@ class Table {
             departed: []
         })
         return promise
-    }
-
-    received (version) {
-        assert(version == this.table.pending.version, 'complete.wrong.version')
-        // You can now see the structure of a pending message.
-        this.events.push(JSON.parse(JSON.stringify({
-            module: 'diffuser',
-            method: 'balance',
-            table: this.table
-        })))
     }
 
     complete (version) {
